@@ -36,7 +36,6 @@ object Render {
         return tf
     }
 
-    private val clip = Path()
     fun dot(cv: Canvas, p: Paint, cx: Float, cy: Float, r: Float, color: Int, frac: Float? = null) {
         p.style = Paint.Style.FILL
         if (frac == null) {
@@ -44,7 +43,8 @@ object Render {
         }
         p.color = PARTIAL; cv.drawCircle(cx, cy, r, p)
         cv.save()
-        clip.reset(); clip.addCircle(cx, cy, r, Path.Direction.CW)
+        // a fresh path per dot: widgets, the worker and the wallpaper draw on different threads
+        val clip = Path().apply { addCircle(cx, cy, r, Path.Direction.CW) }
         cv.clipPath(clip)
         p.color = color
         cv.drawRect(cx - r, cy + r - 2 * r * frac, cx + r, cy + r, p)

@@ -145,7 +145,7 @@ fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, 
             Divider()
             SettingRow("Ripple", "A wave runs through your years each time you come back") { Toggle(s.ripple) { v -> st.update(refresh = false) { it.copy(ripple = v) } } }
             Divider()
-            SettingRow("Monday note", "“Week 1,812 begins.” Once a week, nothing else") {
+            SettingRow("Monday note", "“You're in week 881 of your life.” Once a week, nothing else") {
                 Toggle(s.nudge) { v ->
                     if (v && !Nudge.permitted(ctx) && Build.VERSION.SDK_INT >= 33) notifyPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                     else { st.update(refresh = false) { it.copy(nudge = v) }; Nudge.schedule(ctx, v) }

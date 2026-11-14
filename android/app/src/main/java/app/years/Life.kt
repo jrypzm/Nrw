@@ -44,22 +44,35 @@ object Life {
         Measure("full moon", "full moons", 365.2425 / 29.530589),
     )
 
+    /** Your birthday in a given year. 29 February falls on 28 February in other years. */
+    fun birthdayIn(birth: LocalDate, year: Int): LocalDate = birth.withYear(year)
+
+    /** Whole years you've completed by [today]. */
+    fun wholeYears(birth: LocalDate, today: LocalDate): Int {
+        var y = today.year - birth.year
+        if (birthdayIn(birth, today.year).isAfter(today)) y--
+        return max(0, y)
+    }
+
     /** Exact age: whole calendar years, plus how far you are between your last birthday and the next. */
     fun age(birth: LocalDate, now: ZonedDateTime = ZonedDateTime.now()): Double {
         val today = now.toLocalDate()
         if (!today.isAfter(birth)) return 0.0
-        val years = ChronoUnit.YEARS.between(birth, today)
-        val last = birth.plusYears(years).atStartOfDay(now.zone)
-        val next = birth.plusYears(years + 1).atStartOfDay(now.zone)
+        val years = wholeYears(birth, today)
+        val last = birthdayIn(birth, birth.year + years).atStartOfDay(now.zone)
+        val next = birthdayIn(birth, birth.year + years + 1).atStartOfDay(now.zone)
         val f = Duration.between(last, now).toMillis().toDouble() / max(1L, Duration.between(last, next).toMillis())
         return years + f.coerceIn(0.0, 0.999999)
     }
 
     fun isBirthday(birth: LocalDate, today: LocalDate = LocalDate.now()) =
-        birth.month == today.month && birth.dayOfMonth == today.dayOfMonth
+        today.isAfter(birth) && birthdayIn(birth, today.year) == today
 
     fun lastBirthday(birth: LocalDate, today: LocalDate): LocalDate =
-        birth.plusYears(ChronoUnit.YEARS.between(birth, today))
+        birthdayIn(birth, birth.year + wholeYears(birth, today))
+
+    /** The start of the k-th month after your last birthday (clamped at short month ends, never drifting). */
+    private fun monthStart(lb: LocalDate, k: Int): LocalDate = lb.plusMonths(k.toLong())
 
     fun mon(d: LocalDate): String = d.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
 
@@ -81,12 +94,13 @@ object Life {
             ViewKind.YEAR -> {
                 val today = now.toLocalDate()
                 val lb = lastBirthday(birth, today)
-                val m = ChronoUnit.MONTHS.between(lb, today).toInt().coerceIn(0, 11)
-                val st = lb.plusMonths(m.toLong()).atStartOfDay(now.zone)
-                val en = lb.plusMonths(m + 1L).atStartOfDay(now.zone)
+                var m = 0
+                while (m < 11 && !monthStart(lb, m + 1).isAfter(today)) m++
+                val st = monthStart(lb, m).atStartOfDay(now.zone)
+                val en = (if (m == 11) birthdayIn(birth, lb.year + 1) else monthStart(lb, m + 1)).atStartOfDay(now.zone)
                 val f = (Duration.between(st, now).toMillis().toDouble() /
                         max(1L, Duration.between(st, en).toMillis())).coerceIn(0.0, 1.0)
-                val next = lb.plusYears(1)
+                val next = birthdayIn(birth, lb.year + 1)
                 GridModel(
                     kind, 12, (m + f).coerceIn(0.0, 12.0), 6, "month",
                     "Age $lived", "Turning ${lived + 1} on ${next.dayOfMonth} ${mon(next)}",
@@ -106,14 +120,17 @@ object Life {
             return Headline(m.total.toDouble(), "lives", "of human history", if (s.lived) f else 100 - f, Measure("life", "lives", 1.0))
         }
         val left = max(0.0, m.total - m.done)
-        val base = if (s.lived) m.done else left
         val measure = if (m.kind == ViewKind.LIFE) MEASURES[s.unit.mod(MEASURES.size)] else Measure(m.unit, m.unit + "s", 1.0)
-        // The life grid can be zoomed to months, weeks or days: convert its dots back to years first.
-        val dotsPerYear = if (m.kind != ViewKind.LIFE) 1.0 else when (m.unit) { "month" -> 12.0; "week" -> 52.1775; "day" -> 365.2425; else -> 1.0 }
-        val v = base / dotsPerYear * measure.perYear
+        // The life grid can be zoomed to months, weeks or days, so count in years from your exact age instead of dots.
+        val base = if (m.kind == ViewKind.LIFE) {
+            val lived = s.birth?.let { age(it) }?.coerceAtMost(s.span.toDouble()) ?: 0.0
+            if (s.lived) lived else max(0.0, s.span - lived)
+        } else if (s.lived) m.done else left
+        val v = base * measure.perYear
         val word = if (!s.lived) "left" else if (m.kind == ViewKind.YEAR) "in" else "lived"
         val whole = floor(v).toLong()
-        return Headline(v, if (whole == 1L) measure.one else measure.many, word, base / m.total * 100.0, measure)
+        val pct = if (m.kind == ViewKind.LIFE) base / s.span * 100.0 else base / m.total * 100.0
+        return Headline(v, if (whole == 1L) measure.one else measure.many, word, pct, measure)
     }
 
     private val INT = DecimalFormat("#,##0")
@@ -179,7 +196,8 @@ object Life {
 
     fun together(s: Settings, p: Person, today: LocalDate = LocalDate.now()): Together {
         val theirAge = today.year - p.birthYear
-        val theirLeft = max(0.0, s.span - theirAge.toDouble())
+        // Someone who has already passed your lifespan still has years ahead of them: allow at least a few.
+        val theirLeft = max(s.span - theirAge.toDouble(), if (theirAge < 105) max(2.0, (100.0 - theirAge) / 3.0) else 1.0)
         val shared = minOf(yearsLeft(s), theirLeft)
         return Together(floor(shared * p.often.perYear).toLong(), shared, theirAge)
     }
@@ -195,8 +213,8 @@ object Life {
         val sleep = left * 8.0 / 24.0
         val workYears = max(0.0, minOf(left, 65.0 - age))
         val work = workYears * (40.0 * 48.0) / 8766.0
-        val phone = left * phoneHours / 24.0
         val upkeep = left * 3.0 / 24.0 // eating, washing, chores, getting around
+        val phone = minOf(left * phoneHours / 24.0, max(0.0, left - sleep - work - upkeep))
         val free = max(0.0, left - sleep - work - phone - upkeep)
         return listOf(Slice("Asleep", sleep), Slice("Working", work), Slice("On your phone", phone), Slice("Eating, chores, commuting", upkeep), Slice("Truly yours", free))
     }

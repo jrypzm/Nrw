@@ -243,6 +243,8 @@ fun Wheel(items: List<String>, index: Int, onIndex: (Int) -> Unit, width: Dp, al
     }
     LaunchedEffect(center) { if (center != index) { view.tick(); onIndex(center) } }
     LaunchedEffect(index, items.size) { if (index != center && !state.isScrollInProgress) state.scrollToItem(index.coerceIn(0, items.lastIndex)) }
+    // if a date was clamped mid-fling, settle the wheel on the value that was actually saved
+    LaunchedEffect(state.isScrollInProgress) { if (!state.isScrollInProgress && index != center) state.animateScrollToItem(index.coerceIn(0, items.lastIndex)) }
     LazyColumn(state = state, flingBehavior = fling, contentPadding = PaddingValues(vertical = itemH * 2), modifier = Modifier.width(width).height(itemH * 5)) {
         itemsIndexed(items) { i, t ->
             val d = abs(i - center)

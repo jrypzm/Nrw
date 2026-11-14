@@ -75,7 +75,7 @@ class YearsWallpaperService : WallpaperService() {
             val ripple = if (rippleStart > 0 && since < dur) since / dur.toFloat() else -1f
             val canvas = runCatching { holder.lockHardwareCanvas() }.getOrNull() ?: runCatching { holder.lockCanvas() }.getOrNull() ?: return
             try {
-                val style = if (settings.wall == WallStyle.GRID && settings.sun) WallStyle.DAYLIGHT else settings.wall
+                val style = Background.styleFor(settings)
                 Render.wallpaper(this@YearsWallpaperService, canvas, frame.width(), frame.height(), settings, style, System.currentTimeMillis(), ripple)
             } finally {
                 runCatching { holder.unlockCanvasAndPost(canvas) }
