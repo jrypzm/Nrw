@@ -7,3 +7,8 @@ The current year gently breathes. Tap any dot to see its age and calendar year.
 - Open `index.html` (or host the folder on any static host, e.g. GitHub Pages).
 - On your phone: browser menu → **Add to Home Screen** to use it full-screen and offline.
 - Birthday and lifespan (default 80) are stored only on the device (`localStorage`).
+
+## Next: native app (planned)
+- Bundle SF Pro (Display Semibold/Bold, Text Regular/Medium/Semibold) inside the app build.
+  For the web version, `tools/embed_fonts.py` can inline them into `index.html` once the font files are supplied.
+- Home-screen / lock-screen widget showing the years grid.
