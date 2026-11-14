@@ -89,8 +89,17 @@ import kotlin.math.floor
 import kotlin.math.max
 
 class MainActivity : ComponentActivity() {
+    /** Which screen a widget asked for ("TODAY", "PEOPLE"...). */
+    private val open = mutableStateOf<String?>(null)
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        open.value = intent.getStringExtra("open")
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) open.value = intent?.getStringExtra("open")
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
@@ -98,7 +107,7 @@ class MainActivity : ComponentActivity() {
         Background.schedule(this)
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(background = C.Bg, surface = C.Surface, primary = C.Fg, onPrimary = Color.Black, onSurface = C.Fg)) {
-                App()
+                App(open.value) { open.value = null }
             }
         }
     }
@@ -133,14 +142,14 @@ sealed interface Sheet {
 }
 
 @Composable
-fun App() {
+fun App(open: String?, consumed: () -> Unit) {
     val ctx = LocalContext.current
     val st = remember { AppState(ctx.applicationContext) }
     Box(Modifier.fillMaxSize().background(C.Bg)) {
         AnimatedContent(
             targetState = st.s.birth == null,
             transitionSpec = { fadeIn(tween(600)) togetherWith fadeOut(tween(250)) }, label = "root",
-        ) { onboarding -> if (onboarding) Onboarding(st) else Home(st) }
+        ) { onboarding -> if (onboarding) Onboarding(st) else Home(st, open, consumed) }
     }
 }
 
@@ -202,7 +211,7 @@ fun Onboarding(st: AppState) {
 const val PAGES = 5
 
 @Composable
-fun Home(st: AppState) {
+fun Home(st: AppState, open: String?, consumed: () -> Unit) {
     val s = st.s
     val ctx = LocalContext.current
     val view = LocalView.current
@@ -215,7 +224,7 @@ fun Home(st: AppState) {
     var now by remember { mutableStateOf(ZonedDateTime.now()) }
     LaunchedEffect(s.style) {
         while (true) {
-            if (s.style == NumberStyle.LIVE) withFrameMillis { } else delay(20_000)
+            delay(if (s.style == NumberStyle.LIVE) 50 else 20_000)
             now = ZonedDateTime.now()
         }
     }
@@ -223,6 +232,32 @@ fun Home(st: AppState) {
     var sheet by remember { mutableStateOf<Sheet?>(null) }
     var toast by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(toast) { if (toast != null) { delay(2200); toast = null } }
+
+    // Moments that find you: a letter you sealed years ago, or the year you just finished.
+    fun checkMoments() {
+        if (sheet != null) return
+        val b = st.s.birth ?: return
+        val lived = Life.age(b).toInt()
+        val letter = st.s.letters.indexOfFirst { !it.opened && it.age <= lived }
+        val lb = Life.lastBirthday(b, LocalDate.now())
+        when {
+            letter >= 0 -> sheet = Sheet.LetterRead(letter)
+            st.s.reviewedAge in 0 until lived && ChronoUnit.DAYS.between(lb, LocalDate.now()) <= 30 -> sheet = Sheet.Review
+        }
+    }
+
+    // A widget tap opens the matching screen.
+    LaunchedEffect(open) {
+        when (open) {
+            null -> return@LaunchedEffect
+            "TODAY" -> { pager.scrollToPage(2); sheet = Sheet.Line(LocalDate.now()) }
+            "PEOPLE" -> pager.scrollToPage(3)
+            "DECADE" -> pager.scrollToPage(1)
+            "YEAR" -> pager.scrollToPage(2)
+            else -> pager.scrollToPage(0)
+        }
+        consumed()
+    }
 
     // The ripple plays each time you come back.
     val ripple = remember { Animatable(1f) }
@@ -232,6 +267,7 @@ fun Home(st: AppState) {
             if (e == Lifecycle.Event.ON_RESUME) {
                 now = ZonedDateTime.now()
                 st.bump()
+                checkMoments()
                 if (st.s.ripple) scope.launch {
                     delay(500)
                     val lived = st.s.birth?.let { Life.age(it).toInt() } ?: 0
@@ -244,17 +280,6 @@ fun Home(st: AppState) {
         onDispose { lifecycle.removeObserver(obs) }
     }
 
-    // Moments that find you: a letter you sealed years ago, or the year you just finished.
-    LaunchedEffect(Unit) {
-        val b = st.s.birth ?: return@LaunchedEffect
-        val lived = Life.age(b).toInt()
-        val letter = st.s.letters.indexOfFirst { !it.opened && it.age <= lived }
-        val lb = Life.lastBirthday(b, LocalDate.now())
-        when {
-            letter >= 0 -> sheet = Sheet.LetterRead(letter)
-            st.s.reviewedAge in 0 until lived && ChronoUnit.DAYS.between(lb, LocalDate.now()) <= 30 -> sheet = Sheet.Review
-        }
-    }
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
@@ -430,7 +455,7 @@ fun Header(st: AppState, m: GridModel) {
 @Composable
 fun Heartbeat(s: Settings) {
     var t by remember { mutableStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(Unit) { while (true) { withFrameMillis { }; t = System.currentTimeMillis() } }
+    LaunchedEffect(Unit) { while (true) { delay(50); t = System.currentTimeMillis() } }
     val left = if (t > 0) Life.yearsLeft(s) * 365.2425 * 86400.0 else 0.0
     Text(Life.whole(left), style = TextStyle(fontFamily = Display, fontWeight = FontWeight.Light, fontSize = 44.sp, letterSpacing = (-0.03).em, color = C.Fg, fontFeatureSettings = "tnum"), maxLines = 1, softWrap = false)
     Text("seconds left · each beat is one of them", style = T.sub, modifier = Modifier.padding(top = 3.dp))

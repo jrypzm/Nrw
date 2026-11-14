@@ -148,7 +148,7 @@ fun LedgerPage(st: AppState) {
     val ctx = LocalContext.current
     val s = st.s
     var hours by remember { mutableStateOf<Double?>(null) }
-    LaunchedEffect(st.tick) { hours = ScreenTime.hoursPerDay(ctx) }
+    LaunchedEffect(st.tick) { hours = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { ScreenTime.hoursPerDay(ctx) } }
     val phone = hours ?: 3.0
     val slices = Life.ledger(s, phone)
     val left = Life.yearsLeft(s)

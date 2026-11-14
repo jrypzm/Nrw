@@ -46,13 +46,17 @@ object ScreenTime {
     fun hoursPerDay(c: Context): Double? {
         if (!allowed(c)) return null
         val usm = c.getSystemService(UsageStatsManager::class.java) ?: return null
-        val end = System.currentTimeMillis()
-        val start = end - TimeUnit.DAYS.toMillis(7)
+        // exactly the last 7 full days, midnight to midnight
+        val zone = java.time.ZoneId.systemDefault()
+        val end = LocalDate.now().atStartOfDay(zone).toInstant().toEpochMilli()
+        val start = LocalDate.now().minusDays(7).atStartOfDay(zone).toInstant().toEpochMilli()
         val launcher = runCatching {
             c.packageManager.resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), PackageManager.MATCH_DEFAULT_ONLY)?.activityInfo?.packageName
         }.getOrNull()
-        val stats = runCatching { usm.queryAndAggregateUsageStats(start, end) }.getOrNull() ?: return null
-        val ms = stats.values.filter { it.packageName != launcher && it.packageName != "com.android.systemui" }.sumOf { it.totalTimeInForeground }
+        val stats = runCatching { usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, start, end) }.getOrNull() ?: return null
+        // daily buckets that start inside the window, so a day is never counted twice
+        val ms = stats.filter { it.firstTimeStamp >= start - 3_600_000 && it.firstTimeStamp < end && it.packageName != launcher && it.packageName != "com.android.systemui" && it.packageName != c.packageName }
+            .sumOf { it.totalTimeInForeground }
         return (ms / 3_600_000.0 / 7.0).coerceIn(0.0, 20.0)
     }
 }
@@ -111,8 +115,8 @@ object Nudge {
         val open = PendingIntent.getActivity(c, 0, Intent(c, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val n = NotificationCompat.Builder(c, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_yrs)
-            .setContentTitle("Week ${Life.whole(week.toDouble())} begins")
-            .setContentText("${Life.whole(left.toDouble())} weeks left. Make this one count.")
+            .setContentTitle("A new week")
+            .setContentText("You're in week ${Life.whole(week.toDouble())} of your life. ${Life.whole(left.toDouble())} weeks left. Make this one count.")
             .setContentIntent(open).setAutoCancel(true)
             .build()
         runCatching { NotificationManagerCompat.from(c).notify(1812, n) }

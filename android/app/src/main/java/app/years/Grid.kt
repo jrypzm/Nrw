@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -132,8 +133,15 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
             }
         }
 
+        // The gesture outlives zoom changes, so it always reads the latest grid through these.
+        val idxNow by rememberUpdatedState<(Offset) -> Int?> { o -> idxAt(o) }
+        val setNow by rememberUpdatedState<(Int?) -> Unit> { i -> set(i) }
+        val tapNow by rememberUpdatedState<(Int?) -> Unit> { i -> if (i != null) { tip = i; sticky = true; view.tick() } else { tip = null } }
+        val stickyNow by rememberUpdatedState<(Boolean) -> Unit> { b -> if (!b || tip != null) sticky = b }
+        val kindNow by rememberUpdatedState(m.kind)
+
         Canvas(
-            Modifier.fillMaxWidth().height(with(density) { hPx.toDp() }).pointerInput(m.kind, m.total, cell) {
+            Modifier.fillMaxWidth().height(with(density) { hPx.toDp() }).pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     // 1 tap, 2 moved (let the pager swipe), 3 two fingers (zoom), null held still (scrub)
@@ -153,20 +161,20 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
                     }
                     when (outcome) {
                         null -> {
-                            sticky = false
-                            set(idxAt(down.position))
+                            stickyNow(false)
+                            setNow(idxNow(down.position))
                             while (true) {
                                 val ev = awaitPointerEvent()
                                 if (ev.changes.count { it.pressed } >= 2) break
                                 val ch = ev.changes.firstOrNull { it.id == down.id } ?: break
                                 if (!ch.pressed) break
                                 ch.consume()
-                                set(idxAt(ch.position))
+                                setNow(idxNow(ch.position))
                             }
-                            if (tip != null) sticky = true
+                            stickyNow(true)
                         }
-                        1 -> { val i = idxAt(down.position); if (i != null) { tip = i; sticky = true; view.tick() } else tip = null }
-                        3 -> if (m.kind == ViewKind.LIFE) {
+                        1 -> tapNow(idxNow(down.position))
+                        3 -> if (kindNow == ViewKind.LIFE) {
                             var base = 0f
                             while (true) {
                                 val ev = awaitPointerEvent()
@@ -176,8 +184,8 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
                                 if (base == 0f) base = dist
                                 val k = dist / base
                                 val z = st.s.zoom
-                                if (k > 1.3f && z < Life.ZOOMS.lastIndex) { tip = null; view.confirm(); st.update(refresh = false) { it.copy(zoom = z + 1) }; base = dist }
-                                else if (k < 0.77f && z > 0) { tip = null; view.confirm(); st.update(refresh = false) { it.copy(zoom = z - 1) }; base = dist }
+                                if (k > 1.3f && z < Life.ZOOMS.lastIndex) { tapNow(null); view.confirm(); st.update(refresh = false) { it.copy(zoom = z + 1) }; base = dist }
+                                else if (k < 0.77f && z > 0) { tapNow(null); view.confirm(); st.update(refresh = false) { it.copy(zoom = z - 1) }; base = dist }
                                 ev.changes.forEach { it.consume() }
                             }
                         }
@@ -191,13 +199,6 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
             if (points != null) {
                 drawPoints(points.first, PointMode.Points, lit, strokeWidth = r0 * 2, cap = StrokeCap.Round)
                 drawPoints(points.second, PointMode.Points, C.Empty, strokeWidth = r0 * 2, cap = StrokeCap.Round)
-                if (doneInt < total) {
-                    val c = center(doneInt); val r = max(r0 * 1.8f, 3.dp.toPx())
-                    drawCircle(C.Partial, r, c, alpha = breathe)
-                    clipPath(Path().apply { addOval(Rect(c, r)) }) {
-                        drawRect(lit, topLeft = Offset(c.x - r, c.y + r - 2 * r * (m.done - doneInt).toFloat()), size = Size(2 * r, 2 * r * (m.done - doneInt).toFloat()), alpha = breathe)
-                    }
-                }
                 tip?.let { drawCircle(C.Fg, r0 * 2.6f, center(it)) }
                 return@Canvas
             }
@@ -216,17 +217,30 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
                 val r = r0 * k
                 when {
                     i < doneInt -> drawCircle(lit, r, c, alpha = e)
-                    i == doneInt && m.done < total -> {
-                        val f = (m.done - doneInt).toFloat()
-                        val al = e * breathe
-                        drawCircle(C.Partial, r, c, alpha = al)
-                        clipPath(Path().apply { addOval(Rect(c, r)) }) {
-                            drawRect(lit, topLeft = Offset(c.x - r, c.y + r - 2 * r * f), size = Size(2 * r, 2 * r * f), alpha = al)
-                        }
-                    }
+                    i == doneInt && m.done < total -> Unit // drawn in the breathing layer below
                     else -> drawCircle(C.Empty, r, c, alpha = e)
                 }
                 if (i in named) drawCircle(C.Fg.copy(alpha = .55f), cell * 0.43f, c, alpha = e, style = Stroke(1.5.dp.toPx()))
+            }
+        }
+
+        // Only this one dot breathes, so only this small layer redraws every frame.
+        if (doneInt < m.total) {
+            Canvas(Modifier.matchParentSize()) {
+                val c = center(doneInt)
+                val r0 = cell * ratio / 2
+                val r = if (big) max(r0 * 1.8f, 3.dp.toPx()) else {
+                    val l = ((appear.value * (0.7f + m.total * 0.009f) - doneInt * 0.009f) / 0.7f).coerceIn(0f, 1f)
+                    var k = 0.4f + 0.6f * (1f - (1f - l) * (1f - l) * (1f - l))
+                    if (ripple < 1f) { val lr = (ripple * (0.9f + doneInt * 0.016f) - doneInt * 0.016f) / 0.9f; if (lr > 0f && lr < 1f) k *= 1f + 0.32f * sin(lr * PI).toFloat() }
+                    if (doneInt == tip) k *= 1.38f
+                    r0 * k
+                }
+                val f = (m.done - doneInt).toFloat()
+                drawCircle(C.Partial, r, c, alpha = breathe)
+                clipPath(Path().apply { addOval(Rect(c, r)) }) {
+                    drawRect(lit, topLeft = Offset(c.x - r, c.y + r - 2 * r * f), size = Size(2 * r, 2 * r * f), alpha = breathe)
+                }
             }
         }
 

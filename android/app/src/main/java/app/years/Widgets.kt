@@ -1,6 +1,11 @@
 package app.years
 
 import android.content.Context
+import android.content.Intent
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.currentState
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
@@ -10,9 +15,8 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
-import androidx.glance.action.actionStartActivity
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.updateAll
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.fillMaxSize
 
@@ -21,15 +25,17 @@ abstract class DotsWidget(private val kind: WidgetKind) : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val description = Render.describe(context, kind)
+        val open = Intent(context, MainActivity::class.java).putExtra("open", kind.name).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         provideContent {
+            // Reading the version makes every refresh redraw, even while the widget session is still alive.
+            @Suppress("UNUSED_VARIABLE") val version = currentState(Widgets.VERSION)
             val size = LocalSize.current
             val bmp = Render.widget(context, kind, size.width.value, size.height.value)
             Image(
                 provider = ImageProvider(bmp),
-                contentDescription = description,
+                contentDescription = Render.describe(context, kind),
                 contentScale = ContentScale.FillBounds,
-                modifier = GlanceModifier.fillMaxSize().clickable(actionStartActivity<MainActivity>()),
+                modifier = GlanceModifier.fillMaxSize().clickable(actionStartActivity(open)),
             )
         }
     }
@@ -52,13 +58,18 @@ class TodayWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWi
 class PeopleWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidget: GlanceAppWidget = PeopleWidget() }
 
 object Widgets {
+    val VERSION = longPreferencesKey("v")
+
     suspend fun updateAll(c: Context) {
-        runCatching { LifeWidget().updateAll(c) }
-        runCatching { NumberWidget().updateAll(c) }
-        runCatching { DecadeWidget().updateAll(c) }
-        runCatching { YearWidget().updateAll(c) }
-        runCatching { DaysWidget().updateAll(c) }
-        runCatching { TodayWidget().updateAll(c) }
-        runCatching { PeopleWidget().updateAll(c) }
+        val stamp = System.currentTimeMillis()
+        val manager = GlanceAppWidgetManager(c)
+        listOf(LifeWidget(), NumberWidget(), DecadeWidget(), YearWidget(), DaysWidget(), TodayWidget(), PeopleWidget()).forEach { w ->
+            runCatching {
+                manager.getGlanceIds(w.javaClass).forEach { id ->
+                    updateAppWidgetState(c, id) { it[VERSION] = stamp }
+                    w.update(c, id)
+                }
+            }
+        }
     }
 }
