@@ -83,7 +83,7 @@ object Life {
                         max(1L, Duration.between(st, en).toMillis())).coerceIn(0.0, 1.0)
                 val next = lb.plusYears(1)
                 GridModel(
-                    kind, 12, (m + f).coerceIn(0.0, 12.0), 4, "month",
+                    kind, 12, (m + f).coerceIn(0.0, 12.0), 6, "month",
                     "Age $lived", "Turning ${lived + 1} on ${next.dayOfMonth} ${mon(next)}",
                     { i -> val d = lb.plusMonths(i.toLong()); "${mon(d)} ${d.year}" }, null,
                 )
@@ -96,10 +96,16 @@ object Life {
     class Headline(val value: Double, val noun: String, val word: String, val pct: Double, val measure: Measure)
 
     fun headline(s: Settings, m: GridModel): Headline {
+        if (m.unit == "lifetime") {
+            val f = (m.done - (m.total - 1)) * 100.0
+            return Headline(m.total.toDouble(), "lives", "of human history", if (s.lived) f else 100 - f, Measure("life", "lives", 1.0))
+        }
         val left = max(0.0, m.total - m.done)
         val base = if (s.lived) m.done else left
         val measure = if (m.kind == ViewKind.LIFE) MEASURES[s.unit.mod(MEASURES.size)] else Measure(m.unit, m.unit + "s", 1.0)
-        val v = base * measure.perYear
+        // The life grid can be zoomed to months, weeks or days: convert its dots back to years first.
+        val dotsPerYear = if (m.kind != ViewKind.LIFE) 1.0 else when (m.unit) { "month" -> 12.0; "week" -> 52.1775; "day" -> 365.2425; else -> 1.0 }
+        val v = base / dotsPerYear * measure.perYear
         val word = if (!s.lived) "left" else if (m.kind == ViewKind.YEAR) "in" else "lived"
         val whole = floor(v).toLong()
         return Headline(v, if (whole == 1L) measure.one else measure.many, word, base / m.total * 100.0, measure)
@@ -125,18 +131,24 @@ object Life {
 
     // ------------------------------------------------------------ zoom through time
 
-    val ZOOMS = listOf("Years", "Months", "Weeks", "Days")
+    val ZOOMS = listOf("History", "Years", "Months", "Weeks", "Days")
+    const val ZOOM_YEARS = 1
+    /** About 300,000 years of modern humans, as 80-year lives laid end to end. */
+    const val LIFETIMES = 3750
 
     private fun zoomModel(s: Settings, birth: LocalDate, age: Double, now: ZonedDateTime): GridModel {
         val lived = floor(age).toInt()
         val by = birth.year
         val sub = "Age $lived · day ${INT.format(dayOfLife(birth, now.toLocalDate()))}"
-        return when (s.zoom.coerceIn(0, 3)) {
-            1 -> GridModel(ViewKind.LIFE, s.span * 12, (age * 12).coerceIn(0.0, s.span * 12.0), 36, "month", null, sub,
+        return when (s.zoom.coerceIn(0, 4)) {
+            0 -> GridModel(ViewKind.LIFE, LIFETIMES, (LIFETIMES - 1 + (age / s.span).coerceIn(0.0, 1.0)), 50, "lifetime", null,
+                "Yours is the last one, filling now",
+                { i -> if (i == LIFETIMES - 1) "Your life" else "About ${INT.format((LIFETIMES - 1 - i) * 80L)} years ago" }, null)
+            2 -> GridModel(ViewKind.LIFE, s.span * 12, (age * 12).coerceIn(0.0, s.span * 12.0), 36, "month", null, sub,
                 { i -> val d = birth.plusMonths(i.toLong()); "${mon(d)} ${d.year} · age ${i / 12}" }, null)
-            2 -> GridModel(ViewKind.LIFE, s.span * 52, (age * 52.1775).coerceIn(0.0, s.span * 52.0), 52, "week", null, sub,
+            3 -> GridModel(ViewKind.LIFE, s.span * 52, (age * 52.1775).coerceIn(0.0, s.span * 52.0), 52, "week", null, sub,
                 { i -> val d = birth.plusWeeks(i.toLong()); "Week of ${d.dayOfMonth} ${mon(d)} ${d.year}" }, null)
-            3 -> {
+            4 -> {
                 val total = ChronoUnit.DAYS.between(birth, birth.plusYears(s.span.toLong())).toInt()
                 val today = now.toLocalDate()
                 val dayFrac = (now.toLocalTime().toSecondOfDay() / 86400.0)

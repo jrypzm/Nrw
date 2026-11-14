@@ -128,7 +128,7 @@ object Render {
         val lit = lit(s)
         when (kind) {
             WidgetKind.LIFE -> {
-                val m = Life.model(s.copy(zoom = 0), ViewKind.LIFE)
+                val m = Life.model(s.copy(zoom = Life.ZOOM_YEARS), ViewKind.LIFE)
                 val hl = Life.headline(s.copy(unit = 0), m)
                 val num = if (s.pct) "${floor(hl.pct).toInt()}%" else Life.whole(hl.value)
                 val label = if (s.pct) hl.word else "${hl.noun} ${hl.word}"
@@ -152,7 +152,7 @@ object Render {
                 }
             }
             WidgetKind.NUMBER -> {
-                val m = Life.model(s.copy(zoom = 0), ViewKind.LIFE)
+                val m = Life.model(s.copy(zoom = Life.ZOOM_YEARS), ViewKind.LIFE)
                 val hl = Life.headline(s.copy(unit = 0), m)
                 val cap = if (s.lived) "Years lived" else "Years left"
                 text(c, cv, if (s.pct) (if (s.lived) "Lived" else "Left") else cap, pad, pad + 12 * d, 12 * d, MUTE, R.font.inter_medium, W - 2 * pad)
@@ -229,7 +229,7 @@ object Render {
         val s = Prefs.load(c)
         if (s.birth == null) return "yrs."
         if (kind == WidgetKind.DAYS || kind == WidgetKind.TODAY) return "${Life.whole(Life.daysLeft(s).toDouble())} days left"
-        val m = Life.model(s.copy(zoom = 0), if (kind == WidgetKind.DECADE) ViewKind.DECADE else if (kind == WidgetKind.YEAR) ViewKind.YEAR else ViewKind.LIFE)
+        val m = Life.model(s.copy(zoom = Life.ZOOM_YEARS), if (kind == WidgetKind.DECADE) ViewKind.DECADE else if (kind == WidgetKind.YEAR) ViewKind.YEAR else ViewKind.LIFE)
         val hl = Life.headline(s.copy(unit = 0), m)
         return "${Life.whole(hl.value)} ${hl.noun} ${hl.word}"
     }
@@ -340,7 +340,7 @@ object Render {
         val bmp = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
         val cv = Canvas(bmp)
         cv.drawColor(Color.BLACK)
-        val m = Life.model(s.copy(zoom = 0), ViewKind.LIFE)
+        val m = Life.model(s.copy(zoom = Life.ZOOM_YEARS), ViewKind.LIFE)
         val hl = Life.headline(s.copy(unit = 0, lived = false, pct = false), m)
         val pad = 110f
         text(c, cv, Life.whole(hl.value), pad - 8f, 330f, 230f, Color.WHITE, R.font.interdisplay_extralight, tracking = -0.045f)

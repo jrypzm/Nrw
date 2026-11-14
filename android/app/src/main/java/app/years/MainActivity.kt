@@ -272,7 +272,7 @@ fun Home(st: AppState) {
                             val m = Life.model(s, kind, now)
                             Header(st, m)
                             Spacer(Modifier.height(if (s.style == NumberStyle.HERO) 40.dp else 32.dp))
-                            DotGrid(st, m, if (kind == ViewKind.LIFE && s.zoom == 0) ripple.value else 1f) { y -> sheet = Sheet.Milestone(y) }
+                            DotGrid(st, m, if (kind == ViewKind.LIFE && s.zoom == Life.ZOOM_YEARS) ripple.value else 1f) { y -> sheet = Sheet.Milestone(y) }
                             if (kind == ViewKind.LIFE) ZoomBar(st)
                             if (kind == ViewKind.YEAR) YearExtras(st, onLine = { sheet = Sheet.Line(it) }, onEvent = { sheet = Sheet.EventEdit(it) })
                         }

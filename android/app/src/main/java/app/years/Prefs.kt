@@ -18,6 +18,7 @@ enum class Often(val label: String, val perYear: Double) {
 data class Person(val name: String, val birthYear: Int, val often: Often)
 data class Event(val name: String, val date: LocalDate)
 data class Letter(val age: Int, val text: String, val written: LocalDate, val opened: Boolean = false)
+data class LastTime(val text: String, val added: LocalDate)
 
 data class Settings(
     val birth: LocalDate? = null,
@@ -33,13 +34,17 @@ data class Settings(
     val widgetLook: WidgetLook = WidgetLook.BLACK,
     val unit: Int = 0,
     val page: Int = 0,
-    val zoom: Int = 0,
+    val zoom: Int = 1,
     val people: List<Person> = emptyList(),
     val events: List<Event> = emptyList(),
     val letters: List<Letter> = emptyList(),
     val nudge: Boolean = false,
     val reviewedAge: Int = -1,
     val habits: Set<String> = emptySet(),
+    val photos: Set<Int> = emptySet(),
+    val voices: Set<Int> = emptySet(),
+    val lasts: List<LastTime> = emptyList(),
+    val guard: Set<String> = emptySet(),
 )
 
 object Prefs {
@@ -66,13 +71,17 @@ object Prefs {
             widgetLook = enumOr(p.getString("widgetLook", null), WidgetLook.BLACK),
             unit = p.getInt("unit", 0),
             page = p.getInt("page", 0),
-            zoom = p.getInt("zoom", 0),
+            zoom = p.getInt("zoom2", 1),
             people = arr(p.getString("people", null)) { o -> Person(o.getString("n"), o.getInt("y"), enumOr(o.optString("o"), Often.SEASONAL)) },
             events = arr(p.getString("events", null)) { o -> Event(o.getString("n"), LocalDate.parse(o.getString("d"))) },
             letters = arr(p.getString("letters", null)) { o -> Letter(o.getInt("a"), o.getString("t"), LocalDate.parse(o.getString("w")), o.optBoolean("o", false)) },
             nudge = p.getBoolean("nudge", false),
             reviewedAge = p.getInt("reviewedAge", -1),
             habits = p.getStringSet("habits", emptySet())?.toSet() ?: emptySet(),
+            photos = p.getStringSet("photos", emptySet())?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet(),
+            voices = p.getStringSet("voices", emptySet())?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet(),
+            lasts = arr(p.getString("lasts", null)) { o -> LastTime(o.getString("t"), LocalDate.parse(o.getString("d"))) },
+            guard = p.getStringSet("guard", emptySet())?.toSet() ?: emptySet(),
         )
     }
 
@@ -93,13 +102,17 @@ object Prefs {
             .putString("widgetLook", s.widgetLook.name)
             .putInt("unit", s.unit)
             .putInt("page", s.page)
-            .putInt("zoom", s.zoom)
+            .putInt("zoom2", s.zoom)
             .putString("people", JSONArray(s.people.map { JSONObject().put("n", it.name).put("y", it.birthYear).put("o", it.often.name) }).toString())
             .putString("events", JSONArray(s.events.map { JSONObject().put("n", it.name).put("d", it.date.toString()) }).toString())
             .putString("letters", JSONArray(s.letters.map { JSONObject().put("a", it.age).put("t", it.text).put("w", it.written.toString()).put("o", it.opened) }).toString())
             .putBoolean("nudge", s.nudge)
             .putInt("reviewedAge", s.reviewedAge)
             .putStringSet("habits", s.habits)
+            .putStringSet("photos", s.photos.map { it.toString() }.toSet())
+            .putStringSet("voices", s.voices.map { it.toString() }.toSet())
+            .putString("lasts", JSONArray(s.lasts.map { JSONObject().put("t", it.text).put("d", it.added.toString()) }).toString())
+            .putStringSet("guard", s.guard)
             .apply()
     }
 
