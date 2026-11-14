@@ -325,7 +325,7 @@ fun Header(st: AppState, m: GridModel) {
         m.context != null -> "${m.context} · ${m.sub}"
         else -> m.sub
     }
-    val canCycle = m.kind == ViewKind.LIFE && !s.pct && m.unit != "lifetime"
+    val canCycle = m.kind == ViewKind.LIFE && !s.pct && m.unit == "year"
     val key = if (beating) "beat" else "${s.style}|${s.lived}|${s.pct}|${s.unit}|${m.kind}"
     AnimatedContent(
         targetState = key, label = "hdr",
