@@ -47,7 +47,7 @@
   button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; -webkit-appearance: none; }
   input, textarea { font: inherit; color: inherit; -webkit-user-select: text; user-select: text; }
   [hidden] { display: none !important; }
-  .scr { position: fixed; inset: 0; }
+  .scr { position: fixed; left: 0; right: 0; top: 0; height: 100%; height: 100dvh; }
 
   /* ---------- shared controls ---------- */
   .round { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; transition: background .2s, transform .35s var(--spring); }
@@ -226,7 +226,7 @@
 
 <div class="layer" id="layer"><div class="scrim"></div><section class="sheet" id="sheet" role="dialog"><div class="grab"><i></i></div><div class="body" id="sheetBody"></div></section></div>
 <div class="toast" id="toast"></div>
-<div class="install" id="install"><svg viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3v13M8 8l5-5 5 5"/><path d="M7 12H5.5A1.5 1.5 0 0 0 4 13.5v8A1.5 1.5 0 0 0 5.5 23h15a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H19"/></svg><span>Tap <b>Share</b>, then <b>Add to Home Screen</b> to keep yrs. like an app.</span><button class="x" id="installX" aria-label="Dismiss">×</button></div>
+<div class="install" id="install"><svg viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3v13M8 8l5-5 5 5"/><path d="M7 12H5.5A1.5 1.5 0 0 0 4 13.5v8A1.5 1.5 0 0 0 5.5 23h15a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H19"/></svg><span id="installMsg">Tap <b>Share</b>, then <b>Add to Home Screen</b> to keep yrs. like an app.</span><button class="x" id="installX" aria-label="Dismiss">×</button></div>
 <label id="hapt" hidden><input type="checkbox" switch></label>
 
 <script>
@@ -254,8 +254,18 @@ let S = Object.assign({}, DEF, read(KEY, {}));
 // carry over a birthday from the first web version
 if (!S.birth) { const old = read('years.v1', null); if (old && old.birth) { S.birth = old.birth; S.span = old.span || 80; S.names = old.names || {}; } }
 let LINES = read(LKEY, {});
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
-const saveLines = () => { try { localStorage.setItem(LKEY, JSON.stringify(LINES)); } catch {} };
+// ?demo=YYYY-MM-DD runs a throwaway copy (used by the live phone on the website); nothing is saved
+const Q = new URLSearchParams(location.search), DEMO = /^\d{4}-\d{2}-\d{2}$/.test(Q.get('demo') || '') ? Q.get('demo') : null;
+if (DEMO) {
+  const by = +DEMO.slice(0, 4), t = new Date(), ev = new Date(t.getFullYear(), t.getMonth() + 4, 12);
+  S = Object.assign({}, DEF, { birth: DEMO, span: Math.min(120, Math.max(40, +Q.get('span') || 80)), ripple: true,
+    names: { [Math.max(0, t.getFullYear() - by - 7)]: 'Moved to Lisbon', [Math.max(0, t.getFullYear() - by + 6)]: 'See the northern lights' },
+    people: [{ name: 'Mum', born: by - 29, per: 4 }, { name: 'Sam', born: by + 1, per: 52 }],
+    events: [{ name: 'Trip to Japan', date: `${ev.getFullYear()}-${String(ev.getMonth() + 1).padStart(2, '0')}-12` }] });
+  LINES = { [`${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`]: 'Coffee on the balcony before anyone woke up.' };
+}
+const save = () => { if (DEMO) return; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+const saveLines = () => { if (DEMO) return; try { localStorage.setItem(LKEY, JSON.stringify(LINES)); } catch {} };
 const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
 const day0 = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -543,11 +553,18 @@ function wheel(items, index, width, onChange) {
   const w = document.createElement('div'); w.className = 'wheel'; w.style.width = width + 'px';
   w.innerHTML = '<div class="pad"></div>' + items.map(t => `<div class="it">${t}</div>`).join('') + '<div class="pad"></div>';
   const its = () => w.querySelectorAll('.it');
-  let cur = -1, settle;
+  let cur = -1, settle, touching = false, last = index;
   const mark = i => { if (i === cur) return; its()[cur]?.classList.remove('c'); its()[i]?.classList.add('c'); if (cur !== -1) tick(); cur = i; };
   const idx = () => Math.max(0, Math.min(items.length - 1, Math.round(w.scrollTop / 44)));
-  w.addEventListener('scroll', () => { mark(idx()); clearTimeout(settle); settle = setTimeout(() => onChange(idx()), 90); }, { passive: true });
-  w.set = (i, smooth) => { cur = -1; mark(i); w.scrollTo({ top: i * 44, behavior: smooth ? 'smooth' : 'instant' }); };
+  // a value only counts once the wheel has come to rest with no finger on it,
+  // so passing through a date that is out of range never changes the other wheels
+  const arm = () => { clearTimeout(settle); settle = setTimeout(() => { if (touching) return; const i = idx(); if (i !== last) { last = i; onChange(i); } }, 160); };
+  w.addEventListener('scroll', () => { mark(idx()); arm(); }, { passive: true });
+  w.addEventListener('touchstart', () => { touching = true; clearTimeout(settle); }, { passive: true });
+  const up = () => { touching = false; arm(); };
+  w.addEventListener('touchend', up); w.addEventListener('touchcancel', up);
+  w.addEventListener('click', e => { const it = e.target.closest('.it'); if (it) { const i = [...its()].indexOf(it); if (i >= 0) w.scrollTo({ top: i * 44, behavior: 'smooth' }); } });
+  w.set = (i, smooth) => { cur = -1; last = i; mark(i); w.scrollTo({ top: i * 44, behavior: smooth ? 'smooth' : 'instant' }); };
   requestAnimationFrame(() => w.set(index, false));
   return w;
 }
@@ -795,7 +812,7 @@ function renderExtras() {
 
 // ================================================= moments
 function checkMoments() {
-  if ($('layer').classList.contains('open') || !S.birth) return;
+  if (DEMO || $('layer').classList.contains('open') || !S.birth) return;
   const b = birth(), lived = Math.floor(age(b));
   const li = S.letters.findIndex(l => !l.opened && l.age <= lived);
   if (li >= 0) { openSheet('letter', li); return; }
@@ -932,8 +949,10 @@ const SHEETS = {
 // ================================================= install hint (Safari only, once a week at most)
 function maybeInstallHint() {
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  const ios = /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if (standalone || !ios) return;
+  const ua = navigator.userAgent, android = /Android/i.test(ua) || navigator.userAgentData?.platform === 'Android';
+  const ios = !android && (/iP(hone|od|ad)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1));
+  if (DEMO || standalone || (!ios && !android)) return;
+  if (android) $('installMsg').innerHTML = '<b>yrs. for Android</b> has widgets and a lock screen that updates itself. <a href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk" style="color:#fff;font-weight:600">Download</a>';
   const last = +(localStorage.getItem('yrs.hint') || 0); if (Date.now() - last < 7 * 864e5) return;
   const hide = () => { $('install').classList.remove('show'); try { localStorage.setItem('yrs.hint', Date.now()); } catch {} };
   setTimeout(() => { $('install').classList.add('show'); setTimeout(hide, 9000); $('pager').addEventListener('scroll', hide, { once: true, passive: true }); }, 2500);
@@ -950,6 +969,17 @@ document.addEventListener('visibilitychange', () => {
 let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (started) { renderAll(false); $('pager').scrollTo({ left: S.page * $('pager').clientWidth, behavior: 'instant' }); } }, 150); });
 setInterval(() => { if (S.birth && started && !document.hidden) { ['life', 'decade', 'year'].forEach(k => { grids[k].update(false); if (S.style !== 'live') renderHead(k); }); } }, 30000);
 
+if (DEMO) addEventListener('message', e => {
+  const d = e.data || {}; if (!started || typeof d !== 'object') return;
+  if (d.close) closeSheet();
+  if (typeof d.zoom === 'number' && d.zoom >= 0 && d.zoom <= 4) setZoom(d.zoom);
+  if (typeof d.page === 'number') $('pager').scrollTo({ left: Math.max(0, Math.min(4, d.page)) * $('pager').clientWidth, behavior: 'smooth' });
+  if (d.style && ['classic', 'hero', 'live'].includes(d.style)) { S.style = d.style; swapHead(); }
+  if (typeof d.lived === 'boolean' && d.lived !== S.lived) { S.lived = d.lived; swapHead(); }
+  if (d.sheet === 'milestone') openSheet('milestone', Math.floor(age(birth())) + 6);
+  if (d.sheet === 'settings') openSheet('settings');
+  if (d.ripple) { S.zoom === 1 ? rippleNow() : 0; }
+});
 if (S.birth) startHome(); else { $('ob').hidden = false; obRender(1); }
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();

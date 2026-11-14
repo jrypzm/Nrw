@@ -3,805 +3,717 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>yrs. · Your life, in dots</title>
-<meta name="description" content="yrs. shows every year of your life as a dot: the ones you've lived and the ones still ahead. Widgets, a living lock screen, the people you love, and nothing leaves your phone. Free for Android.">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
+<title>yrs. · Your life, in dots</title>
+<meta name="description" content="yrs. shows your whole life as dots: the years behind you, the years ahead, and the one you're in. Free for Android and iPhone. Nothing leaves your phone.">
 <meta property="og:title" content="yrs. · Your life, in dots">
-<meta property="og:description" content="Every year you've lived, and every year still ahead. Free for Android.">
-
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%233a3a3c'/%3E%3Cpath d='M18.6 28.2A14 14 0 1 0 45.4 28.2z' fill='%23fff'/%3E%3C/svg%3E">
+<meta property="og:description" content="Every year you've lived, and every year still ahead. Seen at a glance.">
+<meta property="og:image" content="https://jrypzm.github.io/yrs./web/icons/icon-512.png">
+<link rel="icon" href="web/icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="web/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&display=swap" rel="stylesheet">
 <style>
-  /* One page, pure black like the app: a huge type-led hero, then calm sections that each show one idea with a real screen. */
-  :root {
-    --bg: #000;
-    --fg: #f5f5f7;
-    --mute: #8e8e93;
-    --faint: #48484a;
-    --line: #1c1c1e;
-    --dot-empty: #232323;
-    --dot-part: #3a3a3c;
-    --surface: #0e0e10;
-    --font: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-    --wide: 1180px;
-    color-scheme: dark;
-  }
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font);
-    font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased; font-feature-settings: "tnum" 1, "cv11" 1;
-    overflow-x: hidden;
-  }
-  a { color: inherit; }
-  img { display: block; max-width: 100%; }
-  .wrap { max-width: var(--wide); margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); }
-  :focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; border-radius: 8px; }
+/* ------------------------------------------------------------------
+   yrs. · one black page. The dots tell the story; type does the rest.
+   ------------------------------------------------------------------ */
+:root {
+  --bg: #000; --fg: #f5f5f7; --mute: #86868b; --faint: #48484a; --line: #1d1d1f; --panel: #0b0b0c;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+  --ease: cubic-bezier(.16, 1, .3, 1); --spring: cubic-bezier(.2, .9, .25, 1);
+  --gut: max(24px, env(safe-area-inset-left)); --max: 1320px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 17px; line-height: 1.5; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-feature-settings: "tnum" 1, "ss01" 1; overflow-x: clip; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+::selection { background: #fff; color: #000; }
+.wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 var(--gut); }
+.num { font-variant-numeric: tabular-nums; }
 
-  /* ---------- nav ---------- */
-  nav { position: sticky; top: 0; z-index: 20; background: rgba(0,0,0,.72); backdrop-filter: saturate(160%) blur(18px); -webkit-backdrop-filter: saturate(160%) blur(18px); border-bottom: 1px solid transparent; transition: border-color .3s; }
-  nav.scrolled { border-bottom-color: var(--line); }
-  nav .wrap { display: flex; align-items: center; height: 64px; gap: 28px; }
-  .mark { display: inline-flex; align-items: flex-end; text-decoration: none; font-weight: 750; letter-spacing: -0.06em; font-size: 24px; line-height: 1; font-variation-settings: "opsz" 32; }
-  .mark svg { width: .26em; height: .26em; margin-left: .05em; margin-bottom: .07em; }
-  nav .links { display: flex; gap: 26px; margin-left: auto; font-size: 15px; color: var(--mute); }
-  nav .links a { text-decoration: none; transition: color .2s; }
-  nav .links a:hover { color: var(--fg); }
-  .pill { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 18px; border-radius: 19px; background: var(--fg); color: #000; text-decoration: none; font-weight: 600; font-size: 15px; transition: transform .25s cubic-bezier(.2,.9,.25,1), background .2s; }
-  .pill:hover { background: #fff; transform: translateY(-1px); }
-  .pill:active { transform: scale(.97); }
-  @media (max-width: 720px) { nav .links { display: none; } nav .pill { margin-left: auto; } }
+/* ---------- nav ---------- */
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; transition: transform .6s var(--ease); }
+nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 72px; padding-top: env(safe-area-inset-top); }
+nav.away { transform: translateY(-110%); }
+.logo { display: inline-flex; align-items: flex-end; font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.06em; line-height: 1; }
+.logo i { position: relative; width: .26em; height: .26em; margin: 0 0 .1em .05em; border-radius: 50%; background: #3a3a3c; overflow: hidden; }
+.logo i::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: var(--f, 0%); background: var(--fg); transition: height 2s var(--ease); }
+nav .links { display: flex; align-items: center; gap: 30px; font-size: 14px; color: var(--mute); }
+nav .links a:not(.btn) { transition: color .2s; } nav .links a:not(.btn):hover { color: var(--fg); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 40px; padding: 0 18px; border-radius: 999px; background: var(--fg); color: #000; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; transition: transform .5s var(--spring), background .2s; }
+.btn:hover { background: #fff; transform: scale(1.03); } .btn:active { transform: scale(.97); }
+.btn.big { height: 60px; padding: 0 30px; font-size: 17px; }
+.btn.ghost { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1px #3a3a3c; }
+.btn.ghost:hover { box-shadow: inset 0 0 0 1px var(--fg); background: transparent; }
+.btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
+@media (max-width: 720px) { nav .links a:not(.btn) { display: none; } }
 
-  /* ---------- hero ---------- */
-  .hero { padding: clamp(56px, 10vw, 120px) 0 clamp(40px, 7vw, 90px); }
-  .hero .wrap { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(32px, 6vw, 80px); align-items: center; }
-  @media (max-width: 900px) { .hero .wrap { grid-template-columns: 1fr; } }
-  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); margin-bottom: 22px; }
-  h1 { margin: 0; font-weight: 700; font-size: clamp(54px, 9.4vw, 128px); line-height: .92; letter-spacing: -0.055em; font-variation-settings: "opsz" 32; text-wrap: balance; }
-  h1 .soft { color: var(--faint); }
-  .lede { margin: 28px 0 0; max-width: 540px; font-size: clamp(18px, 2vw, 21px); color: var(--mute); line-height: 1.5; }
-  .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-top: 38px; }
-  .download {
-    display: inline-flex; align-items: center; gap: 14px; height: 64px; padding: 0 30px 0 24px; border-radius: 32px;
-    background: var(--fg); color: #000; text-decoration: none; font-weight: 650; font-size: 18px;
-    box-shadow: 0 0 0 0 rgba(255,255,255,.0); transition: transform .3s cubic-bezier(.2,.9,.25,1), box-shadow .4s, background .2s;
-  }
-  .download:hover { background: #fff; box-shadow: 0 18px 60px -12px rgba(255,255,255,.28); }
-  .download:active { transform: scale(.98); }
-  .download svg { width: 24px; height: 24px; }
-  .download small { display: block; font-size: 12.5px; font-weight: 500; color: #48484a; margin-top: 2px; }
-  .download .t { display: flex; flex-direction: column; line-height: 1.15; }
-  .meta { font-size: 14px; color: var(--mute); line-height: 1.6; }
-  .meta b { color: var(--fg); font-weight: 600; }
+/* ---------- the stage: one WebGL canvas behind the hero and the story ---------- */
+#stage { position: fixed; left: 0; right: 0; top: 0; height: 100vh; height: 100lvh; z-index: 0; pointer-events: none; }
+#stage canvas { width: 100%; height: 100%; display: block; }
 
-  /* phone frames around real renders */
+/* ---------- hero ---------- */
+.hero { position: relative; z-index: 2; height: 100svh; min-height: 600px; }
+.hero .wrap { height: 100%; display: flex; flex-direction: column; justify-content: center; }
+.hero .copy { width: min(48%, 600px); }
+.hero h1 { font-family: var(--display); font-weight: 600; font-size: clamp(54px, 7.4vw, 118px); line-height: .94; letter-spacing: -0.045em; }
+.hero h1 .ln { display: block; overflow: hidden; padding-bottom: .06em; }
+.hero h1 .ln span { display: block; transform: translateY(105%); transition: transform 1.3s var(--ease); }
+.ready .hero h1 .ln span { transform: none; }
+.ready .hero h1 .ln:nth-child(2) span { transition-delay: .09s; }
+.hero .lede { margin-top: 30px; max-width: 30em; font-size: clamp(17px, 1.35vw, 20px); line-height: 1.5; color: var(--mute); }
+.hero .lede b { color: var(--fg); font-weight: 500; }
+.yr { position: relative; display: inline-block; color: var(--fg); font-weight: 600; border-bottom: 1px dashed #5a5a5e; cursor: pointer; }
+.yr select { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 16px; }
+.hero .cta { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 12px; }
+.ticker { margin-top: 30px; font-size: 13px; color: var(--faint); letter-spacing: .01em; }
+.ticker b { color: var(--mute); font-weight: 500; }
+.fade-in { opacity: 0; transform: translateY(14px); transition: opacity 1.2s var(--ease), transform 1.4s var(--ease); }
+.ready .fade-in { opacity: 1; transform: none; }
+.ready .fade-in.d1 { transition-delay: .35s; } .ready .fade-in.d2 { transition-delay: .5s; } .ready .fade-in.d3 { transition-delay: .65s; }
+.scrollhint { position: absolute; left: 50%; bottom: max(26px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: 1px; height: 46px; background: linear-gradient(#3a3a3c, #3a3a3c) no-repeat; overflow: hidden; }
+.scrollhint::after { content: ""; position: absolute; left: 0; top: -40%; width: 1px; height: 40%; background: var(--fg); animation: drip 2.4s var(--ease) infinite; }
+@keyframes drip { to { top: 110%; } }
 
-  /* ---------- sections ---------- */
-  section { padding: clamp(70px, 11vw, 140px) 0; border-top: 1px solid var(--line); }
-  h2 { margin: 0; font-weight: 700; font-size: clamp(40px, 6.2vw, 80px); line-height: .98; letter-spacing: -0.05em; font-variation-settings: "opsz" 32; text-wrap: balance; }
-  .sub { margin: 22px 0 0; max-width: 560px; color: var(--mute); font-size: clamp(17px, 1.8vw, 20px); line-height: 1.55; }
+/* ---------- story: pinned captions over the morphing dots ---------- */
+#story { position: relative; z-index: 2; }
+#story .pin { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.cap { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.cap .wrap > div { width: min(44%, 540px); }
+.cap .big { font-family: var(--display); font-weight: 200; font-size: clamp(72px, 10.5vw, 176px); line-height: .9; letter-spacing: -0.055em; }
+.cap p { margin-top: 22px; font-family: var(--display); font-size: clamp(21px, 2vw, 30px); line-height: 1.25; letter-spacing: -0.02em; color: var(--mute); font-weight: 500; }
+.cap p b { color: var(--fg); font-weight: 500; }
+.cap .ln { display: block; overflow: hidden; }
+.cap .ln > span { display: block; will-change: transform; }
+.cap.final .big { font-weight: 600; letter-spacing: -0.045em; font-size: clamp(54px, 7vw, 112px); line-height: .95; }
+.progress { position: absolute; left: var(--gut); bottom: max(28px, env(safe-area-inset-bottom)); display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--faint); letter-spacing: .04em; text-transform: uppercase; }
+.progress i { width: 18px; height: 2px; border-radius: 1px; background: #2c2c2e; overflow: hidden; position: relative; }
+.progress i b { position: absolute; inset: 0; background: var(--fg); transform-origin: left; transform: scaleX(var(--p, 0)); }
 
-  /* try it */
-  .try { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 90px); align-items: center; margin-top: 56px; }
-  @media (max-width: 900px) { .try { grid-template-columns: 1fr; } }
-  .field { display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
-  .field label { font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
-  .field input, .field select { height: 58px; border-radius: 16px; border: 1px solid #2a2a2c; background: var(--surface); color: var(--fg); font: 500 20px var(--font); padding: 0 18px; color-scheme: dark; }
-  .field input:focus, .field select:focus { outline: none; border-color: var(--mute); }
-  .row2 { display: flex; gap: 12px; flex-wrap: wrap; }
-  .readout { margin-top: 34px; }
-  .big { font-weight: 200; font-size: clamp(76px, 11vw, 140px); line-height: .9; letter-spacing: -0.05em; font-variation-settings: "opsz" 32; }
-  .readout .unit { font-size: 20px; color: var(--mute); margin-top: 10px; }
-  .readout .line { margin-top: 18px; color: var(--mute); font-size: 16px; }
-  .readout .line b { color: var(--fg); font-weight: 600; }
-  #grid { width: 100%; max-width: 520px; height: auto; display: block; margin: 0 auto; }
+/* ---------- regular sections ---------- */
+.sec { position: relative; z-index: 3; background: var(--bg); padding: clamp(110px, 14vw, 200px) 0; }
+.sec.tight { padding-top: 0; }
+.kicker { font-size: 14px; color: var(--mute); letter-spacing: -0.005em; display: flex; align-items: center; gap: 10px; }
+.kicker::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--fg); }
+.h2 { font-family: var(--display); font-weight: 600; font-size: clamp(42px, 5.6vw, 88px); line-height: .98; letter-spacing: -0.045em; margin-top: 22px; }
+.h2 .m { color: var(--faint); }
+.lead { margin-top: 24px; max-width: 34em; font-size: clamp(17px, 1.3vw, 19px); color: var(--mute); }
+.reveal .ln { display: block; overflow: hidden; padding-bottom: .05em; }
+.reveal .ln > span { display: block; transform: translateY(105%); transition: transform 1.2s var(--ease); }
+.reveal.in .ln > span { transform: none; }
+.reveal.in .ln:nth-child(2) > span { transition-delay: .08s; } .reveal.in .ln:nth-child(3) > span { transition-delay: .16s; }
+.soft { opacity: 0; transform: translateY(24px); transition: opacity 1.1s var(--ease), transform 1.3s var(--ease); }
+.soft.in { opacity: 1; transform: none; }
 
-  /* features */
-  .feat { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 96px); align-items: center; }
-  .feat.flip .copy { order: 2; }
-  @media (max-width: 900px) { .feat { grid-template-columns: 1fr; } .feat.flip .copy { order: 0; } }
-  .copy ul { list-style: none; padding: 0; margin: 30px 0 0; display: grid; gap: 14px; }
-  .copy li { display: grid; grid-template-columns: 14px 1fr; gap: 14px; color: var(--mute); font-size: 16.5px; }
-  .copy li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--fg); margin-top: 9px; }
-  .copy li b { color: var(--fg); font-weight: 600; }
-  .shots { display: flex; gap: 22px; justify-content: center; }
-  .zoomwords { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 26px; font-size: 15px; color: var(--faint); }
-  .zoomwords span:nth-child(4) { color: var(--fg); font-weight: 600; }
+/* ---------- the live phone ---------- */
+.app { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(40px, 7vw, 120px); align-items: start; margin-top: clamp(56px, 7vw, 96px); }
+.feats { list-style: none; border-top: 1px solid var(--line); counter-reset: f; }
+.feats li { border-bottom: 1px solid var(--line); }
+.feats button { width: 100%; text-align: left; display: grid; grid-template-columns: 48px 1fr; gap: 0 12px; padding: 26px 0; transition: color .3s; color: var(--faint); }
+.feats button::before { counter-increment: f; content: counter(f, decimal-leading-zero); font-size: 13px; padding-top: .55em; letter-spacing: .02em; }
+.feats .t { font-family: var(--display); font-size: clamp(22px, 2.1vw, 32px); font-weight: 500; letter-spacing: -0.025em; line-height: 1.2; transition: color .35s; }
+.feats .d { grid-column: 2; max-height: 0; overflow: hidden; color: var(--mute); font-size: 16px; line-height: 1.5; transition: max-height .7s var(--ease), opacity .5s, margin .5s var(--ease); opacity: 0; }
+.feats button:hover .t { color: #a1a1a6; }
+.feats .on button { color: var(--mute); } .feats .on .t { color: var(--fg); } .feats .on .d { max-height: 160px; opacity: 1; margin-top: 10px; }
+.phonecol { position: sticky; top: max(96px, calc(50svh - 360px)); }
+.device { --w: clamp(270px, 25vw, 340px); position: relative; width: var(--w); aspect-ratio: 390 / 844; border-radius: calc(var(--w) * .155); padding: calc(var(--w) * .032); background: #0d0d0e; box-shadow: inset 0 0 0 1.5px #2a2a2c, inset 0 0 0 4px #000, 0 60px 120px -40px rgba(255,255,255,.08); }
+.device .screen { position: relative; width: 100%; height: 100%; border-radius: calc(var(--w) * .125); overflow: hidden; background: #000; isolation: isolate; }
+.device .island { position: absolute; z-index: 3; top: calc(var(--w) * .033); left: 50%; transform: translateX(-50%); width: 31%; height: calc(var(--w) * .088); border-radius: 99px; background: #000; }
+.device iframe { position: absolute; left: 0; top: 0; width: 390px; height: 844px; border: 0; transform-origin: 0 0; background: #000; }
+.device .hand { position: absolute; inset: 0; z-index: 4; display: none; }
+.phonecap { margin-top: 18px; text-align: center; font-size: 13px; color: var(--faint); }
+.phonecap a { color: var(--mute); border-bottom: 1px solid #3a3a3c; }
+.chips { display: none; }
 
-  /* wallpapers, drawn live */
-  .walls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; margin-top: 60px; }
-  @media (max-width: 900px) { .walls { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  .wall { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-  .wall .screen { position: relative; aspect-ratio: 9 / 19.5; border-radius: 30px; overflow: hidden; background: #000; box-shadow: 0 0 0 1.5px #2a2a2c, 0 0 0 7px #0d0d0f, 0 0 0 8px #262628; }
-  .wall canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .wall .clock { position: absolute; left: 0; right: 0; top: 11%; text-align: center; font-weight: 300; font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -0.02em; z-index: 2; }
-  .wall .date { position: absolute; left: 0; right: 0; top: 7.5%; text-align: center; font-size: 11px; font-weight: 600; z-index: 2; color: #e5e5ea; }
-  .wall h3 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
-  .wall p { margin: 0; font-size: 14.5px; color: var(--mute); line-height: 1.5; }
+/* ---------- lock screens ---------- */
+.locks { margin-top: clamp(56px, 7vw, 96px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(14px, 2vw, 28px); }
+.lock figure { margin: 0; }
+.lock .device { --w: 100%; width: 100%; box-shadow: inset 0 0 0 1.5px #2a2a2c, inset 0 0 0 4px #000; }
+.lock canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lock .clock { position: absolute; z-index: 2; left: 0; right: 0; top: 13%; text-align: center; font-family: var(--display); }
+.lock .clock small { display: block; font-size: max(10px, .9cqw); font-weight: 500; color: rgba(255,255,255,.7); }
+.lock .clock b { display: block; font-weight: 600; font-size: clamp(36px, 5.2vw, 76px); line-height: 1; letter-spacing: -0.03em; margin-top: 2px; }
+.lock .screen { container-type: inline-size; }
+.lock .clock small { font-size: 5.2cqw; } .lock .clock b { font-size: 25cqw; }
+.lock figcaption { margin-top: 18px; font-size: 15px; color: var(--mute); display: flex; justify-content: space-between; gap: 8px; }
+.lock figcaption b { color: var(--fg); font-weight: 500; }
 
-  /* widgets */
-  .widgets { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 90px); align-items: center; }
-  @media (max-width: 900px) { .widgets { grid-template-columns: 1fr; } }
+/* ---------- widgets ---------- */
+.home { margin-top: clamp(56px, 7vw, 96px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(40px, 7vw, 120px); align-items: center; }
+.wgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(10px, 1.2vw, 16px); }
+.wg { position: relative; border-radius: clamp(20px, 2.2vw, 30px); background: #0e0e0f; box-shadow: inset 0 0 0 1px #1c1c1e; overflow: hidden; aspect-ratio: 1; }
+.wg.w2 { grid-column: span 2; aspect-ratio: 2.08 / 1; } .wg.sq2 { grid-column: span 2; grid-row: span 2; aspect-ratio: 1; }
+.wg canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.wlist { list-style: none; }
+.wlist li { display: flex; gap: 18px; padding: 18px 0; border-bottom: 1px solid var(--line); font-size: 17px; color: var(--mute); }
+.wlist li b { color: var(--fg); font-weight: 500; min-width: 6.5em; }
 
+/* ---------- statement ---------- */
+.statement { font-family: var(--display); font-weight: 600; font-size: clamp(44px, 7.6vw, 128px); line-height: .95; letter-spacing: -0.05em; }
+.statement .m { color: #2c2c2e; transition: color 1.2s var(--ease); }
+.statement.in .m { color: var(--faint); }
+.facts { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; border-top: 1px solid var(--line); padding-top: 28px; }
+.facts b { display: block; font-weight: 500; font-size: 17px; margin-bottom: 6px; }
+.facts p { color: var(--mute); font-size: 16px; line-height: 1.5; }
 
-  /* ---------- devices: every screen is drawn live, so it stays sharp at any size ---------- */
-  .device {
-    --w: min(100%, 320px);
-    position: relative; width: var(--w); aspect-ratio: 9 / 19.5; margin: 0 auto;
-    border-radius: 13.5% / 6.2%; padding: 2.4%;
-    background: linear-gradient(150deg, #5b5b60 0%, #1b1b1d 18%, #0b0b0c 50%, #1d1d20 82%, #57575c 100%);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.10), inset 0 0 0 3px #050506, 0 60px 120px -40px rgba(255,255,255,.14), 0 30px 60px -10px rgba(0,0,0,.8);
-  }
-  .device::before { content: ""; position: absolute; right: -1.2%; top: 21%; width: 1.4%; height: 9%; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, #2a2a2d, #5a5a5f); }
-  .device::after { content: ""; position: absolute; right: -1.2%; top: 33%; width: 1.4%; height: 5%; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, #2a2a2d, #5a5a5f); }
-  .screen { position: relative; height: 100%; border-radius: 11.6% / 5.4%; background: #000; overflow: hidden; container-type: inline-size; color: #f5f5f7; font-feature-settings: "tnum" 1; }
-  .screen .cam { position: absolute; top: 2.9cqw; left: 50%; width: 3.6cqw; height: 3.6cqw; margin-left: -1.8cqw; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #2a2a33 0 18%, #0a0a0c 45%, #000 70%); box-shadow: 0 0 0 .5cqw #050505; z-index: 5; }
-  .sb { position: absolute; top: 0; left: 0; right: 0; height: 9cqw; display: flex; align-items: center; justify-content: space-between; padding: 0 7cqw; font-size: 3.6cqw; font-weight: 600; letter-spacing: -0.01em; z-index: 4; }
-  .sb svg { height: 3.2cqw; width: auto; margin-left: 1.4cqw; }
-  .app { position: absolute; inset: 9cqw 0 0 0; padding: 4cqw 6cqw 0; }
-  .app .top { display: flex; align-items: center; justify-content: space-between; height: 8cqw; }
-  .app .top b { font-weight: 750; letter-spacing: -0.06em; font-size: 4.4cqw; color: #48484a; font-variation-settings: "opsz" 32; }
-  .app .more { width: 8cqw; height: 8cqw; border-radius: 50%; background: #1c1c1e; display: grid; place-items: center; }
-  .app .more i { display: flex; gap: .8cqw; } .app .more i::before, .app .more i::after, .app .more i span { content: ""; width: .95cqw; height: .95cqw; border-radius: 50%; background: #f5f5f7; display: block; }
-  .app h4 { margin: 7cqw 0 0; font-size: 5.7cqw; font-weight: 640; letter-spacing: -0.025em; line-height: 1.15; font-variation-settings: "opsz" 32; }
-  .app .s { margin-top: .8cqw; font-size: 3.85cqw; color: #8e8e93; font-weight: 500; }
-  .app canvas.g { display: block; width: 100%; margin-top: 7cqw; }
-  .zoom { display: flex; justify-content: space-between; margin-top: 4.5cqw; font-size: 3.2cqw; color: #48484a; }
-  .zoom .on { color: #f5f5f7; font-weight: 600; }
-  .ctl { position: absolute; left: 6cqw; right: 6cqw; bottom: 6.5cqw; display: flex; align-items: center; justify-content: space-between; }
-  .ctl .pl { height: 9cqw; padding: 0 3.2cqw 0 4.2cqw; border-radius: 4.5cqw; background: #1c1c1e; display: flex; align-items: center; gap: 1.6cqw; font-size: 3.85cqw; font-weight: 500; }
-  .ctl .pl svg { width: 2cqw; height: 3cqw; }
-  .ctl .pd { display: flex; gap: 2.4cqw; align-items: center; }
-  .ctl .pd i { width: 1.8cqw; height: 1.8cqw; border-radius: 50%; background: #48484a; } .ctl .pd i.on { background: #f5f5f7; } .ctl .pd i.sm { width: 1.3cqw; height: 1.3cqw; }
-  .ctl .rb { width: 9cqw; height: 9cqw; border-radius: 50%; background: #1c1c1e; display: grid; place-items: center; font-size: 3.85cqw; font-weight: 600; }
-  .home-ind { position: absolute; bottom: 1.8cqw; left: 50%; width: 34cqw; height: 1.2cqw; margin-left: -17cqw; border-radius: 1cqw; background: rgba(255,255,255,.55); }
-  .card2 { margin-top: 3.6cqw; border-radius: 4.6cqw; background: #1c1c1e; padding: 4.6cqw; }
-  .card2 .hd { display: flex; justify-content: space-between; align-items: baseline; font-size: 4.2cqw; font-weight: 600; }
-  .card2 .hd span { font-size: 3.1cqw; font-weight: 400; color: #8e8e93; }
-  .card2 .num { display: flex; align-items: baseline; gap: 2cqw; margin-top: 2cqw; }
-  .card2 .num b { font-weight: 200; font-size: 13cqw; letter-spacing: -0.045em; line-height: 1; font-variation-settings: "opsz" 32; }
-  .card2 .num span { font-size: 3.7cqw; color: #8e8e93; }
-  .card2 .f { font-size: 3.1cqw; color: #8e8e93; margin: 1cqw 0 3cqw; }
-  .card2 canvas { display: block; width: 100%; }
-  .legend { margin-top: 5cqw; display: grid; gap: 2.6cqw; font-size: 3.7cqw; }
-  .legend div { display: flex; align-items: center; gap: 3cqw; color: #8e8e93; }
-  .legend div i { width: 2.4cqw; height: 2.4cqw; border-radius: 50%; }
-  .legend div b { margin-left: auto; color: #f5f5f7; font-weight: 500; }
-  .legend div.y { color: #f5f5f7; } .legend div.y b { font-weight: 650; }
-  .device { --px: 0px; --py: 0px; --rx: 0deg; --ry: 0deg; --rot: 0deg; --s: 1; transform: perspective(1400px) translate3d(var(--px), var(--py), 0) rotateX(var(--rx)) rotateY(var(--ry)) rotate(var(--rot)) scale(var(--s)); will-change: transform; transform-style: preserve-3d; backface-visibility: hidden; }
-  .hero .device { --w: min(100%, 360px, calc((100svh - 170px) / 2.17)); }
-  @media (max-height: 820px) and (min-width: 901px) { .hero { padding-top: 40px; padding-bottom: 40px; } }
-  .shots .device { --w: min(47%, 300px); margin: 0; }
-  @media (max-width: 900px) { .hero .device { --w: min(76%, 330px); margin-top: 28px; } }
-  @media (max-width: 380px) { .shots { gap: 12px; } .shots .device { --w: 48%; } }
+/* ---------- get it ---------- */
+.get { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-top: clamp(56px, 7vw, 96px); }
+.plat { position: relative; border-radius: 32px; padding: clamp(28px, 3.4vw, 48px); background: var(--panel); box-shadow: inset 0 0 0 1px #1c1c1e; display: flex; flex-direction: column; min-height: 400px; overflow: hidden; }
+.plat h3 { font-family: var(--display); font-size: clamp(30px, 3vw, 44px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; }
+.plat .sub { margin-top: 10px; color: var(--mute); font-size: 16px; }
+.plat ol { list-style: none; counter-reset: s; margin: 28px 0 32px; }
+.plat ol li { counter-increment: s; display: grid; grid-template-columns: 28px 1fr; padding: 9px 0; color: var(--mute); font-size: 15px; line-height: 1.45; }
+.plat ol li::before { content: counter(s); color: var(--fg); font-weight: 600; }
+.plat ol li b { color: var(--fg); font-weight: 500; }
+.plat .go { margin-top: auto; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.plat .ver { font-size: 13px; color: var(--faint); }
 
-  /* widgets, drawn live */
-  .widgetboard { container-type: inline-size; padding: 5cqw; border-radius: 9cqw; background: radial-gradient(130% 100% at 15% 0%, #222226 0%, #0b0b0d 55%, #050506 100%); box-shadow: inset 0 0 0 1px #1f1f22, 0 40px 100px -40px rgba(255,255,255,.12); display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; }
-  .wd { position: relative; border-radius: 8cqw; background: #000; box-shadow: inset 0 0 0 .35cqw #262628; padding: 6cqw; aspect-ratio: 1; overflow: hidden; }
-  .wd.wide { grid-column: span 2; aspect-ratio: 2.05; }
-  .wd.slim { grid-column: span 2; aspect-ratio: 4.3; display: flex; align-items: center; gap: 5cqw; }
-  .wd .cap { font-size: 3.3cqw; color: #8e8e93; font-weight: 500; }
-  .wd .n { position: absolute; left: 6cqw; bottom: 5cqw; font-weight: 200; font-size: 17cqw; letter-spacing: -0.05em; line-height: .9; font-variation-settings: "opsz" 32; }
-  .wd .n small { display: block; font-size: 3.3cqw; letter-spacing: 0; font-weight: 500; color: #8e8e93; margin-top: 1.6cqw; }
-  .wd.wide .row { display: grid; grid-template-columns: 1fr 1.25fr; gap: 6cqw; align-items: center; height: 100%; }
-  .wd.wide .n { position: static; font-size: 16cqw; }
-  .wd .t { font-size: 4cqw; font-weight: 600; } .wd .t + .cap { margin-top: .6cqw; }
-  .wd canvas { display: block; width: 100%; }
+/* ---------- footer: the wordmark, bleeding off the page like the icon ---------- */
+footer { position: relative; z-index: 3; background: var(--bg); overflow: hidden; }
+footer .row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 40px 0 0; font-size: 13px; color: var(--faint); border-top: 1px solid var(--line); }
+footer .row a:hover { color: var(--fg); }
+.bleed { display: block; width: 100%; height: auto; margin-top: clamp(40px, 6vw, 90px); margin-bottom: -1px; }
 
-  /* small cards */
-  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border-radius: 26px; overflow: hidden; margin-top: 60px; }
-  @media (max-width: 900px) { .cards { grid-template-columns: 1fr; } }
-  .card { background: var(--bg); padding: 34px 30px 36px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-  .card .ic { width: 34px; height: 34px; }
-  .card h3 { margin: 6px 0 0; font-size: 20px; font-weight: 650; letter-spacing: -0.02em; }
-  .card p { margin: 0; color: var(--mute); font-size: 15.5px; line-height: 1.55; }
-
-  /* install */
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 56px; counter-reset: s; }
-  @media (max-width: 900px) { .steps { grid-template-columns: 1fr; } }
-  .step { border-radius: 24px; background: var(--surface); box-shadow: inset 0 0 0 1px #1c1c1e; padding: 30px; }
-  .step .n { width: 34px; height: 34px; border-radius: 50%; background: var(--fg); color: #000; display: grid; place-items: center; font-weight: 700; font-size: 15px; }
-  .step h3 { margin: 22px 0 8px; font-size: 20px; font-weight: 650; letter-spacing: -0.02em; }
-  .step p { margin: 0; color: var(--mute); font-size: 15.5px; }
-
-  /* faq */
-  .faq { margin-top: 50px; max-width: 820px; }
-  details { border-top: 1px solid var(--line); padding: 22px 0; }
-  details:last-child { border-bottom: 1px solid var(--line); }
-  summary { cursor: pointer; list-style: none; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; display: flex; justify-content: space-between; gap: 20px; }
-  summary::-webkit-details-marker { display: none; }
-  summary::after { content: "+"; color: var(--mute); font-weight: 300; font-size: 26px; line-height: 1; transition: transform .3s; }
-  details[open] summary::after { transform: rotate(45deg); }
-  details p { margin: 14px 0 0; color: var(--mute); max-width: 680px; }
-
-  /* final */
-  .final { text-align: center; padding: clamp(90px, 14vw, 180px) 0; }
-  .final h2 { font-size: clamp(48px, 8vw, 104px); }
-  .final .cta { justify-content: center; }
-  footer { border-top: 1px solid var(--line); padding: 34px 0 calc(34px + env(safe-area-inset-bottom)); color: var(--faint); font-size: 14px; }
-  footer .wrap { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; }
-  footer a { text-decoration: none; color: var(--mute); }
-
-  /* entrance */
-  /* ---------- motion: transform and opacity only, long soft easing ---------- */
-  :root { --ease: cubic-bezier(.16, 1, .3, 1); --ease-in-out: cubic-bezier(.65, 0, .35, 1); }
-  .rise { opacity: 0; transform: translate3d(0, 34px, 0); transition: opacity 1.1s var(--ease) var(--d, 0s), transform 1.3s var(--ease) var(--d, 0s); will-change: opacity, transform; }
-  .rise.in { opacity: 1; transform: none; }
-  .fade { opacity: 0; transition: opacity 1.4s var(--ease) var(--d, 0s); }
-  .fade.in { opacity: 1; }
-  /* masked lines and words slide up out of an invisible edge */
-  .ln, .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .12em; margin-bottom: -.12em; }
-  .ln { display: block; }
-  .ln > span, .w > span { display: inline-block; transform: translate3d(0, 108%, 0); transition: transform 1.25s var(--ease) var(--d, 0s); will-change: transform; }
-  .ln.in > span, .w.in > span, .words.in .w > span { transform: none; }
-  .intro { opacity: 0; transform: translate3d(0, 22px, 0); transition: opacity 1.2s var(--ease) var(--d, 0s), transform 1.4s var(--ease) var(--d, 0s); }
-  body.ready .intro { opacity: 1; transform: none; }
-  /* hover only where there is a real pointer */
-  @media (hover: none) { .download:hover, .pill:hover { transform: none; box-shadow: none; } }
-  @media (prefers-reduced-motion: reduce) {
-    .rise, .fade, .intro, .ln > span, .w > span { opacity: 1 !important; transform: none !important; transition: none !important; }
-    html { scroll-behavior: auto; }
-  }
-
-  /* ---------- every screen size ---------- */
-  section { scroll-margin-top: 70px; }
-  nav { transition: transform .6s var(--ease), border-color .3s; }
-  nav.hide { transform: translate3d(0, -100%, 0); }
-  @media (min-width: 1600px) { :root { --wide: 1340px; } body { font-size: 18px; } }
-  @media (min-width: 2200px) { :root { --wide: 1560px; } body { font-size: 20px; } .hero .device { --w: 420px; } .shots .device { --w: 340px; } .walls { gap: 34px; } }
-  @media (max-width: 900px) { .cta { gap: 16px; } }
-  @media (max-width: 480px) {
-    body { font-size: 16px; }
-    .hero { padding-top: 40px; }
-    .download { width: 100%; justify-content: center; height: 62px; }
-    .cta { flex-direction: column; align-items: stretch; }
-    .meta { text-align: center; }
-    .walls { gap: 14px; }
-    .wall .screen { border-radius: 22px; }
-    .card { padding: 28px 22px 30px; }
-    .step { padding: 24px; }
-    .field input, .field select { height: 54px; font-size: 18px; }
-  }
-  @media (max-width: 480px) { .vd { display: none; } }
-  @media (max-width: 360px) { .wrap { padding-left: 16px; padding-right: 16px; } h1 { font-size: 50px; } }
-  @media (max-height: 520px) and (orientation: landscape) { .hero .wrap { grid-template-columns: 1.2fr .8fr; } .hero .device { --w: 230px; margin-top: 0; } }
+/* ---------- small screens ---------- */
+@media (max-width: 899px) {
+  .hero .wrap { justify-content: flex-start; padding-top: calc(env(safe-area-inset-top) + 104px); }
+  .hero .copy { width: 100%; }
+  .hero h1 { font-size: clamp(46px, 13.4vw, 72px); }
+  .hero .lede { margin-top: 18px; font-size: 16px; }
+  .hero .cta { margin-top: 22px; } .hero .cta .btn { height: 48px; padding: 0 20px; font-size: 15px; }
+  .ticker { display: none; }
+  .scrollhint { display: none; }
+  .cap { top: calc(env(safe-area-inset-top) + 96px); transform: none; }
+  .cap .wrap > div { width: 100%; }
+  .cap .big { font-size: clamp(64px, 19vw, 104px); }
+  .cap p { margin-top: 12px; font-size: clamp(19px, 5.4vw, 24px); }
+  .cap.final .big { font-size: clamp(44px, 12.4vw, 64px); }
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .phonecol { position: relative; top: 0; order: -1; display: flex; flex-direction: column; align-items: stretch; min-width: 0; }
+  .device { --w: min(74vw, 320px); margin: 0 auto; }
+  .phonecol .phonecap, .chipline { align-self: center; }
+  .device .hand { display: block; }
+  .feats { display: none; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 26px calc(-1 * var(--gut)) 0; padding: 0 var(--gut) 4px; scrollbar-width: none; min-width: 0; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chips button { flex: 0 0 auto; scroll-snap-align: center; height: 40px; padding: 0 16px; border-radius: 20px; background: #1c1c1e; color: var(--mute); font-size: 14px; font-weight: 500; transition: background .25s, color .25s; }
+  .chips button.on { background: var(--fg); color: #000; }
+  .chipline { margin-top: 16px; min-height: 3em; text-align: center; color: var(--mute); font-size: 15px; max-width: 30em; }
+  .locks { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin-left: calc(-1 * var(--gut)); margin-right: calc(-1 * var(--gut)); padding: 0 var(--gut) 8px; scrollbar-width: none; gap: 14px; }
+  .locks::-webkit-scrollbar { display: none; }
+  .lock { flex: 0 0 62vw; max-width: 280px; scroll-snap-align: center; }
+  .home { grid-template-columns: 1fr; }
+  .facts { grid-template-columns: 1fr; gap: 24px; }
+  .get { grid-template-columns: 1fr; }
+  .plat { min-height: 0; border-radius: 26px; }
+}
+@media (min-width: 900px) { .chipline { display: none; } }
+@media (min-width: 1800px) { :root { --max: 1560px; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation: none !important; }
+}
 </style>
 </head>
 <body>
 
-<nav id="nav" class="intro" style="--d:0s">
-  <div class="wrap">
-    <a class="mark" href="#top" aria-label="yrs. home">yrs<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#3a3a3c"/><path d="M0.4 7.2A10 10 0 1 0 19.6 7.2z" fill="#f5f5f7"/></svg></a>
-    <div class="links"><a href="#try">Try it</a><a href="#features">Features</a><a href="#install">Install</a><a href="#faq">FAQ</a></div>
-    <a class="pill dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk">Download</a>
+<nav id="nav"><div class="wrap">
+  <a class="logo" href="#top" aria-label="yrs. home">yrs<i id="navDot"></i></a>
+  <div class="links"><a href="#app">The app</a><a href="#lock">Lock screen</a><a href="#privacy">Privacy</a><a class="btn" href="#get">Get yrs.</a></div>
+</div></nav>
+
+<div id="stage" aria-hidden="true"><canvas id="gl"></canvas></div>
+
+<header class="hero" id="top">
+  <div class="wrap"><div class="copy">
+    <h1><span class="ln"><span>Your life,</span></span><span class="ln"><span>in dots.</span></span></h1>
+    <p class="lede fade-in d1">Born in <span class="yr"><span id="yrLabel">1995</span><select id="yrSel" aria-label="Year you were born"></select></span>? Then about <b class="num" id="heroLeft">49 years</b> are still ahead of you. yrs. puts every one of them on your screen, so you spend them on purpose.</p>
+    <div class="cta fade-in d2">
+      <a class="btn big dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 7.5 8 11.5 12 7.5M2.5 14h11"/></svg>Download for Android</a>
+      <a class="btn big ghost" href="web/">Open on iPhone</a>
+    </div>
+    <p class="ticker fade-in d3"><b class="num" id="ticker">0</b> seconds left, give or take</p>
+  </div></div>
+  <div class="scrollhint"></div>
+</header>
+
+<section id="story" aria-label="Your life, counted four ways">
+  <div class="pin">
+    <div class="cap" data-i="0"><div class="wrap"><div><div class="big num" data-count="weeks">4,174</div><p><span class="ln"><span>weeks in an eighty-year life.</span></span><span class="ln"><span><b class="num" data-v="weeksLeft">2,543</b> of yours are still ahead.</span></span></p></div></div></div>
+    <div class="cap" data-i="1"><div class="wrap"><div><div class="big num" data-count="days">29,220</div><p><span class="ln"><span>days. Today is day <b class="num" data-v="dayOf">11,475</b>.</span></span><span class="ln"><span>Tomorrow, there's one less.</span></span></p></div></div></div>
+    <div class="cap" data-i="2"><div class="wrap"><div><div class="big num" data-count="lives">3,750</div><p><span class="ln"><span>lifetimes, end to end, since the first cities.</span></span><span class="ln"><span>Yours is the last dot. <b>Still filling.</b></span></span></p></div></div></div>
+    <div class="cap final" data-i="3"><div class="wrap"><div><div class="big"><span class="ln"><span>So what will</span></span><span class="ln"><span>you do with</span></span><span class="ln"><span>the rest?</span></span></div><p><span class="ln"><span><b class="num" data-v="yearsLeft">49</b> dots to go. Make them count.</span></span></p></div></div></div>
+    <div class="progress" aria-hidden="true"><span id="plabel">Years</span><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
   </div>
-</nav>
+</section>
 
-<main id="top">
-  <!-- ================= hero ================= -->
-  <header class="hero">
-    <div class="wrap">
+<section class="sec" id="app">
+  <div class="wrap">
+    <div class="kicker">The app</div>
+    <h2 class="h2 reveal"><span class="ln"><span>Everything in it</span></span><span class="ln"><span class="m">comes back to the dots.</span></span></h2>
+    <div class="app">
+      <ol class="feats" id="feats">
+        <li class="on"><button data-act='{"page":0,"zoom":1,"ripple":1}' data-chip="Your years"><span class="t">One dot for every year</span><span class="d">White for the years behind you, dark for the years ahead. The one you're in fills a little every day, and a wave runs through your years each time you come back.</span></button></li>
+        <li><button data-act='{"page":0,"zoom":3}' data-chip="Zoom"><span class="t">Pinch from history to a single day</span><span class="d">Zoom through all of human history, years, months, weeks and days. The headline always counts in what you're looking at.</span></button></li>
+        <li><button data-act='{"page":0,"zoom":1,"sheet":"milestone"}' data-chip="Letters"><span class="t">Name a year. Seal a letter to it.</span><span class="d">Mark the year you moved, or plan the one you'll travel. Write to your future self; the letter stays locked until that birthday.</span></button></li>
+        <li><button data-act='{"page":2}' data-chip="A line a day"><span class="t">A line a day</span><span class="d">One sentence about today. Years later, "on this day" brings it back. Countdowns to what's coming.</span></button></li>
+        <li><button data-act='{"page":3}' data-chip="People"><span class="t">The people you love</span><span class="d">See how many more visits you'll have with your parents and friends, at the rate you see them now.</span></button></li>
+        <li><button data-act='{"page":4}' data-chip="Where it goes"><span class="t">Where your years go</span><span class="d">Sleep, work, upkeep and your phone, taken out of the years you have left. What remains is truly yours.</span></button></li>
+        <li><button data-act='{"page":0,"zoom":1,"style":"live"}' data-chip="Live"><span class="t">Watch it move</span><span class="d">Live mode counts down to eight decimal places. Hold the number to feel the seconds as heartbeats.</span></button></li>
+      </ol>
+      <div class="phonecol">
+        <div class="device" id="liveDevice"><div class="screen"><div class="island"></div><iframe id="liveApp" title="yrs. app, live" loading="lazy" tabindex="-1"></iframe></div><a class="hand" href="web/" aria-label="Open the app"></a></div>
+        <div class="chips" id="chips"></div>
+        <p class="chipline" id="chipline"></p>
+        <p class="phonecap">This is the real app, running live. <a href="web/">Open it full screen</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec tight" id="lock">
+  <div class="wrap">
+    <div class="kicker">Lock screen</div>
+    <h2 class="h2 reveal"><span class="ln"><span>See it before</span></span><span class="ln"><span class="m">you see anything else.</span></span></h2>
+    <p class="lead soft">On Android your lock screen redraws itself every day, so it's always true. Daylight follows the sun; Stars drift so slowly you'll only notice tomorrow. On iPhone, save it in one tap.</p>
+    <div class="locks" id="locks"></div>
+  </div>
+</section>
+
+<section class="sec tight" id="widgets">
+  <div class="wrap">
+    <div class="home">
       <div>
-        <div class="eyebrow intro" style="--d:.05s">Free for Android</div>
-        <h1><span class="ln" style="--d:.15s"><span>Your life,</span></span><span class="ln" style="--d:.28s"><span>in dots<span class="soft">.</span></span></span></h1>
-        <p class="lede intro" style="--d:.55s">Every year you've lived, and every year still ahead, seen at a glance. On your home screen, on your lock screen, and in an app that never asks for anything.</p>
-        <div class="cta intro" style="--d:.72s">
-          <a class="download dl magnet" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>
-            <span class="t">Download for Android<small class="ver">Latest build · APK</small></span>
-          </a>
-          <div class="meta">Android 10 and newer<br><b>No account. No ads. No internet.</b></div>
-        </div>
-      </div>
-      <div class="device hero-device fade" style="--d:.35s" data-screen="life" role="img" aria-label="yrs. on a phone: years left, shown as a grid of 80 dots"></div>
-    </div>
-  </header>
-
-  <!-- ================= try it ================= -->
-  <section id="try">
-    <div class="wrap">
-      <div class="eyebrow">Try it</div>
-      <h2 class="words">How many do you have left?</h2>
-      <p class="sub rise">Enter your birthday. This runs entirely in your browser; nothing is sent anywhere.</p>
-      <div class="try">
-        <div class="rise">
-          <div class="row2">
-            <div class="field"><label for="bday">Birthday</label><input id="bday" type="date" value="1995-06-15"></div>
-            <div class="field" style="max-width:150px"><label for="span">Lifespan</label>
-              <select id="span"><option>70</option><option>75</option><option selected>80</option><option>85</option><option>90</option></select></div>
-          </div>
-          <div class="readout" aria-live="polite">
-            <div class="big" id="left">49</div>
-            <div class="unit" id="unit">years left</div>
-            <div class="line" id="line"></div>
-          </div>
-        </div>
-        <canvas id="grid" width="1040" height="840" role="img" aria-label="Your life as dots"></canvas>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= zoom ================= -->
-  <section id="features">
-    <div class="wrap feat">
-      <div class="copy">
-        <div class="eyebrow">Zoom through time</div>
-        <h2 class="words">From all of history to this very day.</h2>
-        <p class="sub rise">Pinch the grid. Your life as one of 3,750 lifetimes since the first humans, then as years, months, weeks, and every single day.</p>
-        <div class="zoomwords"><span>History</span><span>Years</span><span>Months</span><span>Weeks</span><span>Days</span></div>
-        <ul>
-          <li><span><b>Hold and drag</b> across the dots to travel through your life, with a soft tick for every year.</span></li>
-          <li><span><b>Tap the number</b> to count in days, weeks, summers, weekends or full moons.</span></li>
-          <li><span><b>Hold the number</b> and feel your heartbeat as the seconds you have left tick by.</span></li>
+        <div class="kicker">Widgets · Android</div>
+        <h2 class="h2 reveal"><span class="ln"><span>One idea</span></span><span class="ln"><span class="m">per widget.</span></span></h2>
+        <ul class="wlist soft" style="margin-top:40px">
+          <li><b>Life</b>All your years, the current one filling.</li>
+          <li><b>Number</b>Just the years left. Nothing else.</li>
+          <li><b>This year</b>Twelve months since your last birthday.</li>
+          <li><b>Today</b>One dot for today, filling as it goes.</li>
+          <li><b>People</b>Visits left with someone you love.</li>
         </ul>
       </div>
-      <div class="shots rise">
-        <div class="device" data-screen="weeks" role="img" aria-label="Weeks view: every week of a life"></div>
-        <div class="device" data-screen="history" role="img" aria-label="History view: one life among 3,750"></div>
+      <div class="wgrid soft" id="wgrid">
+        <div class="wg sq2"><canvas data-w="life"></canvas></div>
+        <div class="wg w2"><canvas data-w="number"></canvas></div>
+        <div class="wg"><canvas data-w="today"></canvas></div>
+        <div class="wg"><canvas data-w="decade"></canvas></div>
+        <div class="wg w2"><canvas data-w="year"></canvas></div>
+        <div class="wg w2"><canvas data-w="people"></canvas></div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ================= people + ledger ================= -->
-  <section>
-    <div class="wrap feat flip">
-      <div class="copy">
-        <div class="eyebrow">The people you love</div>
-        <h2 class="words">See the time you have left together.</h2>
-        <p class="sub rise">Add the people who matter and how often you see them. yrs. shows how many more visits, summers and days you'll share, so you can choose to make more.</p>
-        <ul>
-          <li><span><b>The Ledger</b> splits the years you have left into sleep, work, your phone, chores, and the part that's truly yours.</span></li>
-          <li><span><b>Real screen time</b>, if you allow it, read from Android itself and never sent anywhere.</span></li>
-        </ul>
-      </div>
-      <div class="shots rise">
-        <div class="device" data-screen="people" role="img" aria-label="People: visits left with the people you love"></div>
-        <div class="device" data-screen="ledger" role="img" aria-label="Ledger: where the years you have left will go"></div>
-      </div>
+<section class="sec" id="privacy">
+  <div class="wrap">
+    <p class="statement reveal" id="stmt"><span class="ln"><span>No account. No cloud.</span></span><span class="ln"><span class="m">No tracking. No ads.</span></span><span class="ln"><span class="m">Nothing leaves your phone.</span></span></p>
+    <div class="facts soft">
+      <div><b>It can't phone home</b><p>The Android app doesn't even ask for internet access. It has nowhere to send your birthday.</p></div>
+      <div><b>Yours alone</b><p>Your birthday, names, letters and lines live only on your device. Delete the app and they're gone.</p></div>
+      <div><b>Free, for good</b><p>No subscription, no trial, no upsell. Just the dots.</p></div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ================= lock screen ================= -->
-  <section id="lock">
-    <div class="wrap">
-      <div class="eyebrow">Lock screen</div>
-      <h2 class="words">A wallpaper that moves only when time does.</h2>
-      <p class="sub rise">Set yrs. as a live wallpaper, or let it repaint your lock screen every hour. It rests while you're away and ripples when you wake your phone.</p>
-      <div class="walls">
-        <div class="wall rise"><div class="screen"><div class="date">Sat 14 Nov</div><div class="clock">10:58</div><canvas data-wall="grid"></canvas></div><h3>Grid</h3><p>Your years, and a line that changes every day.</p></div>
-        <div class="wall rise"><div class="screen"><div class="date">Sat 14 Nov</div><div class="clock">10:58</div><canvas data-wall="daylight"></canvas></div><h3>Daylight</h3><p>Bright at noon, dim at night. Shown here as a day passing in 12 seconds.</p></div>
-        <div class="wall rise"><div class="screen"><div class="date">Sat 14 Nov</div><div class="clock">10:58</div><canvas data-wall="hourglass"></canvas></div><h3>Hourglass</h3><p>Lived years below, the rest above, this year slipping through.</p></div>
-        <div class="wall rise"><div class="screen"><div class="date">Sat 14 Nov</div><div class="clock">10:58</div><canvas data-wall="stars"></canvas></div><h3>Constellation</h3><p>Your years as stars, in a pattern only your birthday makes.</p></div>
+<section class="sec tight" id="get">
+  <div class="wrap">
+    <div class="kicker">Get yrs.</div>
+    <h2 class="h2 reveal"><span class="ln"><span>Start counting</span></span><span class="ln"><span class="m">what counts.</span></span></h2>
+    <div class="get">
+      <div class="plat soft">
+        <h3>Android</h3><p class="sub">The full app, with widgets and a lock screen that keeps itself up to date.</p>
+        <ol><li><span>Tap <b>Download</b>. You always get the latest build.</span></li><li><span>Open <b>yrs.apk</b> from your notifications. If asked, allow installs from your browser.</span></li><li><span>yrs. isn't on the Play Store yet, so Play Protect may ask. Tap <b>Install anyway</b>. Updates keep your data.</span></li></ol>
+        <div class="go"><a class="btn big dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 7.5 8 11.5 12 7.5M2.5 14h11"/></svg>Download</a><span class="ver" id="ver">Android 10 or newer</span></div>
+      </div>
+      <div class="plat soft">
+        <h3>iPhone</h3><p class="sub">The same app on the web, full screen and offline once it's on your Home Screen.</p>
+        <ol><li><span>Open <b>jrypzm.github.io/yrs./web</b> in Safari.</span></li><li><span>Tap <b>Share</b>, then <b>Add to Home Screen</b>.</span></li><li><span>Open yrs. from your Home Screen. Save the lock screen from Settings.</span></li></ol>
+        <div class="go"><a class="btn big ghost" href="web/">Open on iPhone</a><span class="ver">iOS 16 or newer</span></div>
       </div>
     </div>
-  </section>
-
-  <!-- ================= widgets ================= -->
-  <section>
-    <div class="wrap widgets">
-      <div class="copy">
-        <div class="eyebrow">Widgets</div>
-        <h2 class="words">Seven widgets. One idea each.</h2>
-        <p class="sub rise">Your life, years left, days left, this decade, this year of life, today's line, and the people you love. Black or glass. Add them in one tap from the app.</p>
-      </div>
-      <div class="widgetboard rise" id="wboard" role="img" aria-label="yrs. widgets on a home screen"></div>
-    </div>
-  </section>
-
-  <!-- ================= more ================= -->
-  <section>
-    <div class="wrap">
-      <div class="eyebrow">And quietly</div>
-      <h2 class="words">Small things that stay with you.</h2>
-      <div class="cards">
-        <div class="card rise"><svg class="ic" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="12" fill="#3a3a3c"/><path d="M5.6 13.4A12 12 0 1 0 28.4 13.4z" fill="#f5f5f7"/></svg><h3>One line a day</h3><p>Write a single sentence about today. A year from now, yrs. shows it back to you: "A year ago today…"</p></div>
-        <div class="card rise"><svg class="ic" viewBox="0 0 34 34" fill="none" stroke="#f5f5f7" stroke-width="2"><rect x="5" y="9" width="24" height="17" rx="3"/><path d="M5 11l12 8 12-8"/></svg><h3>Letters to future you</h3><p>Seal a letter to a future year. It stays locked until that birthday. Not even you can read it early.</p></div>
-        <div class="card rise"><svg class="ic" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="12" stroke="#f5f5f7" stroke-width="2"/><circle cx="17" cy="17" r="5" fill="#f5f5f7"/></svg><h3>Name your years</h3><p>Give a year a name: "Moved to Dubai". Plan a future one. Named years wear a thin ring everywhere.</p></div>
-        <div class="card rise"><svg class="ic" viewBox="0 0 34 34" fill="none" stroke="#f5f5f7" stroke-width="2" stroke-linecap="round"><path d="M17 7v10l6 4"/><circle cx="17" cy="17" r="12"/></svg><h3>Countdowns</h3><p>The trip, the wedding, the day you start. Each sits inside this year of your life.</p></div>
-        <div class="card rise"><svg class="ic" viewBox="0 0 34 34" fill="none" stroke="#f5f5f7" stroke-width="2" stroke-linecap="round"><path d="M10 6h14M10 28h14M11 6c0 7 12 8 12 11s-12 4-12 11M23 6c0 7-12 8-12 11"/></svg><h3>Your year in review</h3><p>On your birthday: days lived, lines written, and the first and last line of the year you just finished.</p></div>
-        <div class="card rise"><svg class="ic" viewBox="0 0 34 34" fill="none" stroke="#f5f5f7" stroke-width="2"><rect x="8" y="14" width="18" height="13" rx="3"/><path d="M12 14v-3a5 5 0 0 1 10 0v3"/></svg><h3>Private by design</h3><p>No account, no ads, no analytics, and no internet permission at all. Everything stays on your phone.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= install ================= -->
-  <section id="install">
-    <div class="wrap">
-      <div class="eyebrow">Install</div>
-      <h2 class="words">Thirty seconds, three steps.</h2>
-      <div class="steps">
-        <div class="step rise"><div class="n">1</div><h3>Download</h3><p>Tap Download on your Android phone. You always get the latest build.</p></div>
-        <div class="step rise"><div class="n">2</div><h3>Open the file</h3><p>Open yrs.apk from your notifications or Downloads. If Android asks, allow installs from your browser.</p></div>
-        <div class="step rise"><div class="n">3</div><h3>Install</h3><p>yrs. isn't from the Play Store yet, so Play Protect may ask. Tap "Install anyway". Updates install over the top and keep your data.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= faq ================= -->
-  <section id="faq">
-    <div class="wrap">
-      <div class="eyebrow">Questions</div>
-      <h2 class="words">Good to know.</h2>
-      <div class="faq">
-        <details><summary>Is yrs. free?</summary><p>Yes. No ads, no subscriptions, no in-app purchases.</p></details>
-        <details><summary>Is there an iPhone version?</summary><p>Not as an app yet. On iPhone, open <a href="web/">the web version</a> in Safari, tap Share, then "Add to Home Screen". It works offline and keeps everything on your phone. A full iPhone app is planned.</p></details>
-        <details><summary>What happens to my birthday and notes?</summary><p>They never leave your phone. The app doesn't even have permission to use the internet. Uninstalling removes everything.</p></details>
-        <details><summary>How is "years left" worked out?</summary><p>From your birthday and a lifespan you choose (80 by default). In settings, five honest questions can adjust it. It's an estimate to reflect on, not a prediction or medical advice.</p></details>
-        <details><summary>How do I update?</summary><p>Download again from this page and install. The new version goes over the old one and keeps everything you've added.</p></details>
-        <details><summary>Why does Android warn me when installing?</summary><p>Android shows a warning for any app installed from outside the Play Store. yrs. is built and signed automatically from its public source code on GitHub.</p></details>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= final ================= -->
-  <section class="final">
-    <div class="wrap">
-      <h2 class="words">Make the next one count.</h2>
-      <div class="cta rise">
-        <a class="download dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>
-          <span class="t">Download for Android<small class="ver">Latest build · APK</small></span>
-        </a>
-      </div>
-    </div>
-  </section>
-</main>
+  </div>
+</section>
 
 <footer>
-  <div class="wrap">
-    <span class="mark" style="font-size:18px;color:var(--faint)">yrs.</span>
-    <span>Your life, in dots.</span>
-    <span style="margin-left:auto"><a href="https://github.com/jrypzm/yrs./releases">All releases</a></span>
-  </div>
+  <div class="wrap"><div class="row"><span>yrs. · Your life, in dots.</span><span><a href="https://github.com/jrypzm/yrs.">Source</a> &nbsp;·&nbsp; <a href="https://github.com/jrypzm/yrs./releases">Releases</a></span></div></div>
+  <svg class="bleed" id="bleed" viewBox="18 26 72 64" aria-hidden="true"></svg>
 </footer>
 
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js" defer></script>
 <script>
 (() => {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+'use strict';
+const $ = id => document.getElementById(id);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const touch = matchMedia('(hover: none)').matches;
+const fmt = n => Math.floor(Math.max(0, n)).toLocaleString('en-US');
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const out3 = t => 1 - Math.pow(1 - t, 3);
+const Y = 365.2425, WK = 52.1775, LIVES = 3750;
 
+// ================================================= you
+// exact birthday if this browser already uses the web app; otherwise the year you pick
+const now = () => new Date();
+let birth, span = 80;
+function readApp() { try { const s = JSON.parse(localStorage.getItem('yrs.v2')); if (s && s.birth) { const [y, m, d] = s.birth.split('-').map(Number); return { b: new Date(y, m - 1, d), span: s.span || 80 }; } } catch {} return null; }
+function setBirthYear(y) { const app = readApp(); birth = app && app.b.getFullYear() === y ? app.b : new Date(y, y === now().getFullYear() ? 0 : 6, 1); span = Math.max(app && app.b.getFullYear() === y ? app.span : 80, Math.ceil(age() + 1)); }
+function age(t = now()) {
+  if (t <= birth) return 0;
+  const bi = y => { const d = new Date(y, birth.getMonth(), birth.getDate()); return d.getMonth() !== birth.getMonth() ? new Date(y, birth.getMonth() + 1, 0) : d; };
+  let y = t.getFullYear() - birth.getFullYear(); if (bi(t.getFullYear()) > t) y--;
+  const a = bi(birth.getFullYear() + y), b = bi(birth.getFullYear() + y + 1);
+  return y + Math.min(.999999, (t - a) / (b - a));
+}
+const NUM = () => {
+  const a = age(), end = new Date(birth.getFullYear() + span, birth.getMonth(), birth.getDate());
+  return { a, yearsLeft: span - a, weeks: Math.round(span * WK), weeksLeft: (span - a) * WK, days: Math.round((end - birth) / 864e5), dayOf: Math.floor((now() - birth) / 864e5) + 1, daysLived: (now() - birth) / 864e5, secLeft: (end - now()) / 1000, lives: LIVES };
+};
+const stored = (() => { try { return +localStorage.getItem('yrs.site.year') || 0; } catch { return 0; } })();
+const app0 = readApp();
+setBirthYear(app0 ? app0.b.getFullYear() : stored || 1995);
 
+// year picker inside the sentence
+const sel = $('yrSel');
+for (let y = now().getFullYear(); y >= 1925; y--) sel.add(new Option(y, y));
+sel.value = birth.getFullYear();
+sel.onchange = () => { const y = +sel.value; try { localStorage.setItem('yrs.site.year', y); } catch {} setBirthYear(y); personalise(true); };
 
-  // latest release: version, size, date
-  fetch('https://api.github.com/repos/jrypzm/yrs./releases/latest').then(r => r.ok ? r.json() : null).then(rel => {
-    if (!rel) return;
-    const a = (rel.assets || []).find(x => x.name === 'yrs.apk') || (rel.assets || [])[0];
-    const v = (rel.tag_name || '').replace(/^years-/, '');
-    const mb = a ? (a.size / 1048576).toFixed(1) + ' MB' : '';
-    const d = new Date(rel.published_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-    document.querySelectorAll('.ver').forEach(el => el.innerHTML = `Version ${v} · ${mb}<span class="vd"> · ${d}</span>`);
-  }).catch(() => {});
+function personalise(rebuild) {
+  const n = NUM();
+  $('yrLabel').textContent = birth.getFullYear();
+  const yl = Math.floor(n.yearsLeft); $('heroLeft').textContent = `${yl} ${yl === 1 ? 'year' : 'years'}`;
+  document.querySelectorAll('[data-v]').forEach(el => el.textContent = fmt(n[el.dataset.v]));
+  document.querySelectorAll('[data-count]').forEach(el => el.dataset.target = n[el.dataset.count]);
+  $('navDot').style.setProperty('--f', (n.a / span * 100).toFixed(1) + '%');
+  if (rebuild && GL) { GL.build(); GL.intro(); }
+  drawLocks(); drawWidgets(); drawBleed();
+  const src = `web/?demo=${birth.getFullYear()}-${String(birth.getMonth() + 1).padStart(2, '0')}-${String(birth.getDate()).padStart(2, '0')}&span=${span}`;
+  const fr = $('liveApp'); if (fr.dataset.src !== src) { fr.dataset.src = src; if (fr.dataset.live) fr.src = src; }
+}
 
-  // ---------- try it ----------
-  const YEAR = 365.2425;
-  const bday = document.getElementById('bday'), spanSel = document.getElementById('span');
-  const grid = document.getElementById('grid'), gx = grid.getContext('2d');
-  bday.max = new Date().toISOString().slice(0, 10);
-  function birthdayIn(b, y) { const d = new Date(y, b.getMonth(), b.getDate()); if (d.getMonth() !== b.getMonth()) d.setDate(0); return d; }
-  function age(b, now = new Date()) {
-    if (now <= b) return 0;
-    let y = now.getFullYear() - b.getFullYear();
-    if (birthdayIn(b, now.getFullYear()) > now) y--;
-    const last = birthdayIn(b, b.getFullYear() + y), next = birthdayIn(b, b.getFullYear() + y + 1);
-    return y + Math.min(.999999, (now - last) / (next - last));
+// ================================================= the stage (WebGL)
+// Every day of your life is one point. Years, weeks and days are the same points, stacked or spread;
+// the history view adds the 3,749 lifetimes before yours. The GPU morphs between layouts.
+const GL = (() => {
+  const cv = $('gl'), gl = cv.getContext('webgl', { antialias: false, alpha: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
+  if (!gl) return null;
+  const VS = `
+    attribute vec2 p0, p1, p2, p3; attribute vec4 rep, unit; attribute float d;
+    uniform vec4 uA, uB, uSize, uL; uniform float uT, uDpr, uAppear, uFill; uniform vec2 uRes;
+    varying float vFrac, vNow, vA, vS;
+    float ez(float t) { return t < .5 ? 4. * t * t * t : 1. - pow(-2. * t + 2., 3.) / 2.; }
+    void main() {
+      float t = ez(clamp(uT * 1.7 - d * .7, 0., 1.));
+      vec2 a = p0 * uA.x + p1 * uA.y + p2 * uA.z + p3 * uA.w;
+      vec2 b = p0 * uB.x + p1 * uB.y + p2 * uB.z + p3 * uB.w;
+      vec4 sz = uSize * rep;
+      float s = mix(dot(sz, uA), dot(sz, uB), t);
+      vec4 L = uL; L.xyz *= uFill;
+      float la = dot(L, uA), lb = dot(L, uB), ua = dot(unit, uA), ub = dot(unit, uB);
+      float fa = clamp(la - ua, 0., 1.), fb = clamp(lb - ub, 0., 1.);
+      vFrac = mix(fa, fb, t);
+      vNow = mix(fa > 0. && fa < 1. ? 1. : 0., fb > 0. && fb < 1. ? 1. : 0., t);
+      float ap = clamp(uAppear * 1.8 - d * .8, 0., 1.); ap = 1. - pow(1. - ap, 3.);
+      s *= .35 + .65 * ap;
+      vA = ap; vS = s * uDpr;
+      gl_PointSize = vS;
+      vec2 c = mix(a, b, t) / uRes * 2. - 1.;
+      gl_Position = s < .05 ? vec4(2., 2., 2., 1.) : vec4(c.x, -c.y, 0., 1.);
+    }`;
+  const FS = `
+    precision mediump float;
+    varying float vFrac, vNow, vA, vS; uniform float uTime;
+    void main() {
+      vec2 q = gl_PointCoord * 2. - 1.; float r = length(q);
+      float aa = 1.6 / max(vS, 1.);
+      float cov = vS < 4.5 ? 1. : 1. - smoothstep(1. - aa, 1., r);
+      if (cov <= 0.) discard;
+      float filled = step(1. - vFrac, gl_PointCoord.y);
+      vec3 base = vec3(vNow > .5 ? .227 : .137);
+      vec3 col = mix(base, vec3(.96), filled);
+      col *= 1. - vNow * .32 * (.5 + .5 * sin(uTime * 1.8));
+      gl_FragColor = vec4(col * cov * vA, 1.);
+    }`;
+  const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(o); return o; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
+  const U = {}; ['uA', 'uB', 'uSize', 'uL', 'uT', 'uDpr', 'uAppear', 'uFill', 'uRes', 'uTime'].forEach(k => U[k] = gl.getUniformLocation(pr, k));
+  const buf = {}; const attr = (name, size, data) => {
+    const loc = gl.getAttribLocation(pr, name); if (loc < 0) return;
+    if (!buf[name]) buf[name] = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf[name]); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+  };
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.clearColor(0, 0, 0, 1);
+
+  let N = 0, D = 0, W = 0, H = 0, RH = 0, dpr = 1, sizes = [0, 0, 0, 0];
+  const st = { from: 0, to: 0, t: 0, appear: reduce ? 1 : 0, fill: reduce ? 1 : 0, alive: true };
+
+  function region() {
+    const desk = W >= 900;
+    if (desk) { const rw = Math.min(W * .4, 660), rx = W * .53 + (W * .42 - rw) / 2; return { x: rx, y: H * .16, w: rw, h: H * .7 }; }
+    const top = Math.max(H * .5, 380), bottom = H - Math.max(28, H * .05);
+    return { x: 24, y: top, w: W - 48, h: bottom - top };
   }
-  const fmt = n => Math.floor(n).toLocaleString('en-US');
-  let shown = 0, target = 0, span = 80, raf;
-  function drawGrid(a) {
-    const W = grid.width, cols = 10, cell = W / (cols - 0.4), inset = cell * 0.2, r = cell * 0.3;
-    const rows = Math.ceil(span / cols); grid.height = Math.round(rows * cell - 2 * inset);
-    gx.clearRect(0, 0, W, grid.height);
-    const whole = Math.floor(a);
+  // a story caption sits at the top on phones, so the grid moves down to leave room
+  function fit(cols, rows, R, out, idx, ratio) {
+    let cell = Math.min(R.w / cols, R.h / rows);
+    // tiny dots snap to whole device pixels with a one-pixel gap, so dense grids stay even instead of plaid
+    const tiny = cell * dpr < 9;
+    if (tiny) cell = Math.max(2, Math.floor(cell * dpr)) / dpr;
+    const gw = cell * cols, gh = cell * rows;
+    let x0 = R.x + (R.w - gw) / 2, y0 = R.y + (R.h - gh) / 2;
+    if (tiny) { x0 = Math.round(x0 * dpr) / dpr; y0 = Math.round(y0 * dpr) / dpr; }
+    const size = tiny ? (cell * dpr - 1) / dpr : Math.max(1.1, cell * ratio), off = tiny ? size / 2 : cell / 2;
+    return { cell, at: (i, k) => { out[k * 2] = x0 + (i % cols) * cell + off; out[k * 2 + 1] = y0 + Math.floor(i / cols) * cell + off; }, size };
+  }
+  function build() {
+    dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; const CH = $('stage').clientHeight || H;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(CH * dpr); RH = CH; gl.viewport(0, 0, cv.width, cv.height);
+    D = Math.round(span * Y); const weeks = Math.ceil(D / 7), others = LIVES - 1; N = D + others;
+    const P = [0, 1, 2, 3].map(() => new Float32Array(N * 2)), rep = new Float32Array(N * 4), unit = new Float32Array(N * 4), dd = new Float32Array(N);
+    const R = region();
+    const Ly = fit(10, Math.ceil(span / 10), R, P[0], 0, .6), Lw = fit(52, Math.ceil(weeks / 52), R, P[1], 0, .7), Ld = fit(183, Math.ceil(D / 183), R, P[2], 0, .78), Lh = fit(50, Math.ceil(LIVES / 50), R, P[3], 0, .72);
+    sizes = [Ly.size, Lw.size, Ld.size, Lh.size];
+    let lastY = -1;
+    for (let d = 0; d < D; d++) {
+      const y = Math.floor(d / Y), w = Math.floor(d / 7);
+      Ly.at(y, d); Lw.at(w, d); Ld.at(d, d); Lh.at(LIVES - 1, d);
+      rep.set([y !== lastY ? 1 : 0, d % 7 === 0 ? 1 : 0, 1, d === 0 ? 1 : 0], d * 4); lastY = y;
+      unit.set([y, w, d, LIVES - 1], d * 4); dd[d] = d / D;
+    }
+    for (let j = 0; j < others; j++) {
+      const k = D + j; Lh.at(j, k); for (let l = 0; l < 3; l++) { P[l][k * 2] = P[3][k * 2]; P[l][k * 2 + 1] = P[3][k * 2 + 1]; }
+      rep.set([0, 0, 0, 1], k * 4); unit.set([-1, -1, -1, j], k * 4); dd[k] = j / others;
+    }
+    // your life dot in History is the last cell; the others are the lives before it (all lived)
+    P.forEach((p, i) => attr('p' + i, 2, p)); attr('rep', 4, rep); attr('unit', 4, unit); attr('d', 1, dd);
+  }
+  const one = i => [0, 1, 2, 3].map(k => k === i ? 1 : 0);
+  function draw(time) {
+    const n = NUM();
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform4fv(U.uA, one(st.from)); gl.uniform4fv(U.uB, one(st.to)); gl.uniform4fv(U.uSize, sizes);
+    gl.uniform4fv(U.uL, [n.a, n.a * WK * (Math.round(span * WK) / (span * WK)), n.daysLived, LIVES - 1 + n.a / span]);
+    gl.uniform1f(U.uT, st.t); gl.uniform1f(U.uDpr, dpr); gl.uniform1f(U.uAppear, st.appear); gl.uniform1f(U.uFill, st.fill);
+    gl.uniform2f(U.uRes, W, RH); gl.uniform1f(U.uTime, time / 1000);
+    gl.drawArrays(gl.POINTS, 0, N);
+  }
+  function intro() {
+    if (reduce) { st.appear = st.fill = 1; return; }
+    const t0 = performance.now();
+    const step = t => { const k = (t - t0) / 1000; st.appear = clamp(k / 1.4); st.fill = ease(clamp((k - .7) / 1.8)); if (k < 2.6) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+  return { build, draw, intro, st };
+})();
+
+// ================================================= scroll: story progress, captions, nav
+const story = $('story'), caps = [...document.querySelectorAll('.cap')], bars = [...document.querySelectorAll('.progress b')];
+const pin = story.querySelector('.pin');
+const STEPS = 4, SEQ = [1, 2, 3, 4]; // morph targets after the years grid: weeks, days, history, back to years
+const LAY = [0, 1, 2, 3, 0];
+function sizeStory() { story.style.height = (STEPS * 1.15 + 1) * lastHt() + 'px'; }
+function lastHt() { return innerHeight; }
+let lastY = -1, navY = 0;
+function onScroll(force) {
+  const y = scrollY; if (y === lastY && !force) return; lastY = y;
+  const vh = innerHeight, top = story.offsetTop, stepH = 1.15 * vh, s = (y - top) / stepH;
+  if (GL) {
+    const k = clamp(Math.floor(s), 0, STEPS - 1), u = s - k;
+    if (s <= 0) { GL.st.from = 0; GL.st.to = 0; GL.st.t = 0; }
+    else if (s >= STEPS) { GL.st.from = 0; GL.st.to = 0; GL.st.t = 0; }
+    else { GL.st.from = LAY[k]; GL.st.to = LAY[k + 1]; GL.st.t = clamp((u - .08) / .52); }
+  }
+  // captions: each appears as its morph lands and leaves before the next begins
+  caps.forEach((c, i) => {
+    const u = s - i, last = i === STEPS - 1;
+    const vin = clamp((u - .42) / .22), vout = last ? 1 - clamp((s - STEPS - .1) / .5) : 1 - clamp((u - 1.0) / .14);
+    const v = Math.min(vin, vout);
+    c.style.opacity = v.toFixed(3); c.style.visibility = v > 0 ? 'visible' : 'hidden';
+    c.querySelectorAll('.ln > span').forEach((l, j) => { const p = out3(clamp(vin * 1.25 - j * .12)); l.style.transform = `translateY(${((1 - p) * 100).toFixed(2)}%)`; });
+    const big = c.querySelector('[data-count]');
+    if (big) { const p = out3(clamp((u - .3) / .4)); big.textContent = fmt(+big.dataset.target * p); }
+  });
+  bars.forEach((b, i) => b.style.setProperty('--p', clamp(s - i).toFixed(3)));
+  const pl = ['Years', 'Weeks', 'Days', 'History', 'Years'][clamp(Math.round(s - .3), 0, 4)]; if ($('plabel').textContent !== pl) $('plabel').textContent = pl;
+  // the story's stage scrolls away with the next section; stop drawing once it's covered
+  stageOn = y < top + story.offsetHeight + 10;
+  $('stage').style.visibility = stageOn ? 'visible' : 'hidden';
+  // nav hides on the way down, returns on the way up
+  const nav = $('nav'); if (y > navY + 8 && y > 200) nav.classList.add('away'); else if (y < navY - 8) nav.classList.remove('away'); navY = y;
+}
+let stageOn = true;
+
+// ================================================= reveals
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -12% 0px' });
+document.querySelectorAll('.reveal, .soft, .statement').forEach(el => io.observe(el));
+
+// ================================================= live phone
+const fr = $('liveApp'), dev = $('liveDevice');
+function scalePhone() { const w = dev.querySelector('.screen').clientWidth; fr.style.transform = `scale(${w / 390})`; fr.style.height = (dev.querySelector('.screen').clientHeight / (w / 390)) + 'px'; }
+new ResizeObserver(scalePhone).observe(dev);
+const lazyApp = new IntersectionObserver(es => { if (es[0].isIntersecting) { fr.dataset.live = 1; fr.src = fr.dataset.src; lazyApp.disconnect(); } }, { rootMargin: '600px' });
+lazyApp.observe(dev);
+let appReady = false, pendingAct = null;
+fr.addEventListener('load', () => { setTimeout(() => { appReady = true; if (pendingAct) send(pendingAct); }, 900); });
+function send(act) { if (!appReady) { pendingAct = act; return; } const base = { close: 1, style: act.style || 'classic' }; fr.contentWindow.postMessage(Object.assign(base, act), '*'); }
+const feats = [...document.querySelectorAll('#feats li')];
+function choose(i, fromChip) {
+  feats.forEach((li, k) => li.classList.toggle('on', k === i));
+  chips.forEach((c, k) => c.classList.toggle('on', k === i));
+  $('chipline').textContent = feats[i].querySelector('.d').textContent;
+  send(JSON.parse(feats[i].querySelector('button').dataset.act));
+  if (fromChip) chips[i].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+}
+feats.forEach((li, i) => li.querySelector('button').addEventListener('click', () => choose(i)));
+$('chips').innerHTML = feats.map(li => `<button>${li.querySelector('button').dataset.chip}</button>`).join('');
+const chips = [...document.querySelectorAll('#chips button')];
+chips.forEach((c, i) => c.addEventListener('click', () => choose(i, true)));
+chips[0].classList.add('on'); $('chipline').textContent = feats[0].querySelector('.d').textContent;
+
+// ================================================= lock screens (same drawing as the app)
+function dot(x, cx, cy, r, fill, frac) {
+  x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2);
+  if (frac == null) { x.fillStyle = fill; x.fill(); return; }
+  x.fillStyle = '#3a3a3c'; x.fill(); x.save(); x.clip(); x.fillStyle = fill; x.fillRect(cx - r, cy + r - 2 * r * frac, 2 * r, 2 * r * frac); x.restore();
+}
+const sunLevel = () => { const d = now(), h = d.getHours() + d.getMinutes() / 60; return Math.max(0, Math.sin((h - 6) / 12 * Math.PI)); };
+function wallpaper(x, W, H, style, t) {
+  x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
+  const a = age(), lived = Math.floor(a), done = Math.min(a, span);
+  if (style === 'grid' || style === 'daylight') {
+    const v = style === 'daylight' ? Math.round(110 + 145 * sunLevel()) : 255, L = `rgb(${v},${v},${v})`;
+    const gw = W * .62, cell = gw / 9.6, inset = cell * .2, r = cell * .3, gh = Math.ceil(span / 10) * cell - 2 * inset, x0 = (W - gw) / 2, top = H * .5 - gh / 2;
+    for (let i = 0; i < span; i++) { const cx = x0 - inset + (i % 10 + .5) * cell, cy = top - inset + (Math.floor(i / 10) + .5) * cell; if (i < Math.floor(done)) dot(x, cx, cy, r, L); else if (i === Math.floor(done)) dot(x, cx, cy, r, L, done - Math.floor(done)); else dot(x, cx, cy, r, '#232323'); }
+    x.textAlign = 'center'; x.fillStyle = '#8e8e93'; x.font = `500 ${Math.round(W * .036)}px -apple-system, Inter, sans-serif`;
+    const left = Math.floor(span - a); x.fillText(`${left} ${left === 1 ? 'year' : 'years'} left`, W / 2, top + gh + W * .09);
+  } else if (style === 'hourglass') {
+    const cx = W / 2, r = W * .019, step = r * 2.6, hw = W * .3, neck = H * .52, top = H * .33, bottom = H * .74;
+    x.strokeStyle = '#2a2a2c'; x.lineWidth = Math.max(1, W * .003); x.beginPath();
+    x.moveTo(cx - hw, top - step * 1.5); x.lineTo(cx - r * 1.6, neck); x.lineTo(cx - hw, bottom + step * .6);
+    x.moveTo(cx + hw, top - step * 1.5); x.lineTo(cx + r * 1.6, neck); x.lineTo(cx + hw, bottom + step * .6); x.stroke();
+    let left = span - Math.min(lived, span) - 1, row = 0;
+    while (left > 0 && row < 60) { const y = neck - step * 1.3 - row * step, w = Math.max(step, (neck - y) / (neck - top + step * 1.5) * hw * 1.8), n = Math.max(1, Math.min(left, Math.floor(w / step))); for (let k = 0; k < n; k++) dot(x, cx + (k - (n - 1) / 2) * step, y, r, '#2c2c2e'); left -= n; row++; }
+    let l = Math.min(lived, span); row = 0;
+    while (l > 0 && row < 60) { const y = bottom - row * step, w = Math.max(step, (y - neck) / (bottom - neck) * hw * 1.85), n = Math.max(1, Math.min(l, Math.floor(w / step))); for (let k = 0; k < n; k++) dot(x, cx + (k - (n - 1) / 2) * step, y, r, '#fff'); l -= n; row++; }
+    dot(x, cx, neck + step * (.2 + .15 * Math.sin(t / 6000 * Math.PI * 2)), r, '#fff', a - lived);
+  } else {
+    let s = birth.getFullYear() * 10000 + (birth.getMonth() + 1) * 100 + birth.getDate(); const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647, T = t / 1000;
     for (let i = 0; i < span; i++) {
-      const cx = -inset + (i % cols + .5) * cell, cy = -inset + (Math.floor(i / cols) + .5) * cell;
-      gx.beginPath(); gx.arc(cx, cy, r, 0, Math.PI * 2);
-      if (i < whole) { gx.fillStyle = '#f5f5f7'; gx.fill(); }
-      else if (i === whole && a < span) {
-        gx.fillStyle = '#3a3a3c'; gx.fill(); gx.save(); gx.clip(); gx.fillStyle = '#f5f5f7';
-        const f = a - whole; gx.fillRect(cx - r, cy + r - 2 * r * f, 2 * r, 2 * r * f); gx.restore();
-      } else { gx.fillStyle = '#232323'; gx.fill(); }
+      const bx = W * (.1 + rnd() * .8), by = H * (.34 + rnd() * .42), sz = .6 + rnd() * .8, ph = rnd() * 6.283, dx = Math.sin(T / 6 + ph) * W * .012, dy = Math.cos(T / 8 + ph) * W * .012, r = W * .011 * sz;
+      if (i < lived) { x.globalAlpha = .55 + .45 * (.5 + .5 * Math.sin(T / 2 + ph * 3)); dot(x, bx + dx, by + dy, r, '#fff'); x.globalAlpha = 1; }
+      else if (i === lived) dot(x, bx + dx, by + dy, r * 1.5, '#fff', a - lived); else dot(x, bx + dx, by + dy, r, '#262628');
     }
   }
-  function update() {
-    const v = bday.value; span = +spanSel.value;
-    const parts = v.split('-').map(Number);
-    if (parts.length !== 3 || !parts[0]) return;
-    const b = new Date(parts[0], parts[1] - 1, parts[2]);
-    const a = Math.min(age(b), span);
-    target = a;
-    const end = new Date(b.getFullYear() + span, b.getMonth(), b.getDate());
-    const days = Math.max(0, (end - new Date()) / 864e5);
-    const lived = Math.max(0, (new Date() - b) / 864e5);
-    document.getElementById('left').textContent = fmt(Math.max(0, span - a));
-    document.getElementById('unit').textContent = Math.floor(span - a) === 1 ? 'year left' : 'years left';
-    document.getElementById('line').innerHTML = `<b>${fmt(days)}</b> days left · <b>${fmt(lived)}</b> days lived · <b>${fmt(days / 7)}</b> weekends`;
-    cancelAnimationFrame(raf);
-    if (reduce) { shown = a; drawGrid(a); return; }
-    const from = shown, t0 = performance.now(), dur = 900 + Math.abs(a - from) * 25;
-    const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); shown = from + (a - from) * e; drawGrid(shown); if (k < 1) raf = requestAnimationFrame(step); };
-    raf = requestAnimationFrame(step);
-  }
-  bday.addEventListener('input', update); spanSel.addEventListener('change', update);
-  // start empty, fill when the section comes into view
-  drawGrid(0);
-  new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { update(); o.disconnect(); } }, { threshold: .3 }).observe(grid);
+}
+const WALLS = [['grid', 'Grid', 'The classic'], ['daylight', 'Daylight', 'Follows the sun'], ['hourglass', 'Hourglass', 'Falls once a year'], ['stars', 'Stars', 'Drifts all day']];
+$('locks').innerHTML = WALLS.map(([k, l, d]) => `<div class="lock soft"><figure><div class="device"><div class="screen"><div class="island"></div><canvas data-wall="${k}"></canvas><div class="clock"><small></small><b></b></div></div></div><figcaption><b>${l}</b><span>${d}</span></figcaption></figure></div>`).join('');
+document.querySelectorAll('.lock').forEach(el => io.observe(el));
+function sizeTo(cv) { const r = cv.getBoundingClientRect(), d = Math.min(3, devicePixelRatio || 1); const w = Math.round(r.width * d), h = Math.round(r.height * d); if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } return cv.getContext('2d'); }
+function drawLocks(t = performance.now()) {
+  const d = now(), time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, ''), date = d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.querySelectorAll('[data-wall]').forEach(cv => { const x = sizeTo(cv); if (!cv.width) return; wallpaper(x, cv.width, cv.height, cv.dataset.wall, t); const c = cv.nextElementSibling; c.querySelector('small').textContent = date; c.querySelector('b').textContent = time; });
+}
+let locksOn = false; new IntersectionObserver(es => { locksOn = es[0].isIntersecting; }).observe($('locks'));
 
-
-  // ---------- devices and widgets, drawn live (sharp at any size) ----------
-  const SB = '<div class="cam"></div><div class="sb"><span>9:41</span><span>' +
-    '<svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#f5f5f7"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="#f5f5f7"/><rect x="10" y="3" width="3" height="9" rx="1" fill="#f5f5f7"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#f5f5f7"/></svg>' +
-    '<svg viewBox="0 0 16 12"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0z" fill="#f5f5f7"/><path d="M3.4 6.8a6.5 6.5 0 0 1 9.2 0l-1.4 1.4a4.5 4.5 0 0 0-6.4 0z" fill="#f5f5f7"/><path d="M1.2 4.6a9.6 9.6 0 0 1 13.6 0l-1.4 1.4a7.6 7.6 0 0 0-10.8 0z" fill="#f5f5f7"/></svg>' +
-    '<svg viewBox="0 0 27 12"><rect x=".5" y=".5" width="23" height="11" rx="3.2" fill="none" stroke="#8e8e93"/><rect x="2" y="2" width="16" height="8" rx="2" fill="#f5f5f7"/><rect x="24.5" y="4" width="1.8" height="4" rx=".9" fill="#8e8e93"/></svg>' +
-    '</span></div>';
-  const TOP = '<div class="top"><b>yrs.</b><span class="more"><i><span></span></i></span></div>';
-  const CTL = page => '<div class="ctl">' +
-    (page < 3 ? '<span class="pl">Left<svg viewBox="0 0 8 12" fill="none" stroke="#8e8e93" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 4 4 1.5 6.5 4M1.5 8 4 10.5 6.5 8"/></svg></span>' : '<span></span>') +
-    '<span class="pd">' + [0,1,2,3,4].map(i => `<i class="${i === page ? 'on' : ''} ${i > 2 ? 'sm' : ''}"></i>`).join('') + '</span>' +
-    (page < 3 ? '<span class="rb">%</span>' : '<span style="width:9cqw"></span>') + '</div><div class="home-ind"></div>';
-  const dots = (o) => `<canvas class="g" data-dots='${JSON.stringify(o)}'></canvas>`;
-
-  // one sample life, the same everywhere on the page
-  const B0 = new Date(1995, 5, 15), S0 = 80, A0 = age(B0), L0 = S0 - A0;
-  const daysLeft0 = Math.floor((new Date(B0.getFullYear() + S0, 5, 15) - new Date()) / 864e5);
-  const daysLived0 = Math.floor((new Date() - B0) / 864e5);
-  const together = (born, perYear) => { const a = new Date().getFullYear() - born; const theirs = Math.max(S0 - a, a < 105 ? Math.max(2, (100 - a) / 3) : 1); return { v: Math.floor(Math.min(L0, theirs) * perYear), yrs: Math.min(L0, theirs), a }; };
-  const zoom = on => '<div class="zoom">' + ['History', 'Years', 'Months', 'Weeks', 'Days'].map(z => `<span class="${z === on ? 'on' : ''}">${z}</span>`).join('') + '</div>';
-
-  const screens = {
-    life: () => TOP + `<h4>${fmt(L0)} years left</h4><div class="s">Age ${Math.floor(A0)} · ${S0} year life</div>` +
-      dots({ total: S0, done: A0, cols: 10, ratio: .6, ring: [24] }) + zoom('Years') + CTL(0),
-    weeks: () => TOP + `<h4>${fmt(L0 * 52.1775)} weeks left</h4><div class="s">Age ${Math.floor(A0)} · ${S0} year life</div>` +
-      dots({ total: Math.round(S0 * 52.1775), done: A0 * 52.1775, cols: 52, ratio: .66 }) + zoom('Weeks') + CTL(0),
-    history: () => TOP + `<h4>3,750 lives of human history</h4><div class="s">Yours is the last one, filling now</div>` +
-      dots({ total: 3750, done: 3749 + A0 / S0, cols: 50, ratio: .66 }) + zoom('History') + CTL(0),
-    people: () => {
-      const card = (name, often, born, per, unit) => { const t = together(born, per); const n = Math.min(t.v, 100);
-        return `<div class="card2"><div class="hd">${name}<span>${often}</span></div><div class="num"><b>${fmt(t.v)}</b><span>more ${unit} together</span></div>` +
-          `<div class="f">About ${fmt(t.yrs)} summers left together · ${name} is ${t.a}</div>` + `<canvas data-dots='${JSON.stringify({ total: n, done: n, cols: 20, ratio: .56 })}'></canvas>` +
-          (t.v > n ? `<div class="f" style="margin:2cqw 0 0">+ ${fmt(t.v - n)} more</div>` : '') + '</div>'; };
-      return TOP + `<h4 style="margin-top:6cqw">People</h4><div class="s">The time you have left together</div><div style="height:2cqw"></div>` +
-        card('Mum', 'Every month', 1966, 12, 'visits') + card('Grandpa', 'A few times a year', 1946, 4, 'visits') + CTL(3);
-    },
-    ledger: () => {
-      const left = L0, a = A0, sleep = left / 3, work = Math.max(0, Math.min(left, 65 - a)) * 1920 / 8766, upkeep = left / 8, phone = Math.min(left * 3 / 24, left - sleep - work - upkeep), free = left - sleep - work - phone - upkeep;
-      const sl = [['Asleep', sleep, '#2c2c2e'], ['Working', work, '#48484a'], ['On your phone', phone, '#8e8e93'], ['Eating, chores, commuting', upkeep, '#3a3a3c'], ['Truly yours', free, '#f5f5f7']];
-      const total = Math.round(left), raw = sl.map(x => x[1] / left * total), ints = raw.map(Math.floor);
-      let rest = total - ints.reduce((p, c) => p + c, 0); raw.map((v, i) => [v - Math.floor(v), i]).sort((p, q) => q[0] - p[0]).forEach(([, i]) => { if (rest > 0) { ints[i]++; rest--; } });
-      const colors = ints.flatMap((n, i) => Array(n).fill(sl[i][2]));
-      return TOP + `<h4 style="margin-top:6cqw">Your ${fmt(left)} years</h4><div class="s">Where the time you have left will go</div>` +
-        dots({ total: colors.length, done: 0, cols: 10, ratio: .6, colors }) +
-        '<div class="legend">' + sl.map((x, i) => `<div class="${i === 4 ? 'y' : ''}"><i style="background:${x[2]}"></i>${x[0]}<b>${x[1].toFixed(1)} yrs</b></div>`).join('') + '</div>' + CTL(4);
-    },
-  };
-  document.querySelectorAll('.device[data-screen]').forEach(d => {
-    d.innerHTML = `<div class="screen">${SB}<div class="app">${screens[d.dataset.screen]()}</div></div>`;
-  });
-
-  // widgets
-  const lb = (() => { const t = new Date(); let y = t.getFullYear(); if (birthdayIn(B0, y) > t) y--; return birthdayIn(B0, y); })();
-  let mo = 0; while (mo < 11 && new Date(lb.getFullYear(), lb.getMonth() + mo + 1, Math.min(lb.getDate(), 28)) <= new Date()) mo++;
-  const mStart = new Date(lb.getFullYear(), lb.getMonth() + mo, lb.getDate()), mEnd = new Date(lb.getFullYear(), lb.getMonth() + mo + 1, lb.getDate());
-  const monthsDone = mo + Math.min(1, (new Date() - mStart) / (mEnd - mStart));
-  const decStart = Math.floor(A0 / 10) * 10;
-  const mum = together(1966, 12), gp = together(1946, 4);
-  const wb = document.getElementById('wboard');
-  if (wb) wb.innerHTML =
-    `<div class="wd"><div class="cap">Years left</div><div class="n">${fmt(L0)}</div></div>` +
-    `<div class="wd"><div class="cap">Days left</div><div class="n" style="font-size:11.5cqw">${fmt(daysLeft0)}<small>Today is day ${fmt(daysLived0 + 1)}</small></div></div>` +
-    `<div class="wd wide"><div class="row"><div><div class="n">${fmt(L0)}<small>years left</small></div></div>${dots({ total: S0, done: A0, cols: 10, ratio: .6 })}</div></div>` +
-    `<div class="wd slim"><div style="flex:0 0 auto"><div class="t">Your ${decStart}s</div><div class="cap">${Math.floor(A0 - decStart)} of 10 years</div></div><div style="flex:1">${dots({ total: 10, done: A0 - decStart, cols: 10, ratio: .62 })}</div></div>` +
-    `<div class="wd" style="display:flex;flex-direction:column;justify-content:space-between">${dots({ total: 12, done: monthsDone, cols: 4, ratio: .62 })}<div><div class="t">Age ${Math.floor(A0)}</div><div class="cap">${Math.floor(monthsDone)} of 12 months</div></div></div>` +
-    `<div class="wd" style="display:flex;flex-direction:column;justify-content:center;gap:5cqw"><div><div class="cap">Mum</div><div class="t" style="font-size:6.4cqw">${fmt(mum.v)} visits</div></div><div><div class="cap">Grandpa</div><div class="t" style="font-size:6.4cqw">${fmt(gp.v)} visits</div></div></div>` +
-    `<div class="wd slim" style="aspect-ratio:3.2;align-items:flex-start;flex-direction:column;justify-content:center;gap:1.6cqw"><div class="t" style="font-size:5cqw">Day ${fmt(daysLived0 + 1)}</div><div style="font-size:3.8cqw;color:#f5f5f7">Long walk by the sea with Mum. Rain at the end, still worth it.</div></div>`;
-
-  // paint every dot grid at the real pixel density; k (0..1) plays the dots-filling-in entrance
-  function paintDots(cv, k = 1) {
-    const o = JSON.parse(cv.dataset.dots), d = Math.min(3, devicePixelRatio || 1), W = cv.clientWidth;
-    if (!W) return;
-    const cell = W / (o.cols - (1 - o.ratio)), inset = cell * (1 - o.ratio) / 2, r = cell * o.ratio / 2;
-    const rows = Math.ceil(o.total / o.cols), H = rows * cell - 2 * inset;
-    cv.style.height = H + 'px'; cv.width = Math.round(W * d); cv.height = Math.round(H * d);
-    const x = cv.getContext('2d'); x.scale(d, d);
-    const whole = Math.floor(o.done);
-    const D = .7 + o.total * .009;
-    for (let i = 0; i < o.total; i++) {
-      const cx = -inset + (i % o.cols + .5) * cell, cy = -inset + (Math.floor(i / o.cols) + .5) * cell;
-      let e = 1;
-      if (k < 1) { const l = Math.max(0, Math.min(1, (k * D - i * .009) / .7)); e = 1 - Math.pow(1 - l, 3); if (e <= 0) continue; }
-      x.globalAlpha = e;
-      const rr0 = r * (.4 + .6 * e);
-      x.beginPath(); x.arc(cx, cy, rr0, 0, Math.PI * 2);
-      if (o.colors) { x.fillStyle = o.colors[i]; x.fill(); continue; }
-      if (i < whole) { x.fillStyle = '#f5f5f7'; x.fill(); }
-      else if (i === whole && o.done < o.total) {
-        const rr = o.total > 300 ? Math.max(r * 1.8, 2.2) : r; x.beginPath(); x.arc(cx, cy, rr, 0, Math.PI * 2);
-        x.fillStyle = '#3a3a3c'; x.fill(); x.save(); x.clip(); x.fillStyle = '#f5f5f7'; const f = o.done - whole; x.fillRect(cx - rr, cy + rr - 2 * rr * f, 2 * rr, 2 * rr * f); x.restore();
-      } else { x.fillStyle = '#232323'; x.fill(); }
-      if (o.ring && o.ring.includes(i)) { x.beginPath(); x.arc(cx, cy, r * 1.45, 0, Math.PI * 2); x.strokeStyle = 'rgba(245,245,247,.55)'; x.lineWidth = Math.max(1, cell * .035); x.stroke(); }
-    }
-    x.globalAlpha = 1;
-  }
-  const played = new WeakSet();
-  const paintAll = () => document.querySelectorAll('canvas[data-dots]').forEach(c => paintDots(c, played.has(c) || reduce ? 1 : 0));
-  paintAll();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(paintAll);
-  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(paintAll, 120); });
-
-  // ---------- live wallpapers (same drawing as the app) ----------
-  const AGE = 31.4, SPAN = 80, LIVED = 31, FRAC = AGE - LIVED;
-  function dot(x, cx, cy, r, fill, frac) {
-    x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2);
-    if (frac == null) { x.fillStyle = fill; x.fill(); return; }
-    x.fillStyle = '#3a3a3c'; x.fill(); x.save(); x.clip(); x.fillStyle = fill; x.fillRect(cx - r, cy + r - 2 * r * frac, 2 * r, 2 * r * frac); x.restore();
-  }
-  function gridWall(x, W, H, lit, wave) {
-    const gw = W * .62, cell = gw / 9.6, inset = cell * .2, r = cell * .3, gh = 8 * cell - 2 * inset, x0 = (W - gw) / 2, top = H * .46 - gh / 2;
-    for (let i = 0; i < SPAN; i++) {
-      const cx = x0 - inset + (i % 10 + .5) * cell, cy = top - inset + (Math.floor(i / 10) + .5) * cell;
-      const k = wave ? wave(i) : 1;
-      if (i < LIVED) dot(x, cx, cy, r * k, lit); else if (i === LIVED) dot(x, cx, cy, r * k, lit, FRAC); else dot(x, cx, cy, r, '#232323');
-    }
-    x.textAlign = 'center'; x.fillStyle = '#8e8e93'; x.font = `500 ${W * .036}px Inter, sans-serif`;
-    x.fillText('48 years left', W / 2, top + gh + W * .085);
-    x.fillStyle = 'rgba(142,142,147,.6)'; x.font = `400 ${W * .03}px Inter, sans-serif`;
-    x.fillText('52 more visits with Mum', W / 2, top + gh + W * .135);
-  }
-  const walls = {
-    grid(x, W, H, t) { const p = (t % 5000) / 1200; gridWall(x, W, H, '#fff', i => { if (i > LIVED || p > 1) return 1; const d = p * (LIVED + 10) - i; return d > 0 && d < 7 ? 1 + .34 * Math.sin(d / 7 * Math.PI) : 1; }); },
-    daylight(x, W, H, t) { const day = (t / 12000) % 1, sun = Math.max(0, Math.sin(day * Math.PI * 2 - Math.PI / 2) * .5 + .5), v = Math.round(110 + 145 * sun); gridWall(x, W, H, `rgb(${v},${v},${v})`); },
-    hourglass(x, W, H, t) {
-      const cx = W / 2, r = W * .019, step = r * 2.6, hw = W * .3, neck = H * .5, top = H * .3, bottom = H * .72;
-      x.strokeStyle = '#2a2a2c'; x.lineWidth = Math.max(1, W * .003);
-      x.beginPath(); x.moveTo(cx - hw, top - step * 1.5); x.lineTo(cx - r * 1.6, neck); x.lineTo(cx - hw, bottom + step * .6);
-      x.moveTo(cx + hw, top - step * 1.5); x.lineTo(cx + r * 1.6, neck); x.lineTo(cx + hw, bottom + step * .6); x.stroke();
-      let left = SPAN - LIVED - 1, row = 0;
-      while (left > 0) { const y = neck - step * 1.3 - row * step, w = Math.max(step, (neck - y) / (neck - top + step * 1.5) * hw * 1.8), n = Math.max(1, Math.min(left, Math.floor(w / step))); for (let k = 0; k < n; k++) dot(x, cx + (k - (n - 1) / 2) * step, y, r, '#2c2c2e'); left -= n; row++; }
-      let l = LIVED; row = 0;
-      while (l > 0) { const y = bottom - row * step, w = Math.max(step, (y - neck) / (bottom - neck) * hw * 1.85), n = Math.max(1, Math.min(l, Math.floor(w / step))); for (let k = 0; k < n; k++) dot(x, cx + (k - (n - 1) / 2) * step, y, r, '#fff'); l -= n; row++; }
-      dot(x, cx, neck + step * (.2 + .15 * Math.sin((t % 6000) / 6000 * Math.PI * 2)), r, '#fff', FRAC);
-    },
-    stars(x, W, H, t) {
-      let s = 19950615; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647, T = t / 1000;
-      for (let i = 0; i < SPAN; i++) {
-        const bx = W * (.1 + rnd() * .8), by = H * (.3 + rnd() * .42), sz = .6 + rnd() * .8, ph = rnd() * 6.283;
-        const dx = Math.sin(T / 4 + ph) * W * .01, dy = Math.cos(T / 5.5 + ph) * W * .01, r = W * .011 * sz;
-        if (i < LIVED) { x.globalAlpha = .55 + .45 * (.5 + .5 * Math.sin(T / 1.5 + ph * 3)); dot(x, bx + dx, by + dy, r, '#fff'); x.globalAlpha = 1; }
-        else if (i === LIVED) dot(x, bx + dx, by + dy, r * 1.5, '#fff', FRAC); else dot(x, bx + dx, by + dy, r, '#262628');
-      }
-    },
-  };
-  const cvs = [...document.querySelectorAll('canvas[data-wall]')];
-  const vis = new Set();
-  const wio = new IntersectionObserver(es => es.forEach(e => e.isIntersecting ? vis.add(e.target) : vis.delete(e.target)));
-  cvs.forEach(c => wio.observe(c));
-  function size() { cvs.forEach(c => { const b = c.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); c.width = Math.max(1, b.width * d); c.height = Math.max(1, b.height * d); }); }
-  size(); addEventListener('resize', () => { size(); frame(performance.now(), true); });
-  function frame(t, all) {
-    cvs.forEach(c => { if (!all && !vis.has(c)) return; const x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height); walls[c.dataset.wall](x, c.width, c.height, reduce ? 6000 : t); });
-    if (!all && !reduce) requestAnimationFrame(t2 => frame(t2));
-  }
-  frame(0, true); if (!reduce) requestAnimationFrame(t => frame(t));
-
-  // =================== motion engine ===================
-  const canHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const lerp = (a, b, t) => a + (b - a) * t;
-
-  // section titles: split into words that rise one after another
-  document.querySelectorAll('.words').forEach(h => {
-    const html = h.innerHTML.split(/(<br>)/);
-    let n = 0;
-    h.innerHTML = html.map(part => part === '<br>' ? part : part.split(' ').filter(Boolean).map(w => `<span class="w" style="--d:${(n++ * .06).toFixed(2)}s"><span>${w}</span></span>`).join(' ')).join('');
-  });
-  // staggered groups
-  [['.cards', '.card'], ['.steps', '.step'], ['.walls', '.wall'], ['#wboard', '.wd'], ['.faq', 'details']].forEach(([g, c]) => {
-    document.querySelectorAll(g).forEach(group => group.querySelectorAll(c).forEach((el, i) => { el.classList.add('rise'); el.style.setProperty('--d', (i * .08).toFixed(2) + 's'); }));
-  });
-  document.getElementById('wboard')?.classList.remove('rise');
-
-  // reveal on scroll
-  const reveal = new IntersectionObserver(es => es.forEach(e => {
-    if (!e.isIntersecting) return;
-    e.target.classList.add('in'); reveal.unobserve(e.target);
-    e.target.querySelectorAll?.('canvas[data-dots]').forEach(playDots);
-  }), { rootMargin: '0px 0px -10% 0px', threshold: .08 });
-  document.querySelectorAll('.rise, .fade:not(.hero-device), .words, .wd').forEach(el => reveal.observe(el));
-
-  // dots fill in, once, the first time a screen is seen
-  function playDots(cv) {
-    if (played.has(cv)) return; played.add(cv);
-    if (reduce) { paintDots(cv, 1); return; }
-    const o = JSON.parse(cv.dataset.dots);
-    if (o.total > 400) { paintDots(cv, 1); return; }
-    const dur = 900 + o.total * 12, t0 = performance.now();
-    const tick = t => { const k = Math.min(1, (t - t0) / dur); paintDots(cv, k); if (k < 1) requestAnimationFrame(tick); };
-    requestAnimationFrame(tick);
-  }
-  const devObs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) e.target.querySelectorAll('canvas[data-dots]').forEach(playDots); }), { threshold: .25 });
-  document.querySelectorAll('.device').forEach(d => devObs.observe(d));
-
-  // intro: once fonts are ready, play the hero sequence
-  const start = () => {
-    if (document.body.classList.contains('ready')) return;
-    document.body.classList.add('ready');
-    document.querySelectorAll('.hero .ln').forEach(l => l.classList.add('in'));
-    document.querySelector('.hero-device')?.classList.add('in');
-    introT0 = performance.now(); wake();
-  };
-  let introT0 = 0;
-  (document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 700))]) : Promise.resolve()).then(() => requestAnimationFrame(start));
-
-  // nav: hides while you read down, returns when you scroll up
-  const navEl = document.getElementById('nav');
-  let lastY = scrollY;
-  addEventListener('scroll', () => {
-    const y = scrollY;
-    navEl.classList.toggle('scrolled', y > 8);
-    if (Math.abs(y - lastY) > 6) { navEl.classList.toggle('hide', y > lastY && y > 400); lastY = y; }
-    wake();
-  }, { passive: true });
-
-  // devices: gentle parallax as you scroll, a soft tilt toward the pointer, a smooth rise on first load
-  const devs = [...document.querySelectorAll('.device')].map((el, i) => ({
-    el, hero: el.classList.contains('hero-device'),
-    base: { rot: el.classList.contains('hero-device') ? -3 : 0, py: el.parentElement.classList.contains('shots') && el === el.parentElement.children[1] ? 44 : 0 },
-    cur: { py: 0, rx: 0, ry: 0, rot: 0, s: 1 }, tgt: { py: 0, rx: 0, ry: 0, rot: 0, s: 1 }, hover: false, vis: false,
-  }));
-  const visObs = new IntersectionObserver(es => es.forEach(e => { const d = devs.find(x => x.el === e.target); if (d) d.vis = e.isIntersecting; wake(); }));
-  devs.forEach(d => {
-    d.cur.rot = d.base.rot; d.cur.py = d.base.py + (d.hero ? 80 : 0);
-    visObs.observe(d.el);
-    if (canHover) {
-      d.el.addEventListener('pointermove', ev => {
-        const r = d.el.getBoundingClientRect();
-        const nx = (ev.clientX - r.left) / r.width - .5, ny = (ev.clientY - r.top) / r.height - .5;
-        d.tgt.ry = nx * 10; d.tgt.rx = -ny * 8; d.hover = true; wake();
-      });
-      d.el.addEventListener('pointerleave', () => { d.tgt.rx = 0; d.tgt.ry = 0; d.hover = false; wake(); });
+// ================================================= widgets (Android)
+function drawWidgets() {
+  const a = age(), lived = Math.floor(a), F = (w, s) => `${w} ${s}px -apple-system, "SF Pro Display", Inter, sans-serif`;
+  document.querySelectorAll('[data-w]').forEach(cv => {
+    const x = sizeTo(cv), W = cv.width, H = cv.height; if (!W) return; x.clearRect(0, 0, W, H);
+    const p = W * .1, kind = cv.dataset.w;
+    x.textBaseline = 'alphabetic'; x.textAlign = 'left';
+    if (kind === 'life') {
+      const cols = 10, rows = Math.ceil(span / 10), cell = Math.min((W - 2 * p) / cols, (H - 2 * p - H * .1) / rows), x0 = (W - cell * cols) / 2, y0 = p;
+      for (let i = 0; i < span; i++) { const cx = x0 + (i % cols + .5) * cell, cy = y0 + (Math.floor(i / cols) + .5) * cell; dot(x, cx, cy, cell * .32, i < lived ? '#fff' : i === lived ? '#fff' : '#232323', i === lived ? a - lived : null); }
+      x.fillStyle = '#8e8e93'; x.font = F(500, H * .055); x.fillText(`${Math.floor(span - a)} years left`, x0 + cell * .18, H - p * .9);
+    } else if (kind === 'number') {
+      x.fillStyle = '#fff'; x.font = F(200, H * .5); x.fillText(Math.floor(span - a), p, H * .66);
+      x.fillStyle = '#8e8e93'; x.font = F(500, H * .12); x.fillText('years left', p, H * .86);
+    } else if (kind === 'today') {
+      const d = now(), f = (d.getHours() * 60 + d.getMinutes()) / 1440, r = W * .22;
+      dot(x, W / 2, H * .44, r, '#fff', f);
+      x.textAlign = 'center'; x.fillStyle = '#8e8e93'; x.font = F(500, H * .1); x.fillText(`${Math.round(f * 100)}% of today`, W / 2, H * .86);
+    } else if (kind === 'decade') {
+      const st = Math.floor(lived / 10) * 10, cell = (W - 2 * p) / 5;
+      for (let i = 0; i < 10; i++) { const cx = p + (i % 5 + .5) * cell, cy = H * .3 + Math.floor(i / 5) * cell; const v = a - st - i; dot(x, cx, cy, cell * .3, v >= 1 ? '#fff' : v > 0 ? '#fff' : '#232323', v > 0 && v < 1 ? v : null); }
+      x.fillStyle = '#8e8e93'; x.font = F(500, H * .1); x.fillText(`Your ${st}s`, p, H * .86);
+    } else if (kind === 'year') {
+      const f = a - lived, m = f * 12, cell = (W - 2 * p) / 6;
+      for (let i = 0; i < 12; i++) { const cx = p + (i % 6 + .5) * cell, cy = H * .26 + Math.floor(i / 6) * cell * .95; const v = m - i; dot(x, cx, cy, cell * .27, v >= 1 || (v > 0) ? '#fff' : '#232323', v > 0 && v < 1 ? v : null); }
+      x.fillStyle = '#8e8e93'; x.font = F(500, H * .1); x.fillText(`Age ${lived} · ${12 - Math.ceil(m)} months to go`, p, H * .86);
+    } else {
+      const n = Math.min(Math.floor(Math.max(2, span - a) * 4), 60), cols = 20, cell = (W - 2 * p) / cols;
+      x.fillStyle = '#fff'; x.font = F(600, H * .11); x.fillText('Mum', p, H * .22);
+      x.fillStyle = '#8e8e93'; x.font = F(500, H * .09); x.textAlign = 'right'; x.fillText(`${Math.floor(Math.max(2, span - a) * 4)} visits left`, W - p, H * .22); x.textAlign = 'left';
+      for (let i = 0; i < n; i++) dot(x, p + (i % cols + .5) * cell, H * .38 + Math.floor(i / cols) * cell * 1.05, cell * .3, '#fff');
     }
   });
+}
 
-  // magnetic download buttons
-  const magnets = canHover ? [...document.querySelectorAll('.download, .pill')].map(el => ({ el, x: 0, y: 0, tx: 0, ty: 0 })) : [];
-  magnets.forEach(m => {
-    m.el.addEventListener('pointermove', ev => { const r = m.el.getBoundingClientRect(); m.tx = (ev.clientX - r.left - r.width / 2) * .18; m.ty = (ev.clientY - r.top - r.height / 2) * .28; wake(); });
-    m.el.addEventListener('pointerleave', () => { m.tx = 0; m.ty = 0; wake(); });
-  });
-
-  // one loop, only while something is moving
-  let running = false;
-  function wake() { if (!running && !reduce) { running = true; requestAnimationFrame(loop); } }
-  function loop(t) {
-    let moving = false;
-    const vh = innerHeight;
-    for (const d of devs) {
-      if (!d.vis && !d.hero) continue;
-      const r = d.el.getBoundingClientRect();
-      const p = ((r.top + r.height / 2) - vh / 2) / vh; // -1 .. 1 across the screen
-      const introLeft = d.hero ? Math.max(0, 1 - (t - introT0) / 1600) : 0;
-      d.tgt.py = d.base.py + p * -38 + (introT0 ? 80 * Math.pow(introLeft, 3) : 80);
-      d.tgt.rot = d.hover ? 0 : d.base.rot;
-      d.tgt.s = d.hover ? 1.02 : 1;
-      const k = d.hero && introLeft > 0 ? .14 : .1;
-      let delta = 0;
-      for (const key of ['py', 'rx', 'ry', 'rot', 's']) { const v = lerp(d.cur[key], d.tgt[key], k); delta += Math.abs(v - d.tgt[key]); d.cur[key] = v; }
-      d.el.style.setProperty('--py', d.cur.py.toFixed(2) + 'px');
-      d.el.style.setProperty('--rx', d.cur.rx.toFixed(3) + 'deg');
-      d.el.style.setProperty('--ry', d.cur.ry.toFixed(3) + 'deg');
-      d.el.style.setProperty('--rot', d.cur.rot.toFixed(3) + 'deg');
-      d.el.style.setProperty('--s', d.cur.s.toFixed(4));
-      if (delta > .02 || introLeft > 0) moving = true;
-    }
-    for (const m of magnets) {
-      m.x = lerp(m.x, m.tx, .16); m.y = lerp(m.y, m.ty, .16);
-      m.el.style.transform = `translate3d(${m.x.toFixed(2)}px, ${m.y.toFixed(2)}px, 0)`;
-      if (Math.abs(m.x - m.tx) + Math.abs(m.y - m.ty) > .05) moving = true;
-    }
-    if (moving) requestAnimationFrame(loop); else running = false;
+// ================================================= the footer wordmark: the app icon, life-size
+function drawBleed() {
+  const svg = $('bleed'), a = age(), f = a / span;
+  // the real glyph outlines come from the app icon; fetched once
+  if (!svg.dataset.ok) {
+    svg.dataset.ok = 1;
+    fetch('web/icons/icon.svg').then(r => r.text()).then(t => {
+      const m = [...t.matchAll(/<path fill="(#[0-9a-f]+)" d="([^"]+)"/g)];
+      if (!m.length) return;
+      svg.innerHTML = `<defs><clipPath id="dc"><path d="${m[1] ? m[1][2] : ''}"/></clipPath></defs>` + `<path fill="#f5f5f7" d="${m[0][2]}"/>` + (m[1] ? `<path fill="#3a3a3c" d="${m[1][2]}"/><g clip-path="url(#dc)"><rect id="bleedFill" x="60" width="30" fill="#f5f5f7"/></g>` : '');
+      drawBleed();
+    }).catch(() => {});
+    return;
   }
-  if (reduce) devs.forEach(d => { d.el.style.setProperty('--rot', d.base.rot + 'deg'); d.el.style.setProperty('--py', d.base.py + 'px'); });
-  else wake();
+  const r = svg.querySelector('#bleedFill'); if (r) { const top = 27.36, bot = 43.2, y = bot - (bot - top) * f; r.setAttribute('y', y); r.setAttribute('height', bot - y); }
+}
+
+// ================================================= release info
+fetch('https://api.github.com/repos/jrypzm/yrs./releases/latest').then(r => r.ok ? r.json() : null).then(rel => {
+  if (!rel) return;
+  const a = (rel.assets || []).find(x => x.name === 'yrs.apk') || (rel.assets || [])[0];
+  const v = (rel.tag_name || '').replace(/^years-/, ''), mb = a ? (a.size / 1048576).toFixed(1) + ' MB' : '';
+  $('ver').textContent = `Version ${v}${mb ? ' · ' + mb : ''} · Android 10+`;
+}).catch(() => {});
+
+// ================================================= loop
+function frame(t) {
+  if (GL && stageOn) GL.draw(t);
+  if (locksOn && !reduce && (frame.l == null || t - frame.l > 66)) { frame.l = t; drawLocks(t); }
+  if ((frame.s == null || t - frame.s > 1000)) { frame.s = t; $('ticker').textContent = fmt(NUM().secLeft); }
+  onScroll();
+  requestAnimationFrame(frame);
+}
+function resize() { sizeStory(); if (GL) GL.build(); scalePhone(); drawLocks(); drawWidgets(); onScroll(true); }
+// phones fire resize whenever the toolbar slides; only re-lay out when the width or the height really changes
+let rz, lastW = innerWidth, lastH = innerHeight;
+addEventListener('resize', () => { if (innerWidth === lastW && Math.abs(innerHeight - lastH) < 140) return; lastW = innerWidth; lastH = innerHeight; clearTimeout(rz); rz = setTimeout(resize, 120); });
+
+sizeStory();
+if (GL) { try { GL.build(); } catch (e) { console.error(e); } }
+personalise(false);
+onScroll(true);
+requestAnimationFrame(frame);
+const go = () => { document.documentElement.classList.add('ready'); if (GL) GL.intro(); };
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(go));
+setTimeout(() => document.documentElement.classList.contains('ready') || go(), 1500);
+
+// smooth wheel scrolling on desktops only; touch keeps the phone's own physics
+addEventListener('load', () => {
+  if (reduce || touch || !window.Lenis) return;
+  const lenis = new Lenis({ lerp: .085, wheelMultiplier: 1 });
+  const raf = t => { lenis.raf(t); requestAnimationFrame(raf); }; requestAnimationFrame(raf);
+  document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', e => { const el = document.querySelector(a.getAttribute('href')); if (el) { e.preventDefault(); lenis.scrollTo(el, { duration: 1.6 }); } }));
+});
 })();
 </script>
 </body>
