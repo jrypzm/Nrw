@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-feature android:name="android.software.live_wallpaper" android:required="false" />
 
     <application
@@ -37,6 +41,19 @@
         <receiver android:name=".YearWidgetReceiver" android:exported="true" android:label="@string/w_year">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_year" />
+        </receiver>
+
+        <receiver android:name=".DaysWidgetReceiver" android:exported="true" android:label="@string/w_days">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_days" />
+        </receiver>
+        <receiver android:name=".TodayWidgetReceiver" android:exported="true" android:label="@string/w_today">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_today" />
+        </receiver>
+        <receiver android:name=".PeopleWidgetReceiver" android:exported="true" android:label="@string/w_people">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_people" />
         </receiver>
 
         <service

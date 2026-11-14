@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Years</string>
+    <string name="app_name">yrs.</string>
     <string name="w_life">Life</string>
     <string name="w_number">Years left</string>
     <string name="w_decade">This decade</string>
@@ -8,5 +8,11 @@
     <string name="w_number_desc">Just the number, large and thin.</string>
     <string name="w_decade_desc">The ten years of the decade you\'re living.</string>
     <string name="w_year_desc">Twelve months between your last birthday and the next.</string>
-    <string name="wall_desc">Your years as dots. Ripples when you wake your phone.</string>
+    <string name="wall_desc">Your life in dots. Ripples when you wake your phone.</string>
+    <string name="w_days">Days left</string>
+    <string name="w_today">Today</string>
+    <string name="w_people">People</string>
+    <string name="w_days_desc">The days you have left, and which day of your life today is.</string>
+    <string name="w_today_desc">Today\'s day of your life and the one line you wrote about it.</string>
+    <string name="w_people_desc">How many more times you\'ll see the people you love.</string>
 </resources>
