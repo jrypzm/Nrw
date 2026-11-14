@@ -38,10 +38,11 @@ object Life {
 
     val MEASURES = listOf(
         Measure("year", "years", 1.0),
+        Measure("day", "days", 365.2425),
+        Measure("week", "weeks", 52.1775),
         Measure("summer", "summers", 1.0),
         Measure("weekend", "weekends", 52.1775),
         Measure("full moon", "full moons", 365.2425 / 29.530589),
-        Measure("sunrise", "sunrises", 365.2425),
     )
 
     fun age(birth: LocalDate, now: ZonedDateTime = ZonedDateTime.now()): Double {
@@ -87,11 +88,7 @@ object Life {
                     { i -> val d = lb.plusMonths(i.toLong()); "${mon(d)} ${d.year}" }, null,
                 )
             }
-            ViewKind.LIFE -> GridModel(
-                kind, s.span, age.coerceIn(0.0, s.span.toDouble()), 10, "year", null,
-                "Age $lived · ${s.span} year life",
-                { i -> "Age $i · ${by + i}" }, { it },
-            )
+            ViewKind.LIFE -> zoomModel(s, birth, age, now)
         }
     }
 
@@ -124,5 +121,91 @@ object Life {
     fun litColor(sun: Float): Int {
         val v = (110 + 145 * sun).roundToInt().coerceIn(0, 255)
         return Color.rgb(v, v, v)
+    }
+
+    // ------------------------------------------------------------ zoom through time
+
+    val ZOOMS = listOf("Years", "Months", "Weeks", "Days")
+
+    private fun zoomModel(s: Settings, birth: LocalDate, age: Double, now: ZonedDateTime): GridModel {
+        val lived = floor(age).toInt()
+        val by = birth.year
+        val sub = "Age $lived · day ${INT.format(dayOfLife(birth, now.toLocalDate()))}"
+        return when (s.zoom.coerceIn(0, 3)) {
+            1 -> GridModel(ViewKind.LIFE, s.span * 12, (age * 12).coerceIn(0.0, s.span * 12.0), 36, "month", null, sub,
+                { i -> val d = birth.plusMonths(i.toLong()); "${mon(d)} ${d.year} · age ${i / 12}" }, null)
+            2 -> GridModel(ViewKind.LIFE, s.span * 52, (age * 52.1775).coerceIn(0.0, s.span * 52.0), 52, "week", null, sub,
+                { i -> val d = birth.plusWeeks(i.toLong()); "Week of ${d.dayOfMonth} ${mon(d)} ${d.year}" }, null)
+            3 -> {
+                val total = ChronoUnit.DAYS.between(birth, birth.plusYears(s.span.toLong())).toInt()
+                val today = now.toLocalDate()
+                val dayFrac = (now.toLocalTime().toSecondOfDay() / 86400.0)
+                val done = (ChronoUnit.DAYS.between(birth, today) + dayFrac).coerceIn(0.0, total.toDouble())
+                GridModel(ViewKind.LIFE, total, done, 183, "day", null, sub,
+                    { i -> val d = birth.plusDays(i.toLong()); "${d.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)} ${d.dayOfMonth} ${mon(d)} ${d.year}" }, null)
+            }
+            else -> GridModel(ViewKind.LIFE, s.span, age.coerceIn(0.0, s.span.toDouble()), 10, "year", null, sub,
+                { i -> "Age $i · ${by + i}" }, { it })
+        }
+    }
+
+    fun dayOfLife(birth: LocalDate, today: LocalDate = LocalDate.now()): Long = ChronoUnit.DAYS.between(birth, today) + 1
+    fun daysLeft(s: Settings, today: LocalDate = LocalDate.now()): Long =
+        max(0L, ChronoUnit.DAYS.between(today, (s.birth ?: today).plusYears(s.span.toLong())))
+    fun weekOfLife(birth: LocalDate, today: LocalDate = LocalDate.now()): Long = ChronoUnit.WEEKS.between(birth, today) + 1
+    fun yearsLeft(s: Settings): Double = s.birth?.let { max(0.0, s.span - age(it)) } ?: 0.0
+
+    // ------------------------------------------------------------ people (the tail end)
+
+    /** How many more times you'll see someone, and how many years you'll overlap. */
+    class Together(val visits: Long, val years: Double, val theirAge: Int)
+
+    fun together(s: Settings, p: Person, today: LocalDate = LocalDate.now()): Together {
+        val theirAge = today.year - p.birthYear
+        val theirLeft = max(0.0, s.span - theirAge.toDouble())
+        val shared = minOf(yearsLeft(s), theirLeft)
+        return Together(floor(shared * p.often.perYear).toLong(), shared, theirAge)
+    }
+
+    // ------------------------------------------------------------ the ledger
+
+    class Slice(val label: String, val years: Double)
+
+    /** Where the years you have left will go, given your phone time per day. */
+    fun ledger(s: Settings, phoneHours: Double): List<Slice> {
+        val left = yearsLeft(s)
+        val age = s.birth?.let { age(it) } ?: 30.0
+        val sleep = left * 8.0 / 24.0
+        val workYears = max(0.0, minOf(left, 65.0 - age))
+        val work = workYears * (40.0 * 48.0) / 8766.0
+        val phone = left * phoneHours / 24.0
+        val upkeep = left * 3.0 / 24.0 // eating, washing, chores, getting around
+        val free = max(0.0, left - sleep - work - phone - upkeep)
+        return listOf(Slice("Asleep", sleep), Slice("Working", work), Slice("On your phone", phone), Slice("Eating, chores, commuting", upkeep), Slice("Truly yours", free))
+    }
+
+    // ------------------------------------------------------------ lifespan check
+
+    /** Rough, population-level adjustments. An estimate to reflect on, not medical advice. */
+    val HABITS = listOf(
+        Triple("smoke", "I smoke", -10),
+        Triple("exercise", "I exercise most weeks", 3),
+        Triple("sleep", "I usually sleep 7 to 8 hours", 1),
+        Triple("drink", "I drink heavily", -5),
+        Triple("diet", "I mostly eat whole foods", 2),
+    )
+
+    fun estimate(habits: Set<String>, base: Int = 80): Int = (base + HABITS.filter { it.first in habits }.sumOf { it.third }).coerceIn(40, 120)
+
+    /** A short, changing line for the lock screen. */
+    fun lineOfDay(c: android.content.Context, s: Settings, today: LocalDate = LocalDate.now()): String? {
+        val birth = s.birth ?: return null
+        val options = mutableListOf("Day ${INT.format(dayOfLife(birth, today))}", "${INT.format(daysLeft(s, today))} days left")
+        s.people.forEach { p -> val t = together(s, p, today); if (t.visits > 0) options += "${INT.format(t.visits)} more ${if (p.often == Often.DAILY) "days" else "visits"} with ${p.name}" }
+        s.names.forEach { (age, n) -> if (age <= age(birth).toInt()) options += "$n · ${birth.year + age}" }
+        s.events.filter { !it.date.isBefore(today) }.minByOrNull { it.date }?.let { e ->
+            val d = ChronoUnit.DAYS.between(today, e.date); options += if (d == 0L) "${e.name} · today" else "${e.name} · in $d ${if (d == 1L) "day" else "days"}"
+        }
+        return options[(today.dayOfYear + today.year) % options.size]
     }
 }

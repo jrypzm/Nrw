@@ -261,16 +261,16 @@ fun Wheel(items: List<String>, index: Int, onIndex: (Int) -> Unit, width: Dp, al
 }
 
 @Composable
-fun DateWheels(value: LocalDate, onChange: (LocalDate) -> Unit) {
-    val now = LocalDate.now()
-    val years = remember { (1920..now.year).toList() }
+fun DateWheels(value: LocalDate, onChange: (LocalDate) -> Unit, fromYear: Int = 1920, toYear: Int = LocalDate.now().year, latest: LocalDate? = LocalDate.now(), earliest: LocalDate? = null) {
+    val years = remember(fromYear, toYear) { (fromYear..toYear).toList() }
     val months = remember { Month.values().map { it.getDisplayName(JTextStyle.FULL, Locale.ENGLISH) } }
     val dim = value.withDayOfMonth(1).lengthOfMonth()
     val days = (1..dim).map { "$it" }
     fun set(y: Int, m: Int, d: Int) {
         val maxD = LocalDate.of(y, m, 1).lengthOfMonth()
         var date = LocalDate.of(y, m, d.coerceAtMost(maxD))
-        if (date.isAfter(now)) date = now
+        if (latest != null && date.isAfter(latest)) date = latest
+        if (earliest != null && date.isBefore(earliest)) date = earliest
         onChange(date)
     }
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

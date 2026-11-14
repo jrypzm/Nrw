@@ -19,7 +19,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-enum class WidgetKind { LIFE, NUMBER, DECADE, YEAR }
+enum class WidgetKind { LIFE, NUMBER, DECADE, YEAR, DAYS, TODAY, PEOPLE }
 
 /** Pixel drawing shared by widgets, the live wallpaper, the lock screen image and the share card. */
 object Render {
@@ -122,13 +122,13 @@ object Render {
         p.style = Paint.Style.FILL
         val pad = min(18 * d, min(W, H) * 0.14f)
         if (s.birth == null) {
-            text(c, cv, "Open Years to begin", W / 2, H / 2 + 5 * d, 13 * d, MUTE, R.font.inter_medium, W - 2 * pad, Paint.Align.CENTER)
+            text(c, cv, "Open yrs. to begin", W / 2, H / 2 + 5 * d, 13 * d, MUTE, R.font.inter_medium, W - 2 * pad, Paint.Align.CENTER)
             return bmp
         }
         val lit = lit(s)
         when (kind) {
             WidgetKind.LIFE -> {
-                val m = Life.model(s, ViewKind.LIFE)
+                val m = Life.model(s.copy(zoom = 0), ViewKind.LIFE)
                 val hl = Life.headline(s.copy(unit = 0), m)
                 val num = if (s.pct) "${floor(hl.pct).toInt()}%" else Life.whole(hl.value)
                 val label = if (s.pct) hl.word else "${hl.noun} ${hl.word}"
@@ -152,7 +152,7 @@ object Render {
                 }
             }
             WidgetKind.NUMBER -> {
-                val m = Life.model(s, ViewKind.LIFE)
+                val m = Life.model(s.copy(zoom = 0), ViewKind.LIFE)
                 val hl = Life.headline(s.copy(unit = 0), m)
                 val cap = if (s.lived) "Years lived" else "Years left"
                 text(c, cv, if (s.pct) (if (s.lived) "Lived" else "Left") else cap, pad, pad + 12 * d, 12 * d, MUTE, R.font.inter_medium, W - 2 * pad)
@@ -181,14 +181,55 @@ object Render {
                 text(c, cv, m.context ?: "", pad, H - pad - 16 * d, 14 * d, Color.WHITE, R.font.inter_semibold, W - 2 * pad)
                 text(c, cv, "${floor(m.done).toInt()} of 12 months", pad, H - pad, 12 * d, MUTE, R.font.inter_medium, W - 2 * pad)
             }
+            WidgetKind.DAYS -> {
+                val birth = s.birth!!
+                text(c, cv, "Days left", pad, pad + 12 * d, 12 * d, MUTE, R.font.inter_medium, W - 2 * pad)
+                text(c, cv, Life.whole(Life.daysLeft(s).toDouble()), pad - 2 * d, H - pad - 20 * d, min(H * 0.34f, W * 0.30f), Color.WHITE, R.font.interdisplay_extralight, W - 2 * pad, tracking = -0.04f)
+                text(c, cv, "Today is day ${Life.whole(Life.dayOfLife(birth).toDouble())}", pad, H - pad, 12 * d, MUTE, R.font.inter_medium, W - 2 * pad)
+            }
+            WidgetKind.TODAY -> {
+                val birth = s.birth!!
+                val today = java.time.LocalDate.now()
+                text(c, cv, "Day ${Life.whole(Life.dayOfLife(birth, today).toDouble())}", pad, pad + 16 * d, 17 * d, Color.WHITE, R.font.interdisplay_semibold, W - 2 * pad)
+                val line = Lines.get(c, today)
+                val body = line ?: "Tap to write one line about today"
+                val p2 = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = font(c, R.font.inter_regular); textSize = 13 * d; color = if (line != null) Color.WHITE else MUTE }
+                var y = pad + 40 * d
+                wrap(body, p2, W - 2 * pad).take(max(1, ((H - y - pad) / (18 * d)).toInt() + 1)).forEach { ln -> cv.drawText(ln, pad, y, p2); y += 18 * d }
+            }
+            WidgetKind.PEOPLE -> {
+                val people = s.people.take(if (H > 130 * d) 3 else 2)
+                if (people.isEmpty()) {
+                    text(c, cv, "Add the people you love in yrs.", pad, H / 2 + 5 * d, 13 * d, MUTE, R.font.inter_medium, W - 2 * pad)
+                } else {
+                    val rowH = (H - 2 * pad) / people.size
+                    people.forEachIndexed { i, person ->
+                        val t = Life.together(s, person)
+                        val y = pad + rowH * i + rowH / 2
+                        text(c, cv, person.name, pad, y - 2 * d, 14 * d, Color.WHITE, R.font.inter_semibold, W * 0.4f)
+                        text(c, cv, "${Life.whole(t.visits.toDouble())} ${if (person.often == Often.DAILY) "days" else "visits"} left", pad, y + 14 * d, 12 * d, MUTE, R.font.inter_medium, W * 0.4f)
+                        val gw = W - pad - (pad + W * 0.42f)
+                        val n = min(t.visits, 30L).toInt()
+                        if (n > 0) grid(cv, W - pad - gw, y - gw / 30f, gw, 30, 30, n.toDouble(), lit, ratio = 0.55f)
+                    }
+                }
+            }
         }
         return bmp
     }
 
+    private fun wrap(t: String, p: Paint, maxW: Float): List<String> {
+        val out = mutableListOf<String>(); var cur = ""
+        t.split(" ").forEach { w -> val next = if (cur.isEmpty()) w else "$cur $w"; if (p.measureText(next) > maxW && cur.isNotEmpty()) { out += cur; cur = w } else cur = next }
+        if (cur.isNotEmpty()) out += cur
+        return out
+    }
+
     fun describe(c: Context, kind: WidgetKind): String {
         val s = Prefs.load(c)
-        if (s.birth == null) return "Years"
-        val m = Life.model(s, if (kind == WidgetKind.DECADE) ViewKind.DECADE else if (kind == WidgetKind.YEAR) ViewKind.YEAR else ViewKind.LIFE)
+        if (s.birth == null) return "yrs."
+        if (kind == WidgetKind.DAYS || kind == WidgetKind.TODAY) return "${Life.whole(Life.daysLeft(s).toDouble())} days left"
+        val m = Life.model(s.copy(zoom = 0), if (kind == WidgetKind.DECADE) ViewKind.DECADE else if (kind == WidgetKind.YEAR) ViewKind.YEAR else ViewKind.LIFE)
         val hl = Life.headline(s.copy(unit = 0), m)
         return "${Life.whole(hl.value)} ${hl.noun} ${hl.word}"
     }
@@ -211,17 +252,20 @@ object Render {
                 val lit = if (style == WallStyle.DAYLIGHT) Life.litColor(sun) else Color.WHITE
                 val gw = W * 0.62f
                 val gh = gridHeight(gw, 10, span)
-                val top = H * 0.58f - gh / 2
+                val top = H * 0.46f - gh / 2
                 grid(cv, (W - gw) / 2, top, gw, 10, span, done, lit, s.names.keys.toSet(), scaleOf = rippleScale(ripple, lived))
                 if (caption) {
                     val left = max(0, floor(span - age).toInt())
                     val capColor = if (style == WallStyle.DAYLIGHT) Color.argb((150 + 105 * sun).roundToInt(), 142, 142, 147) else MUTE
                     text(c, cv, "$left ${if (left == 1) "year" else "years"} left", W / 2, top + gh + W * 0.085f, W * 0.036f, capColor, R.font.inter_medium, W, Paint.Align.CENTER)
+                    Life.lineOfDay(c, s)?.let { ln ->
+                        text(c, cv, ln, W / 2, top + gh + W * 0.135f, W * 0.030f, Color.argb(150, 142, 142, 147), R.font.inter_regular, W * 0.8f, Paint.Align.CENTER)
+                    }
                 }
             }
             WallStyle.HOURGLASS -> {
                 val cx = W / 2; val r = W * 0.019f; val step = r * 2.6f; val hw = W * 0.3f
-                val neck = H * 0.62f; val top = H * 0.40f; val bottom = H * 0.86f
+                val neck = H * 0.50f; val top = H * 0.30f; val bottom = H * 0.72f
                 p.style = Paint.Style.STROKE; p.strokeWidth = max(1f, W * 0.003f); p.color = 0xFF2A2A2C.toInt()
                 val glass = Path().apply {
                     moveTo(cx - hw, top - step * 1.5f); lineTo(cx - r * 1.6f, neck); lineTo(cx - hw, bottom + step * 0.6f)
@@ -260,7 +304,7 @@ object Render {
                 fun rnd(): Float { seed = (seed * 16807L) % 2147483647L; return seed / 2147483647f }
                 val t = timeMs / 1000f
                 for (i in 0 until span) {
-                    val bx = W * (0.1f + rnd() * 0.8f); val by = H * (0.36f + rnd() * 0.52f)
+                    val bx = W * (0.1f + rnd() * 0.8f); val by = H * (0.30f + rnd() * 0.42f)
                     val sz = 0.6f + rnd() * 0.8f; val ph = rnd() * 6.283f
                     val dx = sin(t / 40f + ph) * W * 0.01f; val dy = cos(t / 55f + ph) * W * 0.01f
                     val r = W * 0.011f * sz
@@ -296,14 +340,14 @@ object Render {
         val bmp = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
         val cv = Canvas(bmp)
         cv.drawColor(Color.BLACK)
-        val m = Life.model(s, ViewKind.LIFE)
+        val m = Life.model(s.copy(zoom = 0), ViewKind.LIFE)
         val hl = Life.headline(s.copy(unit = 0, lived = false, pct = false), m)
         val pad = 110f
         text(c, cv, Life.whole(hl.value), pad - 8f, 330f, 230f, Color.WHITE, R.font.interdisplay_extralight, tracking = -0.045f)
         text(c, cv, "${hl.noun} left", pad, 410f, 44f, MUTE, R.font.inter_medium)
         val gw = W - 2 * pad
         grid(cv, pad, 500f, gw, 10, s.span, m.done, Color.WHITE, s.names.keys.toSet())
-        text(c, cv, "Years", pad, H - 90f, 34f, 0xFF48484A.toInt(), R.font.interdisplay_semibold)
+        text(c, cv, "yrs.", pad, H - 90f, 34f, 0xFF48484A.toInt(), R.font.interdisplay_bold)
         return bmp
     }
 

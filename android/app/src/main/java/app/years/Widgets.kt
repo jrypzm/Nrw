@@ -39,11 +39,17 @@ class LifeWidget : DotsWidget(WidgetKind.LIFE)
 class NumberWidget : DotsWidget(WidgetKind.NUMBER)
 class DecadeWidget : DotsWidget(WidgetKind.DECADE)
 class YearWidget : DotsWidget(WidgetKind.YEAR)
+class DaysWidget : DotsWidget(WidgetKind.DAYS)
+class TodayWidget : DotsWidget(WidgetKind.TODAY)
+class PeopleWidget : DotsWidget(WidgetKind.PEOPLE)
 
 class LifeWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidget: GlanceAppWidget = LifeWidget() }
 class NumberWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidget: GlanceAppWidget = NumberWidget() }
 class DecadeWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidget: GlanceAppWidget = DecadeWidget() }
 class YearWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidget: GlanceAppWidget = YearWidget() }
+class DaysWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidget: GlanceAppWidget = DaysWidget() }
+class TodayWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidget: GlanceAppWidget = TodayWidget() }
+class PeopleWidgetReceiver : GlanceAppWidgetReceiver() { override val glanceAppWidget: GlanceAppWidget = PeopleWidget() }
 
 object Widgets {
     suspend fun updateAll(c: Context) {
@@ -51,5 +57,8 @@ object Widgets {
         runCatching { NumberWidget().updateAll(c) }
         runCatching { DecadeWidget().updateAll(c) }
         runCatching { YearWidget().updateAll(c) }
+        runCatching { DaysWidget().updateAll(c) }
+        runCatching { TodayWidget().updateAll(c) }
+        runCatching { PeopleWidget().updateAll(c) }
     }
 }

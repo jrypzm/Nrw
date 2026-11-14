@@ -1,4 +1,6 @@
 <resources>
     <color name="black">#FF000000</color>
+    <color name="icon_bg">#FF000000</color>
+    <color name="icon_fg">#FFFFFFFF</color>
     <color name="icon_dim">#FF3A3A3C</color>
 </resources>
