@@ -151,7 +151,7 @@ object Life {
                 { i -> if (i == LIFETIMES - 1) "Your life" else "About ${INT.format((LIFETIMES - 1 - i) * 80L)} years ago" }, null)
             2 -> GridModel(ViewKind.LIFE, s.span * 12, (age * 12).coerceIn(0.0, s.span * 12.0), 36, "month", null, sub,
                 { i -> val d = birth.plusMonths(i.toLong()); "${mon(d)} ${d.year} · age ${i / 12}" }, null)
-            3 -> GridModel(ViewKind.LIFE, s.span * 52, (age * 52.1775).coerceIn(0.0, s.span * 52.0), 52, "week", null, sub,
+            3 -> GridModel(ViewKind.LIFE, (s.span * 52.1775).roundToInt(), (age * 52.1775).coerceIn(0.0, s.span * 52.1775), 52, "week", null, sub,
                 { i -> val d = birth.plusWeeks(i.toLong()); "Week of ${d.dayOfMonth} ${mon(d)} ${d.year}" }, null)
             4 -> {
                 val total = ChronoUnit.DAYS.between(birth, birth.plusYears(s.span.toLong())).toInt()
