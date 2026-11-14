@@ -1,10 +1,15 @@
 package app.years
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.service.wallpaper.WallpaperService
 import android.view.SurfaceHolder
+import androidx.core.content.ContextCompat
 
 /**
  * The live wallpaper. It sleeps while the screen is off and draws only when time moves:
@@ -20,6 +25,16 @@ class YearsWallpaperService : WallpaperService() {
         private var rippleStart = 0L
         private var settings = Prefs.load(this@YearsWallpaperService)
         private val tick = Runnable { draw() }
+        // Ripple only when the phone wakes up, not every time you return to the home screen.
+        private var screenWasOff = true
+        private val screen = object : BroadcastReceiver() {
+            override fun onReceive(c: Context?, i: Intent?) { if (i?.action == Intent.ACTION_SCREEN_OFF) screenWasOff = true }
+        }
+
+        override fun onCreate(surfaceHolder: SurfaceHolder) {
+            super.onCreate(surfaceHolder)
+            runCatching { ContextCompat.registerReceiver(this@YearsWallpaperService, screen, IntentFilter(Intent.ACTION_SCREEN_OFF), ContextCompat.RECEIVER_NOT_EXPORTED) }
+        }
 
         private fun rippleMs(): Long {
             val lived = settings.birth?.let { Life.age(it).toInt() } ?: 0
@@ -30,7 +45,8 @@ class YearsWallpaperService : WallpaperService() {
             visible = v
             if (v) {
                 settings = Prefs.load(this@YearsWallpaperService)
-                rippleStart = if (settings.ripple && !isPreview) SystemClock.uptimeMillis() else 0L
+                rippleStart = if (settings.ripple && !isPreview && screenWasOff) SystemClock.uptimeMillis() else 0L
+                screenWasOff = false
                 draw()
             } else handler.removeCallbacks(tick)
         }
@@ -43,7 +59,11 @@ class YearsWallpaperService : WallpaperService() {
             visible = false; handler.removeCallbacks(tick); super.onSurfaceDestroyed(holder)
         }
 
-        override fun onDestroy() { handler.removeCallbacks(tick); super.onDestroy() }
+        override fun onDestroy() {
+            handler.removeCallbacks(tick)
+            runCatching { unregisterReceiver(screen) }
+            super.onDestroy()
+        }
 
         private fun draw() {
             handler.removeCallbacks(tick)

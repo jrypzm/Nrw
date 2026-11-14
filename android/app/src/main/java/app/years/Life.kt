@@ -34,7 +34,6 @@ class GridModel(
 class Measure(val one: String, val many: String, val perYear: Double)
 
 object Life {
-    private const val YEAR_MS = 365.2425 * 86_400_000.0
 
     val MEASURES = listOf(
         Measure("year", "years", 1.0),
@@ -45,9 +44,15 @@ object Life {
         Measure("full moon", "full moons", 365.2425 / 29.530589),
     )
 
+    /** Exact age: whole calendar years, plus how far you are between your last birthday and the next. */
     fun age(birth: LocalDate, now: ZonedDateTime = ZonedDateTime.now()): Double {
-        val b = birth.atStartOfDay(now.zone).toInstant().toEpochMilli()
-        return max(0.0, (now.toInstant().toEpochMilli() - b) / YEAR_MS)
+        val today = now.toLocalDate()
+        if (!today.isAfter(birth)) return 0.0
+        val years = ChronoUnit.YEARS.between(birth, today)
+        val last = birth.plusYears(years).atStartOfDay(now.zone)
+        val next = birth.plusYears(years + 1).atStartOfDay(now.zone)
+        val f = Duration.between(last, now).toMillis().toDouble() / max(1L, Duration.between(last, next).toMillis())
+        return years + f.coerceIn(0.0, 0.999999)
     }
 
     fun isBirthday(birth: LocalDate, today: LocalDate = LocalDate.now()) =
@@ -214,7 +219,8 @@ object Life {
         val birth = s.birth ?: return null
         val options = mutableListOf("Day ${INT.format(dayOfLife(birth, today))}", "${INT.format(daysLeft(s, today))} days left")
         s.people.forEach { p -> val t = together(s, p, today); if (t.visits > 0) options += "${INT.format(t.visits)} more ${if (p.often == Often.DAILY) "days" else "visits"} with ${p.name}" }
-        s.names.forEach { (age, n) -> if (age <= age(birth).toInt()) options += "$n · ${birth.year + age}" }
+        val lived = age(birth).toInt()
+        s.names.forEach { (year, n) -> if (year <= lived) options += "$n · ${birth.year + year}" }
         s.events.filter { !it.date.isBefore(today) }.minByOrNull { it.date }?.let { e ->
             val d = ChronoUnit.DAYS.between(today, e.date); options += if (d == 0L) "${e.name} · today" else "${e.name} · in $d ${if (d == 1L) "day" else "days"}"
         }
