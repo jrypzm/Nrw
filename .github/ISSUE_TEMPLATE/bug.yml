@@ -1,0 +1,39 @@
+name: Report a bug
+description: Something looks wrong, counts wrong, or doesn't work.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time. A screenshot helps more than anything.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where
+      options: [Android app, iPhone web app, Website]
+    validations: { required: true }
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: And what you expected instead.
+      placeholder: On the Weeks zoom, the heading said "days left".
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to see it
+      placeholder: |
+        1. Open yrs.
+        2. Pinch to Weeks
+        3. ...
+  - type: input
+    id: device
+    attributes:
+      label: Phone and version
+      description: yrs. version is in Settings. Leave out your birthday.
+      placeholder: Galaxy S24 Ultra, Android 15, yrs. 1.0.16
+  - type: textarea
+    id: shots
+    attributes:
+      label: Screenshots
+      description: Drag images here.

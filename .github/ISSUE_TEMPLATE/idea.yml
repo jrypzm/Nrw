@@ -1,0 +1,15 @@
+name: Suggest an idea
+description: Something that would help you see or spend your time better.
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      placeholder: A widget that shows how many weekends are left this year.
+    validations: { required: true }
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters to you
+      description: The feeling or moment behind it.
