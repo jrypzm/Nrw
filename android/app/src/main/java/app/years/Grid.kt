@@ -221,7 +221,7 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
                     i == doneInt && m.done < total -> Unit // drawn in the breathing layer below
                     else -> drawCircle(C.Empty, r, c, alpha = e)
                 }
-                if (i in named) drawCircle(C.Fg.copy(alpha = .55f), cell * 0.43f, c, alpha = e, style = Stroke(1.5.dp.toPx()))
+                if (i in named) drawCircle(C.Fg.copy(alpha = .55f), r0 * 1.45f, c, alpha = e, style = Stroke(1.5.dp.toPx()))
             }
         }
 
