@@ -20,3 +20,10 @@ Edit `tools/index.src.html`, then run `python3 tools/build.py` to regenerate `in
 - Bundle SF Pro (Display Semibold/Bold, Text Regular/Medium/Semibold) inside the app build.
   For the web version, `tools/embed_fonts.py` can inline them into `index.html` once the font files are supplied.
 - Home-screen / lock-screen widget showing the years grid.
+
+## Android app
+
+Native Kotlin app in `android/` (Jetpack Compose, Glance widgets, live wallpaper, WorkManager).
+GitHub Actions (`.github/workflows/android.yml`) builds and signs it on every push that touches `android/`,
+and publishes the APK as a GitHub Release (`years-1.0.N`). The signing key `android/app/years-release.jks`
+is a personal sideload key kept in the repo so each build installs over the previous one.

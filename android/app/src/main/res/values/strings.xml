@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Years</string>
+    <string name="w_life">Life</string>
+    <string name="w_number">Years left</string>
+    <string name="w_decade">This decade</string>
+    <string name="w_year">This year of life</string>
+    <string name="w_life_desc">Every year of your life as a dot, with the years you have left.</string>
+    <string name="w_number_desc">Just the number, large and thin.</string>
+    <string name="w_decade_desc">The ten years of the decade you\'re living.</string>
+    <string name="w_year_desc">Twelve months between your last birthday and the next.</string>
+    <string name="wall_desc">Your years as dots. Ripples when you wake your phone.</string>
+</resources>
