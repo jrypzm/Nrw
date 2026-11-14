@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -96,7 +97,7 @@ class ScreensTest {
             val ctx = LocalContext.current
             Row(Modifier.padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 WallStyle.entries.forEach { ws ->
-                    Canvas(Modifier.size(96.dp, 208.dp)) {
+                    Canvas(Modifier.size(96.dp, 208.dp).clipToBounds()) {
                         drawIntoCanvas { Render.wallpaper(ctx, it.nativeCanvas, size.width.toInt(), size.height.toInt(), me, ws) }
                     }
                 }
