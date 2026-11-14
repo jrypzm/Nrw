@@ -23,6 +23,8 @@ enum class WidgetKind { LIFE, NUMBER, DECADE, YEAR, DAYS, TODAY, PEOPLE }
 
 /** Pixel drawing shared by widgets, the live wallpaper, the lock screen image and the share card. */
 object Render {
+    /** Set only by screenshot tests: draw everything at rest, with no entrance animation. */
+    @JvmField var still = false
     const val EMPTY = 0xFF232323.toInt()
     const val PARTIAL = 0xFF3A3A3C.toInt()
     const val MUTE = 0xFF8E8E93.toInt()
@@ -158,10 +160,6 @@ object Render {
                 text(c, cv, if (s.pct) (if (s.lived) "Lived" else "Left") else cap, pad, pad + 12 * d, 12 * d, MUTE, R.font.inter_medium, W - 2 * pad)
                 val num = if (s.pct) "${floor(hl.pct).toInt()}%" else Life.whole(hl.value)
                 text(c, cv, num, pad - 3 * d, H - pad, min(H * 0.5f, W * 0.55f), Color.WHITE, R.font.interdisplay_extralight, W - 2 * pad, tracking = -0.04f)
-                // a hairline of the decade you're in
-                val dm = Life.model(s, ViewKind.DECADE)
-                val bw = min(W - 2 * pad, 70 * d)
-                grid(cv, W - pad - bw, pad + 2 * d, bw, 10, 10, dm.done, lit, ratio = 0.62f)
             }
             WidgetKind.DECADE -> {
                 val m = Life.model(s, ViewKind.DECADE)
@@ -203,14 +201,26 @@ object Render {
                     text(c, cv, "Add the people you love in yrs.", pad, H / 2 + 5 * d, 13 * d, MUTE, R.font.inter_medium, W - 2 * pad)
                 } else {
                     val rowH = (H - 2 * pad) / people.size
+                    val wide = W >= 230 * d
                     people.forEachIndexed { i, person ->
                         val t = Life.together(s, person)
                         val y = pad + rowH * i + rowH / 2
-                        text(c, cv, person.name, pad, y - 2 * d, 14 * d, Color.WHITE, R.font.inter_semibold, W * 0.4f)
-                        text(c, cv, "${Life.whole(t.visits.toDouble())} ${if (person.often == Often.DAILY) "days" else "visits"} left", pad, y + 14 * d, 12 * d, MUTE, R.font.inter_medium, W * 0.4f)
-                        val gw = W - pad - (pad + W * 0.42f)
-                        val n = min(t.visits, 30L).toInt()
-                        if (n > 0) grid(cv, W - pad - gw, y - gw / 30f, gw, 30, 30, n.toDouble(), lit, ratio = 0.55f)
+                        val unit = if (person.often == Often.DAILY) "days" else "visits"
+                        if (wide) {
+                            val textW = W * 0.40f
+                            text(c, cv, person.name, pad, y - 2 * d, 14 * d, Color.WHITE, R.font.inter_semibold, textW)
+                            text(c, cv, "${Life.whole(t.visits.toDouble())} $unit left", pad, y + 14 * d, 12 * d, MUTE, R.font.inter_medium, textW)
+                            // up to 20 visits as readable dots, in two rows of ten
+                            val n = min(t.visits, 20L).toInt()
+                            val gw = min(W - pad - (pad + textW + 8 * d), 130 * d)
+                            if (n > 0) {
+                                val gh = gridHeight(gw, 10, 20, 0.6f)
+                                grid(cv, W - pad - gw, y - gh / 2, gw, 10, 20, n.toDouble(), lit, ratio = 0.6f)
+                            }
+                        } else {
+                            text(c, cv, person.name, pad, y - 4 * d, 13 * d, MUTE, R.font.inter_medium, W - 2 * pad)
+                            text(c, cv, "${Life.whole(t.visits.toDouble())} $unit", pad, y + 16 * d, 19 * d, Color.WHITE, R.font.interdisplay_semibold, W - 2 * pad)
+                        }
                     }
                 }
             }

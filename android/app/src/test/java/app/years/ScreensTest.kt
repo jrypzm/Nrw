@@ -31,6 +31,8 @@ class ScreensTest {
     @get:Rule
     val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_6, theme = "android:Theme.Material.NoActionBar")
 
+    init { Render.still = true }
+
     private val me = Settings(
         birth = LocalDate.of(2010, 1, 2), span = 80,
         names = mapOf(12 to "Moved to Dubai"),
@@ -83,6 +85,8 @@ class ScreensTest {
                     Image(Render.widget(ctx, WidgetKind.YEAR, 150f, 150f, me).asImageBitmap(), null)
                     Image(Render.widget(ctx, WidgetKind.PEOPLE, 150f, 150f, me).asImageBitmap(), null)
                 }
+                Image(Render.widget(ctx, WidgetKind.PEOPLE, 320f, 150f, me).asImageBitmap(), null)
+                Image(Render.widget(ctx, WidgetKind.TODAY, 320f, 120f, me).asImageBitmap(), null)
             }
         }
     }
