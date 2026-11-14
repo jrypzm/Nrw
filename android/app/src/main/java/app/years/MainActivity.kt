@@ -113,8 +113,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-class AppState(private val ctx: Context) {
-    var s by mutableStateOf(Prefs.load(ctx))
+/** [persist] is false only in screenshot tests, where nothing is saved or scheduled. */
+class AppState(private val ctx: Context, initial: Settings? = null, private val persist: Boolean = true) {
+    var s by mutableStateOf(initial ?: Prefs.load(ctx))
         private set
     /** Bumps when something outside settings changes (a daily line, coming back to the app). */
     var tick by mutableIntStateOf(0)
@@ -122,6 +123,7 @@ class AppState(private val ctx: Context) {
 
     fun update(refresh: Boolean = true, forceLock: Boolean = false, f: (Settings) -> Settings) {
         s = f(s)
+        if (!persist) return
         Prefs.save(ctx, s)
         if (refresh) Background.refreshNow(ctx, forceLock)
     }
@@ -150,59 +152,6 @@ fun App(open: String?, consumed: () -> Unit) {
             targetState = st.s.birth == null,
             transitionSpec = { fadeIn(tween(600)) togetherWith fadeOut(tween(250)) }, label = "root",
         ) { onboarding -> if (onboarding) Onboarding(st) else Home(st, open, consumed) }
-    }
-}
-
-// ================================================================== onboarding
-
-@Composable
-fun Onboarding(st: AppState) {
-    var step by remember { mutableIntStateOf(0) }
-    var date by remember { mutableStateOf(LocalDate.of(1995, 6, 15)) }
-    var span by remember { mutableIntStateOf(80) }
-    val view = LocalView.current
-    Column(Modifier.fillMaxSize().systemBarsPadding().padding(horizontal = 24.dp)) {
-        Spacer(Modifier.height(56.dp))
-        Text("yrs.", style = T.h2.copy(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 22.sp, letterSpacing = (-0.05).em))
-        Spacer(Modifier.height(36.dp))
-        AnimatedContent(
-            targetState = step, modifier = Modifier.weight(1f), label = "ob",
-            transitionSpec = {
-                val dir = if (targetState > initialState) 1 else -1
-                (slideInHorizontally(tween(420)) { dir * it / 5 } + fadeIn(tween(420))) togetherWith (slideOutHorizontally(tween(260)) { -dir * it / 5 } + fadeOut(tween(200)))
-            },
-        ) { s ->
-            Column(Modifier.fillMaxWidth()) {
-                if (s == 0) {
-                    Text("When were\nyou born?", style = T.h1)
-                    Text("Stays on this phone. yrs. has no internet access.", style = T.sub, modifier = Modifier.padding(top = 10.dp))
-                    Spacer(Modifier.height(48.dp))
-                    DateWheels(date, { date = it })
-                } else {
-                    Text("How long\nis a life?", style = T.h1)
-                    Text("80 is a fair average. You can estimate yours later.", style = T.sub, modifier = Modifier.padding(top = 10.dp))
-                    Spacer(Modifier.height(24.dp))
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text("$span", style = TextStyle(fontFamily = Display, fontWeight = FontWeight.ExtraLight, fontSize = 112.sp, letterSpacing = (-0.05).em, color = C.Fg, fontFeatureSettings = "tnum"), modifier = Modifier.alignByBaseline())
-                        Text("years", style = T.sub.copy(fontSize = 17.sp), modifier = Modifier.padding(start = 10.dp).alignByBaseline())
-                        Spacer(Modifier.weight(1f))
-                        Stepper(span, { span = it }, 40..120)
-                    }
-                    Spacer(Modifier.height(24.dp))
-                    val age = Life.age(date)
-                    PreviewGrid(span, age)
-                    Text("${Life.whole(max(0.0, span - age))} years · ${Life.whole(Life.daysLeft(Settings(birth = date, span = span)).toDouble())} days left", style = T.sub, modifier = Modifier.padding(top = 14.dp))
-                }
-            }
-        }
-        PrimaryButton(if (step == 0) "Continue" else "Begin", {
-            if (step == 0) step = 1 else {
-                view.confirm()
-                st.update { it.copy(birth = date, span = span, reviewedAge = Life.age(date).toInt()) }
-            }
-        })
-        if (step == 1) QuietButton("Back", { step = 0 }) else Spacer(Modifier.height(48.dp))
-        Spacer(Modifier.height(8.dp))
     }
 }
 

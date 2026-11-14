@@ -131,8 +131,8 @@ object Prefs {
 /** One line a day, keyed by ISO date. Kept apart from settings because it grows. */
 object Lines {
     private fun sp(c: Context) = c.applicationContext.getSharedPreferences("years-lines", Context.MODE_PRIVATE)
-    fun all(c: Context): Map<String, String> = sp(c).all.mapNotNull { (k, v) -> (v as? String)?.let { k to it } }.toMap()
-    fun get(c: Context, d: LocalDate): String? = sp(c).getString(d.toString(), null)
+    fun all(c: Context): Map<String, String> = runCatching { sp(c).all.mapNotNull { (k, v) -> (v as? String)?.let { k to it } }.toMap() }.getOrDefault(emptyMap())
+    fun get(c: Context, d: LocalDate): String? = runCatching { sp(c).getString(d.toString(), null) }.getOrNull()
     fun put(c: Context, d: LocalDate, text: String) {
         val e = sp(c).edit()
         if (text.isBlank()) e.remove(d.toString()) else e.putString(d.toString(), text.trim().take(140))
