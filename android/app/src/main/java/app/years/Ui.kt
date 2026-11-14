@@ -264,7 +264,7 @@ fun Wheel(items: List<String>, index: Int, onIndex: (Int) -> Unit, width: Dp, al
 fun DateWheels(value: LocalDate, onChange: (LocalDate) -> Unit) {
     val now = LocalDate.now()
     val years = remember { (1920..now.year).toList() }
-    val months = remember { Month.entries.map { it.getDisplayName(JTextStyle.FULL, Locale.ENGLISH) } }
+    val months = remember { Month.values().map { it.getDisplayName(JTextStyle.FULL, Locale.ENGLISH) } }
     val dim = value.withDayOfMonth(1).lengthOfMonth()
     val days = (1..dim).map { "$it" }
     fun set(y: Int, m: Int, d: Int) {
