@@ -74,7 +74,7 @@ object Render {
             }
             if (i in named) {
                 p.style = Paint.Style.STROKE; p.strokeWidth = max(1f, cell * 0.035f); p.color = RING
-                cv.drawCircle(cx, cy, cell * 0.43f, p)
+                cv.drawCircle(cx, cy, r * 1.45f, p)
                 p.style = Paint.Style.FILL
             }
         }
