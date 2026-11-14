@@ -176,6 +176,20 @@ nav .links a:not(.btn) { transition: color .2s; } nav .links a:not(.btn):hover {
 .plat .go { margin-top: auto; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .plat .ver { font-size: 13px; color: var(--faint); }
 
+
+/* ---------- why web, support ---------- */
+.whys { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 44px clamp(40px, 6vw, 96px); border-top: 1px solid var(--line); padding-top: 32px; }
+.whys b { display: block; font-family: var(--display); font-size: clamp(20px, 1.7vw, 24px); font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; }
+.whys p { color: var(--mute); font-size: 16px; line-height: 1.55; max-width: 34em; }
+.support { text-align: center; }
+.support .star { display: inline-grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: #111; color: var(--fg); }
+.support .star svg { width: 36px; height: 36px; }
+.support .btn svg { width: 17px; height: 17px; }
+.btn .count { margin-left: 4px; padding-left: 12px; border-left: 1px solid rgba(0,0,0,.18); font-variant-numeric: tabular-nums; }
+.btn .count:empty { display: none; }
+.small { font-size: 14px; color: var(--faint); } .small b { color: var(--mute); font-weight: 500; }
+@media (max-width: 899px) { .whys { grid-template-columns: 1fr; gap: 28px; } }
+
 /* ---------- footer: the wordmark, bleeding off the page like the icon ---------- */
 footer { position: relative; z-index: 3; background: var(--bg); overflow: hidden; }
 footer .row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 40px 0 0; font-size: 13px; color: var(--faint); border-top: 1px solid var(--line); }
@@ -226,7 +240,7 @@ footer .row a:hover { color: var(--fg); }
 
 <nav id="nav"><div class="wrap">
   <a class="logo" href="#top" aria-label="yrs. home">yrs<i id="navDot"></i></a>
-  <div class="links"><a href="#app">The app</a><a href="#lock">Lock screen</a><a href="#privacy">Privacy</a><a class="btn" href="#get">Get yrs.</a></div>
+  <div class="links"><a href="#app">The app</a><a href="#lock">Lock screen</a><a href="#privacy">Privacy</a><a href="#support">Support</a><a class="btn" href="#get">Get yrs.</a></div>
 </div></nav>
 
 <div id="stage" aria-hidden="true"><canvas id="gl"></canvas></div>
@@ -340,6 +354,29 @@ footer .row a:hover { color: var(--fg); }
         <div class="go"><a class="btn big ghost" href="web/">Open on iPhone</a><span class="ver">iOS 16 or newer</span></div>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="sec tight" id="why">
+  <div class="wrap">
+    <div class="kicker">Why a web app on iPhone?</div>
+    <h2 class="h2 reveal"><span class="ln"><span>Same app.</span></span><span class="ln"><span class="m">No App Store toll.</span></span></h2>
+    <div class="whys soft">
+      <div><b>Apple charges to install apps</b><p>Unlike Android, an iPhone only installs native apps from the App Store, and publishing there costs $99 every year. yrs. is free and made by one person, so the web is how it reaches iPhone without a price tag.</p></div>
+      <div><b>It still feels like an app</b><p>Add it to your Home Screen and it opens full screen with its own icon, works offline and uses the iPhone's own SF Pro. It's the same design and the same maths as the Android app.</p></div>
+      <div><b>Private by design</b><p>Everything stays in Safari's storage on your phone. No account, no server, nothing uploaded. Updates arrive the moment they're published, no waiting for review.</p></div>
+      <div><b>What iPhone doesn't allow</b><p>Apple doesn't let web apps add Home Screen widgets or change your wallpaper on their own. So on iPhone you save the lock screen once from Settings. A native iPhone app may come if enough people want it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="support">
+  <div class="wrap support">
+    <div class="star soft" aria-hidden="true"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.2l2.06 4.18 4.6.67-3.33 3.25.79 4.59L8 11.72 3.88 13.9l.79-4.59L1.34 6.05l4.6-.67z"/></svg></div>
+    <h2 class="h2 reveal" style="margin-top:28px"><span class="ln"><span>Like yrs.?</span></span><span class="ln"><span class="m">Give it a star.</span></span></h2>
+    <p class="lead soft" style="margin-left:auto;margin-right:auto">yrs. is free, with no ads and no tracking. A star on GitHub is how you say thanks, and it helps more people find it. It takes one tap.</p>
+    <div class="soft" style="margin-top:36px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap"><a class="btn big" href="https://github.com/jrypzm/yrs" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.2l2.06 4.18 4.6.67-3.33 3.25.79 4.59L8 11.72 3.88 13.9l.79-4.59L1.34 6.05l4.6-.67z"/></svg>Star on GitHub<span class="count" id="stars"></span></a><a class="btn big ghost" href="https://github.com/jrypzm/yrs/issues/new" target="_blank" rel="noopener">Suggest an idea</a></div>
+    <p class="small soft" style="margin-top:18px">Opens GitHub. Sign in, then tap <b>Star</b> at the top of the page.</p>
   </div>
 </section>
 
@@ -677,6 +714,9 @@ function drawBleed() {
   }
   const r = svg.querySelector('#bleedFill'); if (r) { const top = 27.36, bot = 43.2, y = bot - (bot - top) * f; r.setAttribute('y', y); r.setAttribute('height', bot - y); }
 }
+
+// ================================================= stars
+fetch('https://api.github.com/repos/jrypzm/yrs').then(r => r.ok ? r.json() : null).then(r => { if (r && r.stargazers_count > 0) $('stars').textContent = r.stargazers_count.toLocaleString('en-US'); }).catch(() => {});
 
 // ================================================= release info
 fetch('https://api.github.com/repos/jrypzm/yrs/releases/latest').then(r => r.ok ? r.json() : null).then(rel => {
