@@ -149,11 +149,16 @@ fun Pill(text: String, onClick: () -> Unit) {
     }
 }
 
+/** The main white button. Drawn without any extra layer so it can never be left unpainted. */
 @Composable
 fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    val src = remember { MutableInteractionSource() }
+    val pressed by src.collectIsPressedAsState()
+    val view = LocalView.current
+    val bg = when { !enabled -> C.Fg.copy(alpha = .22f); pressed -> Color(0xFFD1D1D6); else -> C.Fg }
     Box(
-        modifier.fillMaxWidth().height(54.dp).clip(RoundedCornerShape(27.dp)).background(if (enabled) C.Fg else C.Fg.copy(alpha = .22f))
-            .then(if (enabled) Modifier.pressable(onClick) else Modifier),
+        modifier.fillMaxWidth().height(54.dp).background(bg, RoundedCornerShape(27.dp))
+            .clickable(src, indication = null, enabled = enabled) { view.tap(); onClick() },
         contentAlignment = Alignment.Center,
     ) { Text(text, style = T.label.copy(color = Color.Black, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)) }
 }

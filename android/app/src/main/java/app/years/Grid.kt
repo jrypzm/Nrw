@@ -95,7 +95,8 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
     val lit = if (s.sun) Color(Life.litColor(Life.sunLevel())) else C.Fg
     val big = m.total > 200
     val ratio = when { big -> 0.64f; m.cols == 10 -> 0.6f; m.cols == 5 -> 0.4f; else -> 0.5f } // medium dots for decade and year
-    val appear = remember(m.kind, m.total) { Animatable(if (big) 1f else 0f) }
+    val still = androidx.compose.ui.platform.LocalInspectionMode.current // screenshot renders: no entrance animation
+    val appear = remember(m.kind, m.total) { Animatable(if (big || still) 1f else 0f) }
     LaunchedEffect(appear) { if (!big) appear.animateTo(1f, tween(700 + m.total * 9, easing = LinearEasing)) }
     val breathe by rememberInfiniteTransition(label = "br").animateFloat(1f, .55f, infiniteRepeatable(tween(1600, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "b")
     var tip by remember(m.kind, m.total) { mutableStateOf<Int?>(null) }
