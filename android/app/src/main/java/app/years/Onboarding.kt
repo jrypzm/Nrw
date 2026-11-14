@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import java.time.LocalDate
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -78,7 +79,12 @@ fun Onboarding(st: AppState, startStep: Int = 0, startDate: LocalDate = LocalDat
     val view = LocalView.current
     BackHandler(enabled = step > 0) { step-- }
 
-    Column(Modifier.fillMaxSize().background(C.Bg).systemBarsPadding()) {
+    // Repaint once the first frame is on screen, so the button can never be left unpainted.
+    var painted by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { androidx.compose.runtime.withFrameNanos { }; painted = true }
+
+    Box(Modifier.fillMaxSize().background(C.Bg).systemBarsPadding()) {
+    Column(Modifier.fillMaxSize().padding(bottom = 108.dp)) {
         // top bar: progress through the three questions
         Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
             if (step > 0) {
@@ -127,7 +133,14 @@ fun Onboarding(st: AppState, startStep: Int = 0, startDate: LocalDate = LocalDat
                             Text("$span", style = TextStyle(fontFamily = Display, fontWeight = FontWeight.ExtraLight, fontSize = 96.sp, letterSpacing = (-0.05).em, color = C.Fg, fontFeatureSettings = "tnum"), modifier = Modifier.alignByBaseline())
                             Text("years", style = T.sub.copy(fontSize = 17.sp), modifier = Modifier.padding(start = 8.dp).alignByBaseline())
                         }
-                        Stepper(span, { span = it }, 40..120)
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            listOf("−" to -1, "+" to 1).forEach { (label, d) ->
+                                Box(
+                                    Modifier.size(44.dp).clip(CircleShape).background(C.Surface).clickable { view.tick(); span = (span + d).coerceIn(40, 120) },
+                                    contentAlignment = Alignment.Center,
+                                ) { Text(label, style = T.body.copy(fontSize = 22.sp)) }
+                            }
+                        }
                     }
                     Spacer(Modifier.height(14.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -151,12 +164,13 @@ fun Onboarding(st: AppState, startStep: Int = 0, startDate: LocalDate = LocalDat
             }
         }
 
-        // pinned action
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 12.dp, bottom = 16.dp)) {
+    }
+
+        // pinned action, always on top
+        Column(Modifier.align(Alignment.BottomCenter).zIndex(1f).fillMaxWidth().background(if (painted) C.Bg else Color(0xFF000001)).padding(horizontal = 24.dp).padding(top = 12.dp, bottom = 16.dp)) {
             PrimaryButton(
                 when (step) { 0 -> "Begin"; 3 -> "Enter yrs."; else -> "Continue" },
                 {
-                    view.tap()
                     if (step < 3) step++ else {
                         view.confirm()
                         st.update { it.copy(birth = date, span = span, reviewedAge = Life.age(date).toInt()) }
