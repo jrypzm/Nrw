@@ -69,7 +69,7 @@
     background: var(--fg); color: #000; text-decoration: none; font-weight: 650; font-size: 18px;
     box-shadow: 0 0 0 0 rgba(255,255,255,.0); transition: transform .3s cubic-bezier(.2,.9,.25,1), box-shadow .4s, background .2s;
   }
-  .download:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 18px 60px -12px rgba(255,255,255,.28); }
+  .download:hover { background: #fff; box-shadow: 0 18px 60px -12px rgba(255,255,255,.28); }
   .download:active { transform: scale(.98); }
   .download svg { width: 24px; height: 24px; }
   .download small { display: block; font-size: 12.5px; font-weight: 500; color: #48484a; margin-top: 2px; }
@@ -112,9 +112,9 @@
   .zoomwords span:nth-child(4) { color: var(--fg); font-weight: 600; }
 
   /* wallpapers, drawn live */
-  .walls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; margin-top: 60px; }
-  @media (max-width: 900px) { .walls { grid-template-columns: repeat(2, 1fr); } }
-  .wall { display: flex; flex-direction: column; gap: 14px; }
+  .walls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; margin-top: 60px; }
+  @media (max-width: 900px) { .walls { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .wall { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
   .wall .screen { position: relative; aspect-ratio: 9 / 19.5; border-radius: 30px; overflow: hidden; background: #000; box-shadow: 0 0 0 1.5px #2a2a2c, 0 0 0 7px #0d0d0f, 0 0 0 8px #262628; }
   .wall canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
   .wall .clock { position: absolute; left: 0; right: 0; top: 11%; text-align: center; font-weight: 300; font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -0.02em; z-index: 2; }
@@ -171,11 +171,12 @@
   .legend div i { width: 2.4cqw; height: 2.4cqw; border-radius: 50%; }
   .legend div b { margin-left: auto; color: #f5f5f7; font-weight: 500; }
   .legend div.y { color: #f5f5f7; } .legend div.y b { font-weight: 650; }
-  .hero .device { --w: min(100%, 340px); transform: rotate(-3deg); transition: transform .9s cubic-bezier(.2,.9,.25,1); }
-  .hero .device:hover { transform: rotate(0) translateY(-6px); }
-  .shots .device { --w: min(47%, 290px); margin: 0; }
-  .shots .device:nth-child(2) { transform: translateY(44px); }
-  @media (max-width: 900px) { .hero .device { --w: min(78%, 320px); margin-top: 24px; } }
+  .device { --px: 0px; --py: 0px; --rx: 0deg; --ry: 0deg; --rot: 0deg; --s: 1; transform: perspective(1400px) translate3d(var(--px), var(--py), 0) rotateX(var(--rx)) rotateY(var(--ry)) rotate(var(--rot)) scale(var(--s)); will-change: transform; transform-style: preserve-3d; backface-visibility: hidden; }
+  .hero .device { --w: min(100%, 360px, calc((100svh - 170px) / 2.17)); }
+  @media (max-height: 820px) and (min-width: 901px) { .hero { padding-top: 40px; padding-bottom: 40px; } }
+  .shots .device { --w: min(47%, 300px); margin: 0; }
+  @media (max-width: 900px) { .hero .device { --w: min(76%, 330px); margin-top: 28px; } }
+  @media (max-width: 380px) { .shots { gap: 12px; } .shots .device { --w: 48%; } }
 
   /* widgets, drawn live */
   .widgetboard { container-type: inline-size; padding: 5cqw; border-radius: 9cqw; background: radial-gradient(130% 100% at 15% 0%, #222226 0%, #0b0b0d 55%, #050506 100%); box-shadow: inset 0 0 0 1px #1f1f22, 0 40px 100px -40px rgba(255,255,255,.12); display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; }
@@ -225,14 +226,53 @@
   footer a { text-decoration: none; color: var(--mute); }
 
   /* entrance */
-  .rise { opacity: 0; transform: translateY(26px); transition: opacity 1s cubic-bezier(.2,.9,.25,1), transform 1s cubic-bezier(.2,.9,.25,1); }
+  /* ---------- motion: transform and opacity only, long soft easing ---------- */
+  :root { --ease: cubic-bezier(.16, 1, .3, 1); --ease-in-out: cubic-bezier(.65, 0, .35, 1); }
+  .rise { opacity: 0; transform: translate3d(0, 34px, 0); transition: opacity 1.1s var(--ease) var(--d, 0s), transform 1.3s var(--ease) var(--d, 0s); will-change: opacity, transform; }
   .rise.in { opacity: 1; transform: none; }
-  @media (prefers-reduced-motion: reduce) { .rise { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+  .fade { opacity: 0; transition: opacity 1.4s var(--ease) var(--d, 0s); }
+  .fade.in { opacity: 1; }
+  /* masked lines and words slide up out of an invisible edge */
+  .ln, .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .12em; margin-bottom: -.12em; }
+  .ln { display: block; }
+  .ln > span, .w > span { display: inline-block; transform: translate3d(0, 108%, 0); transition: transform 1.25s var(--ease) var(--d, 0s); will-change: transform; }
+  .ln.in > span, .w.in > span, .words.in .w > span { transform: none; }
+  .intro { opacity: 0; transform: translate3d(0, 22px, 0); transition: opacity 1.2s var(--ease) var(--d, 0s), transform 1.4s var(--ease) var(--d, 0s); }
+  body.ready .intro { opacity: 1; transform: none; }
+  /* hover only where there is a real pointer */
+  @media (hover: none) { .download:hover, .pill:hover { transform: none; box-shadow: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .rise, .fade, .intro, .ln > span, .w > span { opacity: 1 !important; transform: none !important; transition: none !important; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* ---------- every screen size ---------- */
+  section { scroll-margin-top: 70px; }
+  nav { transition: transform .6s var(--ease), border-color .3s; }
+  nav.hide { transform: translate3d(0, -100%, 0); }
+  @media (min-width: 1600px) { :root { --wide: 1340px; } body { font-size: 18px; } }
+  @media (min-width: 2200px) { :root { --wide: 1560px; } body { font-size: 20px; } .hero .device { --w: 420px; } .shots .device { --w: 340px; } .walls { gap: 34px; } }
+  @media (max-width: 900px) { .cta { gap: 16px; } }
+  @media (max-width: 480px) {
+    body { font-size: 16px; }
+    .hero { padding-top: 40px; }
+    .download { width: 100%; justify-content: center; height: 62px; }
+    .cta { flex-direction: column; align-items: stretch; }
+    .meta { text-align: center; }
+    .walls { gap: 14px; }
+    .wall .screen { border-radius: 22px; }
+    .card { padding: 28px 22px 30px; }
+    .step { padding: 24px; }
+    .field input, .field select { height: 54px; font-size: 18px; }
+  }
+  @media (max-width: 480px) { .vd { display: none; } }
+  @media (max-width: 360px) { .wrap { padding-left: 16px; padding-right: 16px; } h1 { font-size: 50px; } }
+  @media (max-height: 520px) and (orientation: landscape) { .hero .wrap { grid-template-columns: 1.2fr .8fr; } .hero .device { --w: 230px; margin-top: 0; } }
 </style>
 </head>
 <body>
 
-<nav id="nav">
+<nav id="nav" class="intro" style="--d:0s">
   <div class="wrap">
     <a class="mark" href="#top" aria-label="yrs. home">yrs<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#3a3a3c"/><path d="M0.4 7.2A10 10 0 1 0 19.6 7.2z" fill="#f5f5f7"/></svg></a>
     <div class="links"><a href="#try">Try it</a><a href="#features">Features</a><a href="#install">Install</a><a href="#faq">FAQ</a></div>
@@ -245,18 +285,18 @@
   <header class="hero">
     <div class="wrap">
       <div>
-        <div class="eyebrow">Free for Android</div>
-        <h1>Your life,<br>in dots<span class="soft">.</span></h1>
-        <p class="lede">Every year you've lived, and every year still ahead, seen at a glance. On your home screen, on your lock screen, and in an app that never asks for anything.</p>
-        <div class="cta">
-          <a class="download dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk">
+        <div class="eyebrow intro" style="--d:.05s">Free for Android</div>
+        <h1><span class="ln" style="--d:.15s"><span>Your life,</span></span><span class="ln" style="--d:.28s"><span>in dots<span class="soft">.</span></span></span></h1>
+        <p class="lede intro" style="--d:.55s">Every year you've lived, and every year still ahead, seen at a glance. On your home screen, on your lock screen, and in an app that never asks for anything.</p>
+        <div class="cta intro" style="--d:.72s">
+          <a class="download dl magnet" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>
             <span class="t">Download for Android<small class="ver">Latest build · APK</small></span>
           </a>
           <div class="meta">Android 10 and newer<br><b>No account. No ads. No internet.</b></div>
         </div>
       </div>
-      <div class="device hero-device rise" data-screen="life" role="img" aria-label="yrs. on a phone: years left, shown as a grid of 80 dots"></div>
+      <div class="device hero-device fade" style="--d:.35s" data-screen="life" role="img" aria-label="yrs. on a phone: years left, shown as a grid of 80 dots"></div>
     </div>
   </header>
 
@@ -264,7 +304,7 @@
   <section id="try">
     <div class="wrap">
       <div class="eyebrow">Try it</div>
-      <h2 class="rise">How many do you have left?</h2>
+      <h2 class="words">How many do you have left?</h2>
       <p class="sub rise">Enter your birthday. This runs entirely in your browser; nothing is sent anywhere.</p>
       <div class="try">
         <div class="rise">
@@ -289,7 +329,7 @@
     <div class="wrap feat">
       <div class="copy">
         <div class="eyebrow">Zoom through time</div>
-        <h2 class="rise">From all of history to this very day.</h2>
+        <h2 class="words">From all of history to this very day.</h2>
         <p class="sub rise">Pinch the grid. Your life as one of 3,750 lifetimes since the first humans, then as years, months, weeks, and every single day.</p>
         <div class="zoomwords"><span>History</span><span>Years</span><span>Months</span><span>Weeks</span><span>Days</span></div>
         <ul>
@@ -310,7 +350,7 @@
     <div class="wrap feat flip">
       <div class="copy">
         <div class="eyebrow">The people you love</div>
-        <h2 class="rise">See the time you have left together.</h2>
+        <h2 class="words">See the time you have left together.</h2>
         <p class="sub rise">Add the people who matter and how often you see them. yrs. shows how many more visits, summers and days you'll share, so you can choose to make more.</p>
         <ul>
           <li><span><b>The Ledger</b> splits the years you have left into sleep, work, your phone, chores, and the part that's truly yours.</span></li>
@@ -328,7 +368,7 @@
   <section id="lock">
     <div class="wrap">
       <div class="eyebrow">Lock screen</div>
-      <h2 class="rise">A wallpaper that moves only when time does.</h2>
+      <h2 class="words">A wallpaper that moves only when time does.</h2>
       <p class="sub rise">Set yrs. as a live wallpaper, or let it repaint your lock screen every hour. It rests while you're away and ripples when you wake your phone.</p>
       <div class="walls">
         <div class="wall rise"><div class="screen"><div class="date">Sat 14 Nov</div><div class="clock">10:58</div><canvas data-wall="grid"></canvas></div><h3>Grid</h3><p>Your years, and a line that changes every day.</p></div>
@@ -344,7 +384,7 @@
     <div class="wrap widgets">
       <div class="copy">
         <div class="eyebrow">Widgets</div>
-        <h2 class="rise">Seven widgets. One idea each.</h2>
+        <h2 class="words">Seven widgets. One idea each.</h2>
         <p class="sub rise">Your life, years left, days left, this decade, this year of life, today's line, and the people you love. Black or glass. Add them in one tap from the app.</p>
       </div>
       <div class="widgetboard rise" id="wboard" role="img" aria-label="yrs. widgets on a home screen"></div>
@@ -355,7 +395,7 @@
   <section>
     <div class="wrap">
       <div class="eyebrow">And quietly</div>
-      <h2 class="rise">Small things that stay with you.</h2>
+      <h2 class="words">Small things that stay with you.</h2>
       <div class="cards">
         <div class="card rise"><svg class="ic" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="12" fill="#3a3a3c"/><path d="M5.6 13.4A12 12 0 1 0 28.4 13.4z" fill="#f5f5f7"/></svg><h3>One line a day</h3><p>Write a single sentence about today. A year from now, yrs. shows it back to you: "A year ago today…"</p></div>
         <div class="card rise"><svg class="ic" viewBox="0 0 34 34" fill="none" stroke="#f5f5f7" stroke-width="2"><rect x="5" y="9" width="24" height="17" rx="3"/><path d="M5 11l12 8 12-8"/></svg><h3>Letters to future you</h3><p>Seal a letter to a future year. It stays locked until that birthday. Not even you can read it early.</p></div>
@@ -371,7 +411,7 @@
   <section id="install">
     <div class="wrap">
       <div class="eyebrow">Install</div>
-      <h2 class="rise">Thirty seconds, three steps.</h2>
+      <h2 class="words">Thirty seconds, three steps.</h2>
       <div class="steps">
         <div class="step rise"><div class="n">1</div><h3>Download</h3><p>Tap Download on your Android phone. You always get the latest build.</p></div>
         <div class="step rise"><div class="n">2</div><h3>Open the file</h3><p>Open yrs.apk from your notifications or Downloads. If Android asks, allow installs from your browser.</p></div>
@@ -384,7 +424,7 @@
   <section id="faq">
     <div class="wrap">
       <div class="eyebrow">Questions</div>
-      <h2 class="rise">Good to know.</h2>
+      <h2 class="words">Good to know.</h2>
       <div class="faq">
         <details><summary>Is yrs. free?</summary><p>Yes. No ads, no subscriptions, no in-app purchases.</p></details>
         <details><summary>Is there an iPhone version?</summary><p>Not as an app yet. On iPhone, open <a href="web/">the web version</a> in Safari, tap Share, then "Add to Home Screen". It works offline and keeps everything on your phone. A full iPhone app is planned.</p></details>
@@ -399,7 +439,7 @@
   <!-- ================= final ================= -->
   <section class="final">
     <div class="wrap">
-      <h2 class="rise">Make the next one count.</h2>
+      <h2 class="words">Make the next one count.</h2>
       <div class="cta rise">
         <a class="download dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>
@@ -422,13 +462,7 @@
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // nav border on scroll
-  const nav = document.getElementById('nav');
-  addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 8), { passive: true });
 
-  // entrance
-  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
-  document.querySelectorAll('.rise').forEach(el => io.observe(el));
 
   // latest release: version, size, date
   fetch('https://api.github.com/repos/jrypzm/yrs./releases/latest').then(r => r.ok ? r.json() : null).then(rel => {
@@ -437,7 +471,7 @@
     const v = (rel.tag_name || '').replace(/^years-/, '');
     const mb = a ? (a.size / 1048576).toFixed(1) + ' MB' : '';
     const d = new Date(rel.published_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-    document.querySelectorAll('.ver').forEach(el => el.textContent = `Version ${v} · ${mb} · ${d}`);
+    document.querySelectorAll('.ver').forEach(el => el.innerHTML = `Version ${v} · ${mb}<span class="vd"> · ${d}</span>`);
   }).catch(() => {});
 
   // ---------- try it ----------
@@ -562,8 +596,8 @@
     `<div class="wd" style="display:flex;flex-direction:column;justify-content:center;gap:5cqw"><div><div class="cap">Mum</div><div class="t" style="font-size:6.4cqw">${fmt(mum.v)} visits</div></div><div><div class="cap">Grandpa</div><div class="t" style="font-size:6.4cqw">${fmt(gp.v)} visits</div></div></div>` +
     `<div class="wd slim" style="aspect-ratio:3.2;align-items:flex-start;flex-direction:column;justify-content:center;gap:1.6cqw"><div class="t" style="font-size:5cqw">Day ${fmt(daysLived0 + 1)}</div><div style="font-size:3.8cqw;color:#f5f5f7">Long walk by the sea with Mum. Rain at the end, still worth it.</div></div>`;
 
-  // paint every dot grid at the real pixel density
-  function paintDots(cv) {
+  // paint every dot grid at the real pixel density; k (0..1) plays the dots-filling-in entrance
+  function paintDots(cv, k = 1) {
     const o = JSON.parse(cv.dataset.dots), d = Math.min(3, devicePixelRatio || 1), W = cv.clientWidth;
     if (!W) return;
     const cell = W / (o.cols - (1 - o.ratio)), inset = cell * (1 - o.ratio) / 2, r = cell * o.ratio / 2;
@@ -571,9 +605,14 @@
     cv.style.height = H + 'px'; cv.width = Math.round(W * d); cv.height = Math.round(H * d);
     const x = cv.getContext('2d'); x.scale(d, d);
     const whole = Math.floor(o.done);
+    const D = .7 + o.total * .009;
     for (let i = 0; i < o.total; i++) {
       const cx = -inset + (i % o.cols + .5) * cell, cy = -inset + (Math.floor(i / o.cols) + .5) * cell;
-      x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2);
+      let e = 1;
+      if (k < 1) { const l = Math.max(0, Math.min(1, (k * D - i * .009) / .7)); e = 1 - Math.pow(1 - l, 3); if (e <= 0) continue; }
+      x.globalAlpha = e;
+      const rr0 = r * (.4 + .6 * e);
+      x.beginPath(); x.arc(cx, cy, rr0, 0, Math.PI * 2);
       if (o.colors) { x.fillStyle = o.colors[i]; x.fill(); continue; }
       if (i < whole) { x.fillStyle = '#f5f5f7'; x.fill(); }
       else if (i === whole && o.done < o.total) {
@@ -582,8 +621,10 @@
       } else { x.fillStyle = '#232323'; x.fill(); }
       if (o.ring && o.ring.includes(i)) { x.beginPath(); x.arc(cx, cy, r * 1.45, 0, Math.PI * 2); x.strokeStyle = 'rgba(245,245,247,.55)'; x.lineWidth = Math.max(1, cell * .035); x.stroke(); }
     }
+    x.globalAlpha = 1;
   }
-  const paintAll = () => document.querySelectorAll('canvas[data-dots]').forEach(paintDots);
+  const played = new WeakSet();
+  const paintAll = () => document.querySelectorAll('canvas[data-dots]').forEach(c => paintDots(c, played.has(c) || reduce ? 1 : 0));
   paintAll();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(paintAll);
   let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(paintAll, 120); });
@@ -642,6 +683,125 @@
     if (!all && !reduce) requestAnimationFrame(t2 => frame(t2));
   }
   frame(0, true); if (!reduce) requestAnimationFrame(t => frame(t));
+
+  // =================== motion engine ===================
+  const canHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  // section titles: split into words that rise one after another
+  document.querySelectorAll('.words').forEach(h => {
+    const html = h.innerHTML.split(/(<br>)/);
+    let n = 0;
+    h.innerHTML = html.map(part => part === '<br>' ? part : part.split(' ').filter(Boolean).map(w => `<span class="w" style="--d:${(n++ * .06).toFixed(2)}s"><span>${w}</span></span>`).join(' ')).join('');
+  });
+  // staggered groups
+  [['.cards', '.card'], ['.steps', '.step'], ['.walls', '.wall'], ['#wboard', '.wd'], ['.faq', 'details']].forEach(([g, c]) => {
+    document.querySelectorAll(g).forEach(group => group.querySelectorAll(c).forEach((el, i) => { el.classList.add('rise'); el.style.setProperty('--d', (i * .08).toFixed(2) + 's'); }));
+  });
+  document.getElementById('wboard')?.classList.remove('rise');
+
+  // reveal on scroll
+  const reveal = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('in'); reveal.unobserve(e.target);
+    e.target.querySelectorAll?.('canvas[data-dots]').forEach(playDots);
+  }), { rootMargin: '0px 0px -10% 0px', threshold: .08 });
+  document.querySelectorAll('.rise, .fade:not(.hero-device), .words, .wd').forEach(el => reveal.observe(el));
+
+  // dots fill in, once, the first time a screen is seen
+  function playDots(cv) {
+    if (played.has(cv)) return; played.add(cv);
+    if (reduce) { paintDots(cv, 1); return; }
+    const o = JSON.parse(cv.dataset.dots);
+    if (o.total > 400) { paintDots(cv, 1); return; }
+    const dur = 900 + o.total * 12, t0 = performance.now();
+    const tick = t => { const k = Math.min(1, (t - t0) / dur); paintDots(cv, k); if (k < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
+  const devObs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) e.target.querySelectorAll('canvas[data-dots]').forEach(playDots); }), { threshold: .25 });
+  document.querySelectorAll('.device').forEach(d => devObs.observe(d));
+
+  // intro: once fonts are ready, play the hero sequence
+  const start = () => {
+    if (document.body.classList.contains('ready')) return;
+    document.body.classList.add('ready');
+    document.querySelectorAll('.hero .ln').forEach(l => l.classList.add('in'));
+    document.querySelector('.hero-device')?.classList.add('in');
+    introT0 = performance.now(); wake();
+  };
+  let introT0 = 0;
+  (document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 700))]) : Promise.resolve()).then(() => requestAnimationFrame(start));
+
+  // nav: hides while you read down, returns when you scroll up
+  const navEl = document.getElementById('nav');
+  let lastY = scrollY;
+  addEventListener('scroll', () => {
+    const y = scrollY;
+    navEl.classList.toggle('scrolled', y > 8);
+    if (Math.abs(y - lastY) > 6) { navEl.classList.toggle('hide', y > lastY && y > 400); lastY = y; }
+    wake();
+  }, { passive: true });
+
+  // devices: gentle parallax as you scroll, a soft tilt toward the pointer, a smooth rise on first load
+  const devs = [...document.querySelectorAll('.device')].map((el, i) => ({
+    el, hero: el.classList.contains('hero-device'),
+    base: { rot: el.classList.contains('hero-device') ? -3 : 0, py: el.parentElement.classList.contains('shots') && el === el.parentElement.children[1] ? 44 : 0 },
+    cur: { py: 0, rx: 0, ry: 0, rot: 0, s: 1 }, tgt: { py: 0, rx: 0, ry: 0, rot: 0, s: 1 }, hover: false, vis: false,
+  }));
+  const visObs = new IntersectionObserver(es => es.forEach(e => { const d = devs.find(x => x.el === e.target); if (d) d.vis = e.isIntersecting; wake(); }));
+  devs.forEach(d => {
+    d.cur.rot = d.base.rot; d.cur.py = d.base.py + (d.hero ? 80 : 0);
+    visObs.observe(d.el);
+    if (canHover) {
+      d.el.addEventListener('pointermove', ev => {
+        const r = d.el.getBoundingClientRect();
+        const nx = (ev.clientX - r.left) / r.width - .5, ny = (ev.clientY - r.top) / r.height - .5;
+        d.tgt.ry = nx * 10; d.tgt.rx = -ny * 8; d.hover = true; wake();
+      });
+      d.el.addEventListener('pointerleave', () => { d.tgt.rx = 0; d.tgt.ry = 0; d.hover = false; wake(); });
+    }
+  });
+
+  // magnetic download buttons
+  const magnets = canHover ? [...document.querySelectorAll('.download, .pill')].map(el => ({ el, x: 0, y: 0, tx: 0, ty: 0 })) : [];
+  magnets.forEach(m => {
+    m.el.addEventListener('pointermove', ev => { const r = m.el.getBoundingClientRect(); m.tx = (ev.clientX - r.left - r.width / 2) * .18; m.ty = (ev.clientY - r.top - r.height / 2) * .28; wake(); });
+    m.el.addEventListener('pointerleave', () => { m.tx = 0; m.ty = 0; wake(); });
+  });
+
+  // one loop, only while something is moving
+  let running = false;
+  function wake() { if (!running && !reduce) { running = true; requestAnimationFrame(loop); } }
+  function loop(t) {
+    let moving = false;
+    const vh = innerHeight;
+    for (const d of devs) {
+      if (!d.vis && !d.hero) continue;
+      const r = d.el.getBoundingClientRect();
+      const p = ((r.top + r.height / 2) - vh / 2) / vh; // -1 .. 1 across the screen
+      const introLeft = d.hero ? Math.max(0, 1 - (t - introT0) / 1600) : 0;
+      d.tgt.py = d.base.py + p * -38 + (introT0 ? 80 * Math.pow(introLeft, 3) : 80);
+      d.tgt.rot = d.hover ? 0 : d.base.rot;
+      d.tgt.s = d.hover ? 1.02 : 1;
+      const k = d.hero && introLeft > 0 ? .14 : .1;
+      let delta = 0;
+      for (const key of ['py', 'rx', 'ry', 'rot', 's']) { const v = lerp(d.cur[key], d.tgt[key], k); delta += Math.abs(v - d.tgt[key]); d.cur[key] = v; }
+      d.el.style.setProperty('--py', d.cur.py.toFixed(2) + 'px');
+      d.el.style.setProperty('--rx', d.cur.rx.toFixed(3) + 'deg');
+      d.el.style.setProperty('--ry', d.cur.ry.toFixed(3) + 'deg');
+      d.el.style.setProperty('--rot', d.cur.rot.toFixed(3) + 'deg');
+      d.el.style.setProperty('--s', d.cur.s.toFixed(4));
+      if (delta > .02 || introLeft > 0) moving = true;
+    }
+    for (const m of magnets) {
+      m.x = lerp(m.x, m.tx, .16); m.y = lerp(m.y, m.ty, .16);
+      m.el.style.transform = `translate3d(${m.x.toFixed(2)}px, ${m.y.toFixed(2)}px, 0)`;
+      if (Math.abs(m.x - m.tx) + Math.abs(m.y - m.ty) > .05) moving = true;
+    }
+    if (moving) requestAnimationFrame(loop); else running = false;
+  }
+  if (reduce) devs.forEach(d => { d.el.style.setProperty('--rot', d.base.rot + 'deg'); d.el.style.setProperty('--py', d.base.py + 'px'); });
+  else wake();
 })();
 </script>
 </body>
