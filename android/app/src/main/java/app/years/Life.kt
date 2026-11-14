@@ -172,7 +172,7 @@ object Life {
     private fun zoomModel(s: Settings, birth: LocalDate, age: Double, now: ZonedDateTime): GridModel {
         val lived = floor(age).toInt()
         val by = birth.year
-        val sub = "Age $lived · ${INT.format(max(0L, dayOfLife(birth, now.toLocalDate()) - 1))} days lived"
+        val sub = "Age $lived · ${s.span} year life"
         return when (s.zoom.coerceIn(0, 4)) {
             0 -> GridModel(ViewKind.LIFE, LIFETIMES, (LIFETIMES - 1 + (age / s.span).coerceIn(0.0, 1.0)), 50, "lifetime", null,
                 "Yours is the last one, filling now",

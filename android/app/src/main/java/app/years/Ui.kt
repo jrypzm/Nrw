@@ -110,20 +110,17 @@ fun View.confirm() { performHapticFeedback(if (android.os.Build.VERSION.SDK_INT 
 
 // ------------------------------------------------------------------ pressable
 
-/** Springs down when pressed, the way iOS controls do. */
+/** A tap with a haptic tick. No scale layer: on some phones a layered control was left unpainted. */
 @Composable
 fun Modifier.pressable(onClick: () -> Unit, haptic: Boolean = true): Modifier {
-    val src = remember { MutableInteractionSource() }
-    val pressed by src.collectIsPressedAsState()
-    val k by animateFloatAsState(if (pressed) 0.92f else 1f, spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium), label = "press")
     val view = LocalView.current
-    return this.scale(k).clickable(src, indication = null) { if (haptic) view.tap(); onClick() }
+    return this.clickable(remember { MutableInteractionSource() }, indication = null) { if (haptic) view.tap(); onClick() }
 }
 
 @Composable
 fun RoundButton(onClick: () -> Unit, size: Dp = 36.dp, on: Boolean = false, content: @Composable () -> Unit) {
     val bg by animateColorAsState(if (on) C.Fg else C.Surface, label = "rb")
-    Box(Modifier.size(size).clip(CircleShape).background(bg).pressable(onClick), contentAlignment = Alignment.Center) { content() }
+    Box(Modifier.size(size).background(bg, CircleShape).pressable(onClick), contentAlignment = Alignment.Center) { content() }
 }
 
 @Composable
@@ -137,7 +134,7 @@ fun MoreDots(color: Color = C.Fg) {
 @Composable
 fun Pill(text: String, onClick: () -> Unit) {
     Row(
-        Modifier.height(36.dp).clip(RoundedCornerShape(18.dp)).background(C.Surface).pressable(onClick).padding(start = 16.dp, end = 12.dp),
+        Modifier.height(36.dp).background(C.Surface, RoundedCornerShape(18.dp)).pressable(onClick).padding(start = 16.dp, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(text, style = T.label)
