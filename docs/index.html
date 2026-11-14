@@ -182,7 +182,7 @@
   <div class="wrap">
     <a class="mark" href="#top" aria-label="yrs. home">yrs<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="#3a3a3c"/><path d="M0.4 7.2A10 10 0 1 0 19.6 7.2z" fill="#f5f5f7"/></svg></a>
     <div class="links"><a href="#try">Try it</a><a href="#features">Features</a><a href="#install">Install</a><a href="#faq">FAQ</a></div>
-    <a class="pill dl" href="https://github.com/jrypzm/Nrw/releases/latest/download/yrs.apk">Download</a>
+    <a class="pill dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk">Download</a>
   </div>
 </nav>
 
@@ -195,7 +195,7 @@
         <h1>Your life,<br>in dots<span class="soft">.</span></h1>
         <p class="lede">Every year you've lived, and every year still ahead, seen at a glance. On your home screen, on your lock screen, and in an app that never asks for anything.</p>
         <div class="cta">
-          <a class="download dl" href="https://github.com/jrypzm/Nrw/releases/latest/download/yrs.apk">
+          <a class="download dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>
             <span class="t">Download for Android<small class="ver">Latest build · APK</small></span>
           </a>
@@ -347,7 +347,7 @@
     <div class="wrap">
       <h2 class="rise">Make the next one count.</h2>
       <div class="cta rise">
-        <a class="download dl" href="https://github.com/jrypzm/Nrw/releases/latest/download/yrs.apk">
+        <a class="download dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>
           <span class="t">Download for Android<small class="ver">Latest build · APK</small></span>
         </a>
@@ -360,7 +360,7 @@
   <div class="wrap">
     <span class="mark" style="font-size:18px;color:var(--faint)">yrs.</span>
     <span>Your life, in dots.</span>
-    <span style="margin-left:auto"><a href="https://github.com/jrypzm/Nrw/releases">All releases</a></span>
+    <span style="margin-left:auto"><a href="https://github.com/jrypzm/yrs./releases">All releases</a></span>
   </div>
 </footer>
 
@@ -377,7 +377,7 @@
   document.querySelectorAll('.rise').forEach(el => io.observe(el));
 
   // latest release: version, size, date
-  fetch('https://api.github.com/repos/jrypzm/Nrw/releases/latest').then(r => r.ok ? r.json() : null).then(rel => {
+  fetch('https://api.github.com/repos/jrypzm/yrs./releases/latest').then(r => r.ok ? r.json() : null).then(rel => {
     if (!rel) return;
     const a = (rel.assets || []).find(x => x.name === 'yrs.apk') || (rel.assets || [])[0];
     const v = (rel.tag_name || '').replace(/^years-/, '');
