@@ -357,10 +357,14 @@ class Grid {
     const m = this.m, big = m.total > 200;
     this.big = big; this.ratio = big ? .64 : m.cols === 10 ? .6 : m.cols === 5 ? .4 : .5;
     this.W = this.box.clientWidth; this.cell = this.W / (m.cols - (1 - this.ratio)); this.inset = this.cell * (1 - this.ratio) / 2;
+    // very dense grids (days) snap to whole device pixels with a one-pixel gap, so they read as an even texture, not plaid
+    this.tiny = big && this.cell * DPR() < 9;
+    if (this.tiny) { const d = DPR(); this.cellD = Math.max(2, Math.floor(this.W * d / m.cols)); this.cell = this.cellD / d; this.inset = 0; }
+    this.offX = this.tiny ? Math.floor((this.W * DPR() - this.cellD * m.cols) / 2) / DPR() : 0;
     this.H = Math.ceil(m.total / m.cols) * this.cell - 2 * this.inset;
   }
-  center(i) { const m = this.m; return [-this.inset + (i % m.cols + .5) * this.cell, -this.inset + (Math.floor(i / m.cols) + .5) * this.cell]; }
-  idxAt(px, py) { const m = this.m, c = Math.floor((px + this.inset) / this.cell), r = Math.floor((py + this.inset) / this.cell); if (c < 0 || c >= m.cols || r < 0) return null; const i = r * m.cols + c; return i < m.total ? i : null; }
+  center(i) { const m = this.m; return [this.offX - this.inset + (i % m.cols + .5) * this.cell, -this.inset + (Math.floor(i / m.cols) + .5) * this.cell]; }
+  idxAt(px, py) { const m = this.m, c = Math.floor((px - this.offX + this.inset) / this.cell), r = Math.floor((py + this.inset) / this.cell); if (c < 0 || c >= m.cols || r < 0) return null; const i = r * m.cols + c; return i < m.total ? i : null; }
   update(playIn) {
     this.m = model(this.kind); this.measure();
     if (playIn && !reduce && !this.big) this.play('appear', 700 + this.m.total * 9);
@@ -377,7 +381,17 @@ class Grid {
     x.clearRect(0, 0, this.W, this.H);
     const sealed = new Set(S.letters.filter(l => !l.opened).map(l => l.age));
     const D = .7 + m.total * .009, rD = .9 + done * .016;
-    if (this.big) {
+    if (this.tiny) {
+      const d = DPR(), c = this.cellD, sz = c - 1, off = Math.round(this.offX * d);
+      x.save(); x.setTransform(1, 0, 0, 1, 0, 0);
+      for (const [color, from, to] of [[L, 0, done], ['#2a2a2c', done + 1, m.total]]) {
+        x.fillStyle = color; x.beginPath();
+        for (let i = from; i < to; i++) x.rect(off + (i % m.cols) * c, Math.floor(i / m.cols) * c, sz, sz);
+        x.fill();
+      }
+      x.restore();
+      if (this.tipI != null) { const [cx, cy] = this.center(this.tipI); circle(x, cx, cy, Math.max(4, this.cell * 1.6), '#fff'); }
+    } else if (this.big) {
       // thousands of dots: two fills, no per-dot animation
       for (const [color, from, to] of [[L, 0, done], ['#232323', done + 1, m.total]]) {
         x.fillStyle = color; x.beginPath();
