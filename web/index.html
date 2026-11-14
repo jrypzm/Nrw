@@ -2,700 +2,956 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Years">
-<meta name="description" content="See the years you have left, in dots.">
-<title>Years</title>
+<meta name="apple-mobile-web-app-title" content="yrs.">
+<meta name="format-detection" content="telephone=no">
+<meta name="description" content="Your life, in dots.">
+<title>yrs.</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<!-- launch screens for current iPhones -->
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3)" href="splash/splash-1320x2868.png">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3)" href="splash/splash-1206x2622.png">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" href="splash/splash-1290x2796.png">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" href="splash/splash-1179x2556.png">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" href="splash/splash-1284x2778.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" href="splash/splash-1170x2532.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" href="splash/splash-1125x2436.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" href="splash/splash-1242x2688.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" href="splash/splash-828x1792.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" href="splash/splash-750x1334.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..700&display=swap" rel="stylesheet" media="(not (-webkit-touch-callout: none))">
 <style>
-  /* SF Pro first: built-in on Apple devices, or from ./fonts (see fonts/README.md) */
-  @font-face { font-family: "SFP Display"; font-weight: 200; font-display: swap;
-    src: local("SF Pro Display Thin"), local("SFProDisplay-Thin"), url("fonts/SF-Pro-Display-Thin.otf") format("opentype"); }
-  @font-face { font-family: "SFP Display"; font-weight: 300; font-display: swap;
-    src: local("SF Pro Display Light"), local("SFProDisplay-Light"), url("fonts/SF-Pro-Display-Light.otf") format("opentype"); }
-  @font-face { font-family: "SFP Display"; font-weight: 400; font-display: swap;
-    src: local("SF Pro Display Regular"), local("SFProDisplay-Regular"), url("fonts/SF-Pro-Display-Regular.otf") format("opentype"); }
-  @font-face { font-family: "SFP Display"; font-weight: 500; font-display: swap;
-    src: local("SF Pro Display Medium"), local("SFProDisplay-Medium"), url("fonts/SF-Pro-Display-Medium.otf") format("opentype"); }
-  @font-face { font-family: "SFP Display"; font-weight: 600; font-display: swap;
-    src: local("SF Pro Display Semibold"), local("SFProDisplay-Semibold"), url("fonts/SF-Pro-Display-Semibold.otf") format("opentype"); }
-  @font-face { font-family: "SFP Display"; font-weight: 700; font-display: swap;
-    src: local("SF Pro Display Bold"), local("SFProDisplay-Bold"), url("fonts/SF-Pro-Display-Bold.otf") format("opentype"); }
-  @font-face { font-family: "SFP Text"; font-weight: 400; font-display: swap;
-    src: local("SF Pro Text Regular"), local("SFProText-Regular"), url("fonts/SF-Pro-Text-Regular.otf") format("opentype"); }
-  @font-face { font-family: "SFP Text"; font-weight: 500; font-display: swap;
-    src: local("SF Pro Text Medium"), local("SFProText-Medium"), url("fonts/SF-Pro-Text-Medium.otf") format("opentype"); }
-  @font-face { font-family: "SFP Text"; font-weight: 600; font-display: swap;
-    src: local("SF Pro Text Semibold"), local("SFProText-Semibold"), url("fonts/SF-Pro-Text-Semibold.otf") format("opentype"); }
-  @font-face { font-family: "SFP Text"; font-weight: 700; font-display: swap;
-    src: local("SF Pro Text Bold"), local("SFProText-Bold"), url("fonts/SF-Pro-Text-Bold.otf") format("opentype"); }
+  /* yrs. for iPhone: one screen, true black, the system font, native scrolling everywhere. */
   :root {
-    --bg: #000;
-    --fg: #fff;
-    --lit: #fff;             /* lived dots; Daylight dimming changes this */
-    --dim: #8e8e93;
-    --faint: #48484a;
-    --empty: #232323;
-    --partial: #3a3a3c;
-    --surface: #1c1c1e;
-    --surface2: #2c2c2e;
-    --separator: #38383a;
-    --pad: 24px;
-    --spring: cubic-bezier(.2,.9,.25,1);
-    --font: "SFP Text", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
-    --font-display: "SFP Display", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+    --bg: #000; --fg: #fff; --mute: #8e8e93; --faint: #48484a; --empty: #232323; --partial: #3a3a3c;
+    --surface: #1c1c1e; --surface2: #2c2c2e; --surface3: #3a3a3c; --sep: #38383a; --lit: #fff;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+    --ease: cubic-bezier(.16, 1, .3, 1); --spring: cubic-bezier(.2, .9, .25, 1);
+    --st: env(safe-area-inset-top, 0px); --sbm: env(safe-area-inset-bottom, 0px);
+    --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px);
+    color-scheme: dark;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; background: var(--bg); color: var(--fg); }
-  body {
-    font-family: var(--font); -webkit-font-smoothing: antialiased;
-    font-feature-settings: "tnum" 1, "cv11" 1;
-    overscroll-behavior: none; user-select: none; -webkit-user-select: none;
-  }
-  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  html, body { height: 100%; background: var(--bg); color: var(--fg); overflow: hidden; overscroll-behavior: none; }
+  body { font-family: var(--font); font-size: 17px; -webkit-font-smoothing: antialiased; font-feature-settings: "tnum" 1; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; -webkit-appearance: none; }
+  input, textarea { font: inherit; color: inherit; -webkit-user-select: text; user-select: text; }
   [hidden] { display: none !important; }
-  :focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+  .scr { position: fixed; inset: 0; }
 
-  .screen {
-    min-height: 100%;
-    padding: calc(env(safe-area-inset-top) + 20px) calc(env(safe-area-inset-right) + var(--pad))
-             calc(env(safe-area-inset-bottom) + 96px) calc(env(safe-area-inset-left) + var(--pad));
-    max-width: 520px; margin: 0 auto;
-  }
-
-  /* ---------- Top bar ---------- */
-  .bar { display: flex; justify-content: flex-end; height: 32px; margin-bottom: 36px; }
-  .more { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; transition: transform .25s var(--spring), background .2s; }
-  .more:active { transform: scale(.9); background: var(--surface2); }
-  .more svg { width: 16px; height: 4px; }
-
-  /* ---------- Stage (header + grid) ---------- */
-  #stage { touch-action: none; transition: opacity .2s ease, transform .35s var(--spring); }
-  #stage.out-l { opacity: 0; transform: translateX(-28px); }
-  #stage.out-r { opacity: 0; transform: translateX(28px); }
-  #stage.dragging { transition: none; }
-
-  .h-title { font: 600 22px/1.15 var(--font-display); letter-spacing: -0.02em; }
-  .h-sub { margin-top: 3px; font-size: 15px; font-weight: 500; color: var(--dim); letter-spacing: -0.01em; }
-  .h-hero { display: flex; align-items: baseline; gap: 10px; margin-top: -6px; }
-  .h-num { font: 200 104px/0.9 var(--font-display); letter-spacing: -0.045em; }
-  .h-num small { font-size: .42em; font-weight: 300; letter-spacing: -0.02em; margin-left: 2px; }
-  .h-unit { font: 500 17px var(--font); color: var(--dim); letter-spacing: -0.01em; }
-  .h-live { font: 300 44px/1 var(--font-display); letter-spacing: -0.03em; white-space: nowrap; }
-  .h-live .frac { color: var(--dim); }
-  .bday { color: var(--fg); }
-
-  /* ---------- Grid ---------- */
-  .gridwrap { position: relative; margin: 32px -2.08% 0; }
-  .style-hero .gridwrap { margin-top: 40px; }
-  .view-decade .gridwrap, .view-year .gridwrap { margin-left: -4%; margin-right: -4%; }
-  .grid { display: grid; grid-template-columns: repeat(var(--cols, 10), 1fr); }
-  .dot { position: relative; aspect-ratio: 1; cursor: pointer; opacity: 0; transform: scale(.4); animation: in .7s var(--spring) forwards; animation-delay: calc(var(--i) * 9ms); }
-  .dot::before { content: ""; position: absolute; inset: 20%; border-radius: 50%; background: var(--empty); transition: transform .28s var(--spring), background .6s ease; }
-  .view-decade .dot::before, .view-year .dot::before { inset: 22%; }
-  .dot.lived::before { background: var(--lit); }
-  .dot.now::before { background: linear-gradient(to top, var(--lit) var(--fill), var(--partial) var(--fill)); animation: breathe 3.2s ease-in-out 1.2s infinite; }
-  .dot.named::after { content: ""; position: absolute; inset: 8%; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.55); }
-  .dot.active::before { transform: scale(1.38); }
-  @keyframes in { to { opacity: 1; transform: none; } }
-  @keyframes breathe { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
-  /* Unlock ripple: one soft wave from your first year to now */
-  .grid.ripple .dot.lived::before, .grid.ripple .dot.now::before { animation: ripple .9s var(--spring) calc(var(--i) * 16ms) both; }
-  @keyframes ripple { 0%, 100% { transform: scale(1); } 35% { transform: scale(1.32); } }
-
-  .tip {
-    position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none;
-    padding: 7px 11px; border-radius: 12px; background: var(--fg); color: #000; text-align: center;
-    font-size: 13px; font-weight: 600; white-space: nowrap; letter-spacing: -0.01em; line-height: 1.25;
-    transform: translate(-50%, calc(-100% - 6px)) scale(.9); opacity: 0;
-    transition: opacity .15s ease, transform .2s var(--spring);
-  }
-  .tip.show { opacity: 1; transform: translate(-50%, calc(-100% - 6px)); }
-  .tip.sticky { pointer-events: auto; cursor: pointer; }
-  .tip .nm { display: block; font-size: 14px; }
-  .tip .ac { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: #6e6e73; }
-
-  /* ---------- Bottom controls ---------- */
-  .controls {
-    position: fixed; left: 0; right: 0; bottom: 0; max-width: 520px; margin: 0 auto;
-    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-    padding: 0 calc(env(safe-area-inset-right) + var(--pad)) calc(env(safe-area-inset-bottom) + 24px) calc(env(safe-area-inset-left) + var(--pad));
-    pointer-events: none;
-  }
-  .controls > * { pointer-events: auto; }
-  .pill { justify-self: start; height: 36px; padding: 0 12px 0 16px; border-radius: 18px; background: var(--surface); display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 500; transition: transform .25s var(--spring), background .2s; }
-  .pill svg { width: 8px; height: 12px; opacity: .55; }
-  .round { justify-self: end; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font-size: 15px; font-weight: 600; transition: transform .25s var(--spring), background .2s, color .2s; }
-  .pill:active, .round:active { transform: scale(.92); background: var(--surface2); }
+  /* ---------- shared controls ---------- */
+  .round { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; transition: background .2s, transform .35s var(--spring); }
+  .round:active { background: var(--surface2); transform: scale(.92); }
   .round.on { background: var(--fg); color: #000; }
-  .pager { display: flex; gap: 2px; }
-  .pager button { width: 22px; height: 36px; display: grid; place-items: center; }
-  .pager button::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); transition: background .25s, transform .3s var(--spring); }
-  .pager button.sel::before { background: var(--fg); transform: scale(1.1); }
-
-  /* ---------- Onboarding ---------- */
-  .ask { padding-top: 15vh; }
-  .ask h1 { font: 700 34px/1.1 var(--font-display); letter-spacing: -0.025em; }
-  .ask p { margin-top: 10px; font-size: 15px; color: var(--dim); }
-  .field { margin-top: 40px; width: 100%; background: var(--surface); border-radius: 14px; border: 0; color: var(--fg); font: 500 20px/1 var(--font); padding: 18px; color-scheme: dark; appearance: none; -webkit-appearance: none; min-height: 60px; }
-  .field:focus { outline: 1px solid var(--faint); }
-  .primary { margin-top: 16px; width: 100%; height: 54px; border-radius: 27px; background: var(--fg); color: #000; font-size: 17px; font-weight: 600; transition: opacity .2s ease, transform .2s var(--spring); }
-  .primary:active { transform: scale(.97); }
-  .primary:disabled { opacity: .25; }
-  .quiet { margin-top: 6px; width: 100%; height: 48px; font-size: 16px; font-weight: 500; color: var(--dim); }
-
-  /* ---------- Sheets ---------- */
-  .layer .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.6); opacity: 0; pointer-events: none; transition: opacity .3s ease; z-index: 10; }
-  .sheet {
-    position: fixed; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 520px; z-index: 11;
-    max-height: 90vh; overflow-y: auto; overscroll-behavior: contain;
-    background: var(--surface); border-radius: 22px 22px 0 0;
-    padding: 10px var(--pad) calc(env(safe-area-inset-bottom) + 24px);
-    transform: translateY(105%); transition: transform .42s var(--spring);
-  }
-  .layer.open .scrim { opacity: 1; pointer-events: auto; }
-  .layer.open .sheet { transform: none; }
-  .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--faint); margin: 0 auto 18px; }
-  .sheet h2 { font: 600 20px var(--font-display); letter-spacing: -0.015em; margin-bottom: 18px; }
-  .label { margin: 22px 4px 8px; font-size: 13px; color: var(--dim); text-transform: uppercase; letter-spacing: .02em; }
+  .dots3 { display: flex; gap: 3px; } .dots3 i { width: 4px; height: 4px; border-radius: 50%; background: var(--fg); }
+  .pill { height: 36px; padding: 0 12px 0 16px; border-radius: 18px; background: var(--surface); display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 500; transition: background .2s, transform .35s var(--spring); }
+  .pill:active { background: var(--surface2); transform: scale(.94); }
+  .pill svg { width: 8px; height: 12px; }
+  .primary { width: 100%; height: 54px; border-radius: 27px; background: var(--fg); color: #000; font-size: 17px; font-weight: 600; transition: background .15s, transform .35s var(--spring); }
+  .primary:active { background: #d1d1d6; transform: scale(.98); }
+  .quiet { width: 100%; height: 48px; font-size: 16px; font-weight: 500; color: var(--mute); }
+  .caps { margin: 26px 4px 8px; font-size: 13px; color: var(--mute); text-transform: uppercase; letter-spacing: .02em; }
   .group { background: var(--surface2); border-radius: 12px; overflow: hidden; }
-  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px; font-size: 17px; width: 100%; text-align: left; }
-  .row + .row { border-top: .5px solid var(--separator); }
-  .row input[type=date] { background: none; border: 0; color: var(--dim); font: 400 17px var(--font); color-scheme: dark; text-align: right; }
-  .row .chev { color: var(--faint); font-size: 20px; }
-  .row small { display: block; font-size: 13px; color: var(--dim); margin-top: 1px; }
-  .row > span:first-child { padding: 10px 0; }
-  .stepper { display: flex; align-items: center; gap: 14px; }
-  .stepper button { width: 32px; height: 32px; border-radius: 50%; background: #3a3a3c; font-size: 20px; line-height: 1; display: grid; place-items: center; }
-  .stepper button:active { background: var(--faint); }
-  .stepper output { min-width: 28px; text-align: center; color: var(--dim); font-size: 17px; }
-  .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface2); border-radius: 10px; padding: 2px; position: relative; }
-  .seg button { position: relative; z-index: 1; height: 32px; font-size: 14px; font-weight: 500; color: var(--dim); transition: color .2s; }
+  .row { display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 10px 16px; width: 100%; text-align: left; font-size: 17px; position: relative; }
+  .row + .row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--sep); }
+  button.row:active { background: var(--surface3); }
+  .row .t { flex: 1; min-width: 0; } .row small { display: block; font-size: 13px; color: var(--mute); margin-top: 2px; line-height: 1.3; }
+  .row .v { color: var(--mute); } .chev { color: var(--faint); font-size: 22px; line-height: 1; }
+  .switch { position: relative; flex: 0 0 auto; width: 51px; height: 31px; border-radius: 16px; background: var(--surface3); transition: background .25s; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.25); transition: transform .35s var(--spring), background .25s; }
+  .switch.on { background: #fff; } .switch.on::after { transform: translateX(20px); background: #000; }
+  .seg { position: relative; display: grid; background: var(--surface2); border-radius: 10px; padding: 2px; }
+  .seg button { position: relative; z-index: 1; height: 32px; font-size: 14px; font-weight: 500; color: var(--mute); transition: color .25s; }
   .seg button.sel { color: var(--fg); }
-  .seg .thumb { position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 3); border-radius: 8px; background: #5a5a5e; transition: transform .35s var(--spring); }
-  .switch { flex: 0 0 auto; width: 51px; height: 31px; border-radius: 16px; background: #3a3a3c; position: relative; transition: background .25s; }
-  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); transition: transform .3s var(--spring); }
-  .switch[aria-checked="true"] { background: #fff; }
-  .switch[aria-checked="true"]::after { transform: translateX(20px); background: #000; }
-  .note { margin: 10px 4px 0; font-size: 13px; color: var(--dim); line-height: 1.4; }
-  .sheet .primary { margin-top: 22px; }
-  .text { width: 100%; background: var(--surface2); border: 0; border-radius: 12px; color: var(--fg); font: 400 17px var(--font); padding: 15px 16px; }
-  .text::placeholder { color: var(--faint); }
-  .text:focus { outline: 1px solid var(--faint); }
+  .seg .thumb { position: absolute; top: 2px; bottom: 2px; left: 2px; border-radius: 8px; background: #5a5a5e; transition: transform .4s var(--spring); box-shadow: 0 3px 8px rgba(0,0,0,.2); }
+  .stepper { display: flex; align-items: center; gap: 14px; }
+  .stepper button { width: 32px; height: 32px; border-radius: 50%; background: var(--surface3); font-size: 20px; line-height: 1; display: grid; place-items: center; }
+  .stepper button:active { background: var(--faint); }
+  .stepper output { min-width: 30px; text-align: center; color: var(--mute); }
+  .field { width: 100%; border-radius: 12px; background: var(--surface2); border: 0; padding: 15px 16px; font-size: 17px; line-height: 1.35; resize: none; outline: none; }
+  .field::placeholder { color: var(--faint); }
 
-  /* wallpaper picker */
-  .walls { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-  .wall { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--dim); }
-  .wall canvas { width: 100%; aspect-ratio: 9 / 19.5; border-radius: 18px; background: #000; box-shadow: 0 0 0 1px var(--separator); transition: transform .25s var(--spring), box-shadow .2s; }
-  .wall:active canvas { transform: scale(.96); }
-  .wall:hover canvas, .wall:focus-visible canvas { box-shadow: 0 0 0 2px var(--fg); }
+  /* ---------- date wheels: native momentum, snapping to each row ---------- */
+  .wheels { position: relative; display: flex; justify-content: center; gap: 4px; height: 220px; }
+  .wheels::before { content: ""; position: absolute; left: 0; right: 0; top: 88px; height: 44px; border-radius: 12px; background: var(--surface); }
+  .sheet .wheels::before { background: var(--surface3); }
+  .wheel { position: relative; height: 220px; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%, #000 65%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 35%, #000 65%, transparent); overscroll-behavior: contain; }
+  .wheel::-webkit-scrollbar { display: none; }
+  .wheel .pad { height: 88px; }
+  .wheel div.it { height: 44px; display: grid; place-items: center; scroll-snap-align: center; font-family: var(--display); font-size: 21px; font-weight: 400; color: rgba(255,255,255,.35); transition: color .15s, font-weight .15s; }
+  .wheel div.it.c { color: #fff; font-weight: 600; font-size: 22px; }
 
-  .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 90px); z-index: 20; transform: translate(-50%, 10px); opacity: 0; pointer-events: none; background: var(--surface2); padding: 10px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; white-space: nowrap; transition: opacity .2s ease, transform .3s var(--spring); }
-  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  /* ---------- onboarding ---------- */
+  #ob { display: flex; flex-direction: column; padding: calc(var(--st) + 8px) calc(24px + var(--sr)) 0 calc(24px + var(--sl)); }
+  #ob .bar { height: 48px; display: flex; align-items: center; }
+  #ob .back { font-size: 32px; color: var(--mute); width: 40px; text-align: left; }
+  #ob .prog { flex: 1; display: flex; justify-content: center; gap: 6px; padding-right: 40px; }
+  #ob .prog i { height: 6px; width: 6px; border-radius: 3px; background: var(--faint); transition: width .45s var(--spring), background .3s; }
+  #ob .prog i.on { background: var(--fg); } #ob .prog i.cur { width: 22px; }
+  #ob .stage { position: relative; flex: 1; overflow: hidden; }
+  #ob .step { position: absolute; inset: 0; overflow-y: auto; padding: 8px 0 24px; opacity: 0; transform: translate3d(40px, 0, 0); transition: opacity .45s var(--ease), transform .6s var(--ease); pointer-events: none; }
+  #ob .step.in { opacity: 1; transform: none; pointer-events: auto; }
+  #ob .step.out { opacity: 0; transform: translate3d(-40px, 0, 0); }
+  #ob .step.back.out { transform: translate3d(40px, 0, 0); }
+  #ob h1 { font-family: var(--display); font-size: 34px; line-height: 1.08; font-weight: 700; letter-spacing: -0.02em; }
+  #ob .sub { margin-top: 10px; font-size: 15px; color: var(--mute); line-height: 1.4; }
+  #ob .foot { padding: 12px 0 calc(var(--sbm) + 16px); }
+  #ob .note { margin-top: 12px; text-align: center; font-size: 13px; color: var(--faint); min-height: 18px; }
+  .welcome { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 20px; }
+  .mark { display: inline-flex; align-items: flex-end; font-family: var(--display); font-weight: 700; letter-spacing: -0.065em; line-height: .9; }
+  .mark .p { position: relative; display: inline-block; width: .24em; height: .24em; margin-left: .03em; margin-bottom: .12em; border-radius: 50%; background: var(--partial); overflow: hidden; }
+  .mark .p::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: var(--f, 62%); background: var(--fg); transition: height 1.6s var(--ease); }
+  .bignum { font-family: var(--display); font-weight: 200; font-size: 96px; line-height: 1; letter-spacing: -0.05em; }
+  .chips { display: flex; gap: 8px; margin-top: 14px; }
+  .chips button { flex: 1; height: 36px; border-radius: 18px; background: var(--surface); font-size: 15px; font-weight: 500; transition: background .2s, color .2s; }
+  .chips button.sel { background: var(--fg); color: #000; }
+  .plusminus { display: flex; gap: 10px; } .plusminus button { width: 44px; height: 44px; border-radius: 50%; background: var(--surface); font-size: 22px; }
+  .plusminus button:active { background: var(--surface2); }
 
-  @media (prefers-reduced-motion: reduce) {
-    .dot, .dot.now::before, .grid.ripple .dot::before { animation: none !important; opacity: 1; transform: none; }
-    #stage { transition: none; }
-  }
+  /* ---------- home ---------- */
+  #home .top { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; padding: calc(var(--st) + 8px) calc(24px + var(--sr)) 0 calc(24px + var(--sl)); height: calc(var(--st) + 52px); }
+  #home .brand { font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: -0.05em; color: var(--faint); }
+  .pager { position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .pager::-webkit-scrollbar { display: none; }
+  .page { flex: 0 0 100%; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: contain; padding: calc(var(--st) + 82px) calc(24px + var(--sr)) calc(var(--sbm) + 110px) calc(24px + var(--sl)); scrollbar-width: none; }
+  .page::-webkit-scrollbar { display: none; }
+  .controls { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 22px calc(24px + var(--sr)) calc(var(--sbm) + 14px) calc(24px + var(--sl)); background: linear-gradient(to top, #000 55%, rgba(0,0,0,0)); pointer-events: none; }
+  .controls > * { pointer-events: auto; }
+  .controls .l { justify-self: start; transition: opacity .3s; } .controls .r { justify-self: end; transition: opacity .3s; }
+  .controls .faded { opacity: 0; pointer-events: none; }
+  .pdots { display: flex; } .pdots button { width: 18px; height: 36px; display: grid; place-items: center; }
+  .pdots button i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); transition: background .3s, transform .4s var(--spring); }
+  .pdots button.sm i { width: 5px; height: 5px; } .pdots button.on i { background: var(--fg); transform: scale(1.1); }
+
+  .head { min-height: 52px; transition: opacity .18s; }
+  .head.swap { opacity: 0; }
+  .h-title { font-family: var(--display); font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
+  .h-sub { margin-top: 3px; font-size: 15px; font-weight: 500; color: var(--mute); letter-spacing: -0.01em; }
+  .h-hero { display: flex; align-items: baseline; gap: 10px; margin-top: -6px; }
+  .h-num { font-family: var(--display); font-weight: 200; line-height: .9; letter-spacing: -0.045em; }
+  .h-num small { font-size: .42em; font-weight: 300; margin-left: 2px; }
+  .h-unit { font-size: 17px; font-weight: 500; color: var(--mute); }
+  .h-live { font-family: var(--display); font-weight: 300; letter-spacing: -0.03em; white-space: nowrap; line-height: 1.05; }
+  .h-live .fr { color: var(--mute); }
+  .beat { font-family: var(--display); font-weight: 300; font-size: 40px; letter-spacing: -0.03em; white-space: nowrap; animation: pulse 1s var(--ease) infinite; }
+  @keyframes pulse { 0% { transform: scale(1); } 12% { transform: scale(1.025); } 30% { transform: scale(1); } }
+
+  .gridbox { position: relative; margin-top: 32px; touch-action: pan-x pan-y; }
+  .gridbox canvas { display: block; width: 100%; }
+  .now { position: absolute; border-radius: 50%; pointer-events: none; animation: breathe 3.2s ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+  .tip { position: absolute; z-index: 4; padding: 7px 12px; border-radius: 12px; background: #fff; color: #000; text-align: center; white-space: nowrap; font-size: 13px; font-weight: 600; line-height: 1.3; opacity: 0; transform: translate3d(-50%, 6px, 0) scale(.94); transition: opacity .16s, transform .3s var(--spring); pointer-events: none; max-width: 92%; }
+  .tip.show { opacity: 1; transform: translate3d(-50%, 0, 0); }
+  .tip.sticky { pointer-events: auto; }
+  .tip b { display: block; font-size: 14px; } .tip span { display: block; font-size: 12px; font-weight: 500; color: #6e6e73; }
+  .zoombar { display: flex; justify-content: space-between; margin-top: 18px; font-size: 13px; }
+  .zoombar button { color: var(--faint); padding: 6px 0; } .zoombar button.sel { color: var(--fg); font-weight: 600; }
+
+  .card { border-radius: 16px; background: var(--surface); padding: 18px; }
+  .card + .card { margin-top: 12px; }
+  .card:active { background: var(--surface2); }
+  .card .k { font-size: 15px; font-weight: 600; } .card .tx { margin-top: 6px; font-size: 16px; line-height: 1.4; color: var(--mute); }
+  .card .tx.on { color: var(--fg); }
+  .person .hd { display: flex; justify-content: space-between; align-items: baseline; }
+  .person .hd b { font-size: 17px; font-weight: 600; } .person .hd span { font-size: 13px; color: var(--mute); }
+  .person .num { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+  .person .num b { font-family: var(--display); font-weight: 200; font-size: 52px; line-height: 1; letter-spacing: -0.04em; }
+  .person .num span { font-size: 15px; color: var(--mute); }
+  .person .ft { font-size: 13px; color: var(--mute); margin: 4px 0 12px; }
+  .person canvas { display: block; width: 100%; }
+  .legend .lr { display: flex; align-items: center; gap: 12px; padding: 7px 0; font-size: 16px; color: var(--mute); }
+  .legend .lr i { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; } .legend .lr b { margin-left: auto; color: var(--fg); font-weight: 400; }
+  .legend .lr.y { color: var(--fg); } .legend .lr.y b { font-weight: 600; }
+  .range { width: 100%; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: var(--surface3); outline: none; margin: 14px 0 6px; }
+  .range::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.35); }
+  .small { font-size: 13px; color: var(--mute); line-height: 1.45; }
+
+  /* ---------- sheets ---------- */
+  .layer { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+  .layer .scrim { position: absolute; inset: 0; background: rgba(0,0,0,.6); opacity: 0; transition: opacity .4s var(--ease); }
+  .layer.open { pointer-events: auto; } .layer.open .scrim { opacity: 1; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 92%; display: flex; flex-direction: column; background: var(--surface); border-radius: 22px 22px 0 0; transform: translate3d(0, 105%, 0); transition: transform .55s var(--spring); will-change: transform; }
+  .layer.open .sheet { transform: none; }
+  .sheet.drag { transition: none; }
+  .sheet .grab { flex: 0 0 auto; padding: 10px 0 8px; display: grid; place-items: center; touch-action: none; }
+  .sheet .grab i { width: 36px; height: 5px; border-radius: 3px; background: var(--faint); }
+  .sheet .body { overflow-y: auto; padding: 0 calc(24px + var(--sr)) calc(var(--sbm) + 24px) calc(24px + var(--sl)); overscroll-behavior: contain; }
+  .sheet h2 { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -0.015em; margin: 4px 0 4px; }
+  .sheet .lead { font-size: 15px; color: var(--mute); margin-bottom: 18px; }
+  .walls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .walls button { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; color: var(--mute); }
+  .walls canvas { width: 100%; aspect-ratio: 9 / 19.5; border-radius: 14px; box-shadow: 0 0 0 1px var(--sep); background: #000; transition: box-shadow .2s, transform .35s var(--spring); }
+  .walls button.sel { color: var(--fg); } .walls button.sel canvas { box-shadow: 0 0 0 2px var(--fg); }
+  .walls button:active canvas { transform: scale(.96); }
+  .toast { position: fixed; left: 50%; bottom: calc(var(--sbm) + 92px); z-index: 30; padding: 10px 16px; border-radius: 20px; background: var(--surface2); font-size: 14px; font-weight: 500; white-space: nowrap; opacity: 0; transform: translate3d(-50%, 12px, 0); transition: opacity .25s, transform .45s var(--spring); pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate3d(-50%, 0, 0); }
+  .install { position: fixed; left: 12px; right: 12px; bottom: calc(var(--sbm) + 70px); z-index: 25; padding: 16px 18px; border-radius: 18px; background: var(--surface); box-shadow: 0 20px 50px rgba(0,0,0,.6), inset 0 0 0 1px #2a2a2c; font-size: 15px; line-height: 1.4; display: flex; gap: 14px; align-items: center; transform: translate3d(0, 140%, 0); transition: transform .6s var(--spring); }
+  .install.show { transform: none; }
+  .install svg { flex: 0 0 auto; width: 26px; height: 26px; }
+  .install .x { margin-left: auto; color: var(--mute); font-size: 22px; padding: 4px 6px; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; } }
+  @media (min-width: 600px) { .page, #ob, #home .top { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .controls { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .sheet { max-width: 560px; margin: 0 auto; } }
 </style>
 </head>
 <body>
 
-<!-- Onboarding -->
-<main class="screen ask" id="ask" hidden>
-  <h1>When were<br>you born?</h1>
-  <p>Stays on this device. Nothing is sent anywhere.</p>
-  <input class="field" id="askDate" type="date" aria-label="Birthday">
-  <button class="primary" id="askGo" disabled>Continue</button>
+<!-- first run -->
+<main id="ob" class="scr" hidden>
+  <div class="bar"><button class="back" id="obBack" aria-label="Back" hidden>‹</button><div class="prog" id="obProg" hidden><i></i><i></i><i></i></div></div>
+  <div class="stage" id="obStage"></div>
+  <div class="foot"><button class="primary" id="obGo">Begin</button><div class="note" id="obNote">Private by design. Nothing leaves your phone.</div></div>
 </main>
 
-<!-- Main -->
-<main class="screen" id="home" hidden>
-  <div class="bar">
-    <button class="more" id="moreBtn" aria-label="Settings">
-      <svg viewBox="0 0 16 4" fill="#fff"><circle cx="2" cy="2" r="1.6"/><circle cx="8" cy="2" r="1.6"/><circle cx="14" cy="2" r="1.6"/></svg>
-    </button>
-  </div>
-  <div id="stage">
-    <div id="head" aria-live="polite"></div>
-    <div class="gridwrap">
-      <div class="grid" id="grid" role="img"></div>
-      <div class="tip" id="tip"></div>
-    </div>
-  </div>
+<!-- the app -->
+<main id="home" class="scr" hidden>
+  <div class="top"><span class="brand">yrs.</span><button class="round" id="moreBtn" aria-label="Settings" style="width:32px;height:32px"><span class="dots3"><i></i><i></i><i></i></span></button></div>
+  <div class="pager" id="pager"></div>
   <div class="controls">
-    <button class="pill" id="modeBtn" aria-label="Switch between time left and time lived">
-      <span id="modeLabel">Left</span>
-      <svg viewBox="0 0 8 12" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 4 4 1.5 6.5 4M1.5 8 4 10.5 6.5 8"/></svg>
-    </button>
-    <div class="pager" id="pager" role="tablist" aria-label="View">
-      <button role="tab" data-view="life" aria-label="Life"></button>
-      <button role="tab" data-view="decade" aria-label="This decade"></button>
-      <button role="tab" data-view="year" aria-label="This year of life"></button>
-    </div>
-    <button class="round" id="pctBtn" aria-label="Show percentage" aria-pressed="false">%</button>
+    <button class="pill l" id="modeBtn"><span id="modeLabel">Left</span><svg viewBox="0 0 8 12" fill="none" stroke="#8e8e93" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 4 4 1.5 6.5 4M1.5 8 4 10.5 6.5 8"/></svg></button>
+    <div class="pdots" id="pdots"></div>
+    <button class="round r" id="pctBtn" aria-label="Show percentage" style="font-weight:600;font-size:15px">%</button>
   </div>
 </main>
 
-<!-- Settings -->
-<div class="layer" id="settings">
-  <div class="scrim"></div>
-  <section class="sheet" role="dialog" aria-label="Settings">
-    <div class="grabber"></div>
-    <h2>Settings</h2>
-    <div class="group">
-      <label class="row">Birthday <input type="date" id="setDate"></label>
-      <div class="row">Lifespan
-        <div class="stepper">
-          <button id="minus" aria-label="Decrease lifespan">−</button>
-          <output id="span">80</output>
-          <button id="plus" aria-label="Increase lifespan">+</button>
-        </div>
-      </div>
-    </div>
-    <div class="label">Number style</div>
-    <div class="seg" id="seg">
-      <div class="thumb" id="thumb"></div>
-      <button data-style="classic">Classic</button>
-      <button data-style="hero">Large</button>
-      <button data-style="live">Live</button>
-    </div>
-    <div class="label">Feel</div>
-    <div class="group">
-      <div class="row"><span>Daylight<small>Dots glow by day, dim at night</small></span><button class="switch" id="sunSw" role="switch" aria-checked="false" aria-label="Daylight"></button></div>
-      <div class="row"><span>Ripple on open<small>A wave runs through your years</small></span><button class="switch" id="ripSw" role="switch" aria-checked="true" aria-label="Ripple on open"></button></div>
-    </div>
-    <div class="group" style="margin-top:22px">
-      <button class="row" id="wallBtn">Lock screen wallpaper <span class="chev">›</span></button>
-    </div>
-    <p class="note">Swipe sideways for your decade and this year of life. Drag across the dots to travel through time. Tap a year to give it a name.</p>
-    <button class="primary" data-close>Done</button>
-  </section>
-</div>
-
-<!-- Milestone -->
-<div class="layer" id="msLayer">
-  <div class="scrim"></div>
-  <section class="sheet" role="dialog" aria-labelledby="msTitle">
-    <div class="grabber"></div>
-    <h2 id="msTitle">Age 20 · 2012</h2>
-    <input class="text" id="msText" maxlength="40" placeholder="What happened this year?" autocomplete="off">
-    <p class="note">Named years get a thin ring. Names stay on this device.</p>
-    <button class="primary" id="msSave">Save</button>
-    <button class="quiet" id="msDel">Remove name</button>
-  </section>
-</div>
-
-<!-- Wallpaper -->
-<div class="layer" id="wallLayer">
-  <div class="scrim"></div>
-  <section class="sheet" role="dialog" aria-label="Lock screen wallpaper">
-    <div class="grabber"></div>
-    <h2>Lock screen wallpaper</h2>
-    <div class="walls">
-      <button class="wall" data-wall="quiet"><canvas></canvas>Quiet grid</button>
-      <button class="wall" data-wall="daylight"><canvas></canvas>Daylight</button>
-      <button class="wall" data-wall="hourglass"><canvas></canvas>Hourglass</button>
-      <button class="wall" data-wall="stars"><canvas></canvas>Constellation</button>
-    </div>
-    <p class="note">Saves an image sized for this screen. Set it as your lock screen in your phone's wallpaper settings. Daylight uses the brightness of the current hour.</p>
-    <button class="quiet" data-close>Cancel</button>
-  </section>
-</div>
+<div class="layer" id="layer"><div class="scrim"></div><section class="sheet" id="sheet" role="dialog"><div class="grab"><i></i></div><div class="body" id="sheetBody"></div></section></div>
 <div class="toast" id="toast"></div>
+<div class="install" id="install"><svg viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3v13M8 8l5-5 5 5"/><path d="M7 12H5.5A1.5 1.5 0 0 0 4 13.5v8A1.5 1.5 0 0 0 5.5 23h15a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H19"/></svg><span>Tap <b>Share</b>, then <b>Add to Home Screen</b> to keep yrs. like an app.</span><button class="x" id="installX" aria-label="Dismiss">×</button></div>
+<label id="hapt" hidden><input type="checkbox" switch></label>
 
 <script>
 (() => {
-  const KEY = 'years.v1';
-  const YEAR_MS = 365.2425 * 864e5;
-  const $ = id => document.getElementById(id);
-  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
-  const state = Object.assign({ birth: null, span: 80, mode: 'left', pct: false, style: 'classic', view: 'life', sun: false, ripple: true, names: {} }, load());
-  const VIEWS = ['life', 'decade', 'year'];
-  const buzz = (ms = 6) => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} };
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+'use strict';
+const $ = id => document.getElementById(id);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DPR = () => Math.min(3, devicePixelRatio || 1);
+const fmt = n => Math.floor(Math.max(0, n)).toLocaleString('en-US');
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-  /* ---------- Time ---------- */
-  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-  const validBirth = v => v && v <= today() && v >= '1900-01-01';
-  const bparts = () => state.birth.split('-').map(Number);
-  const birthDate = () => { const [y, m, d] = bparts(); return new Date(y, m - 1, d); };
-  const ageNow = () => (Date.now() - birthDate().getTime()) / YEAR_MS;
-  const addMonths = (date, n) => { const d = new Date(date.getFullYear(), date.getMonth() + n, 1); d.setDate(Math.min(date.getDate(), new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); return d; };
-  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
-  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  function isBirthday() { const [, m, d] = bparts(), n = new Date(); return n.getMonth() + 1 === m && n.getDate() === d; }
-  function lastBirthday() { const [, m, d] = bparts(), n = new Date(); let b = new Date(n.getFullYear(), m - 1, d); if (b > n) b = new Date(n.getFullYear() - 1, m - 1, d); return b; }
+// ================================================= haptics
+// iOS 18+ Safari gives a light haptic when a switch control toggles; other phones use vibrate.
+const hapt = $('hapt');
+function tick() { try { if (navigator.vibrate) navigator.vibrate(6); else hapt.click(); } catch {} }
+function thump() { try { if (navigator.vibrate) navigator.vibrate(14); else { hapt.click(); setTimeout(() => hapt.click(), 70); } } catch {} }
 
-  /* Each view = how many dots, how many are done (fractional), and how to talk about it */
-  function model(view) {
-    const age = ageNow(), lived = Math.floor(age), by = bparts()[0];
-    if (view === 'decade') {
-      const start = Math.floor(age / 10) * 10;
-      return { view, total: 10, done: Math.min(10, age - start), unit: 'year', cols: 5,
-        context: start === 0 ? 'Your first decade' : `Your ${start}s`,
-        sub: `Ages ${start}–${start + 9}`,
-        label: i => `Age ${start + i} · ${by + start + i}`, yearIndex: i => start + i };
-    }
-    if (view === 'year') {
-      const lb = lastBirthday(), n = new Date();
-      let m = (n.getFullYear() - lb.getFullYear()) * 12 + n.getMonth() - lb.getMonth();
-      if (addMonths(lb, m) > n) m--;
-      const s = addMonths(lb, m), e = addMonths(lb, m + 1);
-      const done = Math.min(12, m + (n - s) / (e - s));
-      return { view, total: 12, done, unit: 'month', cols: 4,
-        context: `Age ${lived}`, sub: `Turning ${lived + 1} on ${addMonths(lb, 12).getDate()} ${MON[addMonths(lb, 12).getMonth()]}`,
-        label: i => { const d = addMonths(lb, i); return `${MON[d.getMonth()]} ${d.getFullYear()}`; }, yearIndex: null };
-    }
-    return { view: 'life', total: state.span, done: Math.min(state.span, age), unit: 'year', cols: 10,
-      context: null, sub: `Age ${lived} · ${state.span} year life`,
-      label: i => `Age ${i} · ${by + i}`, yearIndex: i => i };
+// ================================================= storage
+const KEY = 'yrs.v2', LKEY = 'yrs.lines';
+const DEF = { birth: null, span: 80, lived: false, pct: false, style: 'classic', sun: false, ripple: true, names: {}, wall: 'daylight', unit: 0, page: 0, zoom: 1, people: [], events: [], letters: [], reviewedAge: -1, habits: [], phoneH: 3 };
+const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+let S = Object.assign({}, DEF, read(KEY, {}));
+// carry over a birthday from the first web version
+if (!S.birth) { const old = read('years.v1', null); if (old && old.birth) { S.birth = old.birth; S.span = old.span || 80; S.names = old.names || {}; } }
+let LINES = read(LKEY, {});
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+const saveLines = () => { try { localStorage.setItem(LKEY, JSON.stringify(LINES)); } catch {} };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const day0 = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+// ================================================= life maths (same rules as the Android app)
+const birthdayIn = (b, y) => { const d = new Date(y, b.getMonth(), b.getDate()); return d.getMonth() !== b.getMonth() ? new Date(y, b.getMonth() + 1, 0) : d; };
+const wholeYears = (b, t) => { let y = t.getFullYear() - b.getFullYear(); if (birthdayIn(b, t.getFullYear()) > day0(t)) y--; return Math.max(0, y); };
+function age(b, now = new Date()) {
+  if (day0(now) <= b) return 0;
+  const y = wholeYears(b, now), last = birthdayIn(b, b.getFullYear() + y), next = birthdayIn(b, b.getFullYear() + y + 1);
+  return y + Math.min(.999999, Math.max(0, (now - last) / (next - last)));
+}
+const lastBirthday = (b, t) => birthdayIn(b, b.getFullYear() + wholeYears(b, t));
+const isBirthday = (b, t = new Date()) => day0(t) > b && +birthdayIn(b, t.getFullYear()) === +day0(t);
+const addMonths = (d, k) => { const x = new Date(d.getFullYear(), d.getMonth() + k, 1); x.setDate(Math.min(d.getDate(), new Date(x.getFullYear(), x.getMonth() + 1, 0).getDate())); return x; };
+const birth = () => parse(S.birth);
+const yearsLeft = () => Math.max(0, S.span - age(birth()));
+const daysLeftExact = () => Math.max(0, (new Date(birth().getFullYear() + S.span, birth().getMonth(), birth().getDate()) - new Date()) / 864e5);
+const daysLived = () => Math.max(0, (new Date() - birth()) / 864e5);
+const dayOfLife = (t = new Date()) => Math.floor((day0(t) - birth()) / 864e5) + 1;
+
+const MEASURES = [['year', 'years', 1], ['day', 'days', 365.2425], ['week', 'weeks', 52.1775], ['summer', 'summers', 1], ['weekend', 'weekends', 52.1775], ['full moon', 'full moons', 365.2425 / 29.530589]];
+const ZOOMS = ['History', 'Years', 'Months', 'Weeks', 'Days'];
+const LIFETIMES = 3750;
+
+function model(kind, now = new Date()) {
+  const b = birth(), a = age(b, now), lived = Math.floor(a), by = b.getFullYear();
+  if (kind === 'decade') {
+    const st = Math.floor(lived / 10) * 10;
+    return { kind, total: 10, done: Math.min(10, Math.max(0, a - st)), cols: 5, unit: 'year', context: st === 0 ? 'Your first decade' : `Your ${st}s`, sub: `Ages ${st}–${st + 9}`, label: i => `Age ${st + i} · ${by + st + i}`, year: i => st + i };
   }
-
-  /* ---------- Header ---------- */
-  function headerHTML(M) {
-    const isLeft = state.mode === 'left', word = isLeft ? 'left' : 'lived';
-    const left = Math.max(0, M.total - M.done), val = isLeft ? left : M.done;
-    const pct = (isLeft ? left : M.done) / M.total * 100;
-    let sub = M.context ? `${M.context} · ${M.sub}` : M.sub;
-    if (M.view === 'life' && isBirthday()) sub = `<span class="bday">Happy birthday</span> · year ${Math.floor(ageNow()) + 1} begins`;
-    const w = M.view === 'year' && !isLeft ? 'in' : word;
-
-    if (state.style === 'hero') {
-      const n = state.pct ? `${Math.floor(pct)}<small>%</small>` : Math.floor(val);
-      const unit = state.pct ? w : `${Math.floor(val) === 1 ? M.unit : M.unit + 's'} ${w}`;
-      return `<div class="h-hero"><div class="h-num">${n}</div><div class="h-unit">${unit}</div></div><div class="h-sub">${sub}</div>`;
-    }
-    if (state.style === 'live') {
-      const [i, f] = (state.pct ? pct.toFixed(7) : val.toFixed(8)).split('.');
-      return `<div class="h-live"><span id="liveI">${i}</span><span class="frac">.<span id="liveF">${f}</span>${state.pct ? '%' : ''}</span></div>
-              <div class="h-sub">${state.pct ? `${w}` : `${M.unit}s ${w}`} · ${sub}</div>`;
-    }
-    let title;
-    if (state.pct) title = `${Math.floor(pct)}% ${w}`;
-    else if (M.view === 'life' && isLeft && left <= 0) title = 'Every year is a gift';
-    else if (isLeft && Math.floor(left) === 0) title = `Less than a ${M.unit} left`;
-    else title = `${plural(Math.floor(val), M.unit)} ${w}`;
-    return `<div class="h-title">${title}</div><div class="h-sub">${sub}</div>`;
+  if (kind === 'year') {
+    const lb = lastBirthday(b, now); let m = 0;
+    while (m < 11 && addMonths(lb, m + 1) <= day0(now)) m++;
+    const st = addMonths(lb, m), en = m === 11 ? birthdayIn(b, lb.getFullYear() + 1) : addMonths(lb, m + 1);
+    const f = Math.min(1, Math.max(0, (now - st) / (en - st)));
+    const nb = birthdayIn(b, lb.getFullYear() + 1);
+    return { kind, total: 12, done: Math.min(12, m + f), cols: 6, unit: 'month', context: `Age ${lived}`, sub: `Turning ${lived + 1} on ${nb.getDate()} ${MON[nb.getMonth()]}`, label: i => { const d = addMonths(lb, i); return `${MON[d.getMonth()]} ${d.getFullYear()}`; }, year: null };
   }
-
-  let raf;
-  function liveLoop() {
-    cancelAnimationFrame(raf);
-    if (state.style !== 'live' || $('home').hidden || document.hidden) return;
-    const tick = () => {
-      const M = model(state.view), isLeft = state.mode === 'left';
-      const val = isLeft ? Math.max(0, M.total - M.done) : M.done;
-      const [i, f] = (state.pct ? (val / M.total * 100).toFixed(7) : val.toFixed(8)).split('.');
-      const I = $('liveI'), F = $('liveF');
-      if (I) { if (I.textContent !== i) I.textContent = i; F.textContent = f; }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
+  const sub = `Age ${lived} · ${S.span} year life`;
+  switch (S.zoom) {
+    case 0: return { kind, total: LIFETIMES, done: LIFETIMES - 1 + Math.min(1, a / S.span), cols: 50, unit: 'lifetime', sub: 'Yours is the last one, filling now', label: i => i === LIFETIMES - 1 ? 'Your life' : `About ${fmt((LIFETIMES - 1 - i) * 80)} years ago`, year: null };
+    case 2: return { kind, total: S.span * 12, done: Math.min(S.span * 12, a * 12), cols: 36, unit: 'month', sub, label: i => { const d = addMonths(b, i); return `${MON[d.getMonth()]} ${d.getFullYear()} · age ${Math.floor(i / 12)}`; }, year: null };
+    case 3: return { kind, total: Math.round(S.span * 52.1775), done: Math.min(S.span * 52.1775, a * 52.1775), cols: 52, unit: 'week', sub, label: i => { const d = new Date(+b + i * 7 * 864e5); return `Week of ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; }, year: null };
+    case 4: { const end = new Date(by + S.span, b.getMonth(), b.getDate()); const total = Math.round((end - b) / 864e5);
+      return { kind, total, done: Math.min(total, (now - b) / 864e5), cols: 183, unit: 'day', sub, label: i => { const d = new Date(by, b.getMonth(), b.getDate() + i); return `${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; }, year: null, dayDate: i => new Date(by, b.getMonth(), b.getDate() + i) }; }
+    default: return { kind, total: S.span, done: Math.min(S.span, a), cols: 10, unit: 'year', sub, label: i => `Age ${i} · ${by + i}`, year: i => i };
   }
+}
 
-  /* ---------- Daylight ---------- */
-  function sunLevel(d = new Date()) {
-    const h = d.getHours() + d.getMinutes() / 60;
-    return Math.max(0, Math.sin((h - 6) / 12 * Math.PI)); // 0 at night, 1 at noon
+function headline(m) {
+  if (m.unit === 'lifetime') { const f = (m.done - (m.total - 1)) * 100; return { v: m.total, noun: 'lives', word: 'of human history', pct: S.lived ? f : 100 - f, one: 'life', many: 'lives' }; }
+  let ms;
+  if (m.kind !== 'life') ms = [m.unit, m.unit + 's', 1];
+  else if (m.unit === 'month') ms = ['month', 'months', 12];
+  else if (m.unit === 'week') ms = ['week', 'weeks', 52.1775];
+  else if (m.unit === 'day') ms = ['day', 'days', 365.2425];
+  else ms = MEASURES[((S.unit % MEASURES.length) + MEASURES.length) % MEASURES.length];
+  let base, pct;
+  if (m.kind === 'life') { const lv = Math.min(S.span, age(birth())); base = S.lived ? lv : Math.max(0, S.span - lv); pct = base / S.span * 100; }
+  else { base = S.lived ? m.done : Math.max(0, m.total - m.done); pct = base / m.total * 100; }
+  let v = base * ms[2];
+  if (m.kind === 'life' && ms[0] === 'day') v = S.lived ? daysLived() : daysLeftExact();
+  const word = !S.lived ? 'left' : m.kind === 'year' ? 'in' : 'lived';
+  return { v, noun: Math.floor(v) === 1 ? ms[0] : ms[1], word, pct, one: ms[0], many: ms[1] };
+}
+
+const together = p => { const a = new Date().getFullYear() - p.born; const theirs = Math.max(S.span - a, a < 105 ? Math.max(2, (100 - a) / 3) : 1); const yrs = Math.min(yearsLeft(), theirs); return { v: Math.floor(yrs * p.per), yrs, a }; };
+const OFTEN = [['We live together', 365], ['Every week', 52], ['Every month', 12], ['A few times a year', 4], ['Once a year', 1]];
+const HABITS = [['smoke', 'I smoke', -10], ['exercise', 'I exercise most weeks', 3], ['sleep', 'I usually sleep 7 to 8 hours', 1], ['drink', 'I drink heavily', -5], ['diet', 'I mostly eat whole foods', 2]];
+const sunLevel = (d = new Date()) => { const h = d.getHours() + d.getMinutes() / 60; return Math.max(0, Math.sin((h - 6) / 12 * Math.PI)); };
+const litColor = s => { const v = Math.round(110 + 145 * s); return `rgb(${v},${v},${v})`; };
+const lit = () => S.sun ? litColor(sunLevel()) : '#fff';
+
+// ================================================= drawing
+function circle(x, cx, cy, r, fill, frac, part = '#3a3a3c') {
+  x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2);
+  if (frac == null) { x.fillStyle = fill; x.fill(); return; }
+  x.fillStyle = part; x.fill(); x.save(); x.clip(); x.fillStyle = fill; x.fillRect(cx - r, cy + r - 2 * r * frac, 2 * r, 2 * r * frac); x.restore();
+}
+function sizeCanvas(cv, W, H) { const d = DPR(); cv.style.height = H + 'px'; cv.width = Math.round(W * d); cv.height = Math.round(H * d); const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); return x; }
+
+/** A tappable, scrubbable, pinchable dot grid for one page. */
+class Grid {
+  constructor(box, kind) {
+    this.box = box; this.kind = kind;
+    this.cv = document.createElement('canvas'); this.now = document.createElement('div'); this.now.className = 'now';
+    this.tip = document.createElement('div'); this.tip.className = 'tip';
+    box.append(this.cv, this.now, this.tip);
+    this.appear = 1; this.ripple = 1; this.tipI = null; this.sticky = false;
+    this.bind();
   }
-  function litColor(s) { const v = Math.round(110 + 145 * s); return `rgb(${v},${v},${v})`; }
-  function applySun() { document.documentElement.style.setProperty('--lit', state.sun ? litColor(sunLevel()) : '#fff'); }
-
-  /* ---------- Render ---------- */
-  let gridKey = '';
-  function render(forceGrid) {
-    const M = model(state.view);
-    document.body.className = `style-${state.style} view-${state.view}`;
-    $('head').innerHTML = headerHTML(M);
-    $('modeLabel').textContent = state.mode === 'left' ? 'Left' : 'Lived';
-    $('pctBtn').classList.toggle('on', state.pct);
-    $('pctBtn').setAttribute('aria-pressed', state.pct);
-    $('pager').querySelectorAll('button').forEach(b => { const on = b.dataset.view === state.view; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on); });
-    applySun();
-    liveLoop();
-
-    const doneInt = Math.floor(M.done);
-    const key = `${state.view}|${doneInt}|${M.total}|${state.birth}|${JSON.stringify(state.names)}`;
-    const grid = $('grid');
-    if (key !== gridKey || forceGrid) {
-      gridKey = key;
-      grid.style.setProperty('--cols', M.cols);
-      grid.setAttribute('aria-label', `${doneInt} of ${M.total} ${M.unit}s`);
-      const frag = document.createDocumentFragment();
-      for (let i = 0; i < M.total; i++) {
-        const el = document.createElement('div');
-        const yi = M.yearIndex ? M.yearIndex(i) : null;
-        el.className = 'dot' + (i < doneInt ? ' lived' : i === doneInt && M.done < M.total ? ' now' : '') + (yi != null && state.names[yi] ? ' named' : '');
-        el.style.setProperty('--i', i);
-        el.dataset.i = i;
-        frag.appendChild(el);
+  measure() {
+    const m = this.m, big = m.total > 200;
+    this.big = big; this.ratio = big ? .64 : m.cols === 10 ? .6 : m.cols === 5 ? .4 : .5;
+    this.W = this.box.clientWidth; this.cell = this.W / (m.cols - (1 - this.ratio)); this.inset = this.cell * (1 - this.ratio) / 2;
+    this.H = Math.ceil(m.total / m.cols) * this.cell - 2 * this.inset;
+  }
+  center(i) { const m = this.m; return [-this.inset + (i % m.cols + .5) * this.cell, -this.inset + (Math.floor(i / m.cols) + .5) * this.cell]; }
+  idxAt(px, py) { const m = this.m, c = Math.floor((px + this.inset) / this.cell), r = Math.floor((py + this.inset) / this.cell); if (c < 0 || c >= m.cols || r < 0) return null; const i = r * m.cols + c; return i < m.total ? i : null; }
+  update(playIn) {
+    this.m = model(this.kind); this.measure();
+    if (playIn && !reduce && !this.big) this.play('appear', 700 + this.m.total * 9);
+    this.draw();
+  }
+  play(key, dur) {
+    this[key] = 0; const t0 = performance.now();
+    const step = t => { this[key] = Math.min(1, (t - t0) / dur); this.draw(); if (this[key] < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+  draw() {
+    if (!this.W) { this.measure(); if (!this.W) return; }
+    const m = this.m, x = sizeCanvas(this.cv, this.W, this.H), r0 = this.cell * this.ratio / 2, done = Math.floor(m.done), L = lit();
+    x.clearRect(0, 0, this.W, this.H);
+    const sealed = new Set(S.letters.filter(l => !l.opened).map(l => l.age));
+    const D = .7 + m.total * .009, rD = .9 + done * .016;
+    if (this.big) {
+      // thousands of dots: two fills, no per-dot animation
+      for (const [color, from, to] of [[L, 0, done], ['#232323', done + 1, m.total]]) {
+        x.fillStyle = color; x.beginPath();
+        for (let i = from; i < to; i++) { const [cx, cy] = this.center(i); x.moveTo(cx + r0, cy); x.arc(cx, cy, r0, 0, Math.PI * 2); }
+        x.fill();
       }
-      grid.replaceChildren(frag);
-    }
-    const now = grid.querySelector('.dot.now');
-    if (now) now.style.setProperty('--fill', `${((M.done - doneInt) * 100).toFixed(1)}%`);
-  }
-
-  function ripple(delay = 0) {
-    if (!state.ripple || reduce || state.view !== 'life') return;
-    const g = $('grid');
-    setTimeout(() => {
-      g.classList.remove('ripple'); void g.offsetWidth; g.classList.add('ripple');
-      clearTimeout(ripple.t); ripple.t = setTimeout(() => g.classList.remove('ripple'), 900 + Math.floor(ageNow()) * 16 + 50);
-    }, delay);
-  }
-
-  /* ---------- Views ---------- */
-  function goView(next, dir) {
-    if (next === state.view) return;
-    buzz(); hideTip(true);
-    const st = $('stage');
-    st.classList.remove('dragging');
-    st.style.transform = '';
-    st.classList.add(dir > 0 ? 'out-l' : 'out-r');
-    setTimeout(() => {
-      state.view = next; save(); render(true);
-      st.classList.remove('out-l', 'out-r');
-      st.classList.add(dir > 0 ? 'out-r' : 'out-l');
-      void st.offsetWidth;
-      st.classList.remove('out-l', 'out-r');
-    }, 180);
-  }
-  const step = d => { const i = VIEWS.indexOf(state.view) + d; if (i >= 0 && i < VIEWS.length) goView(VIEWS[i], d); };
-  $('pager').addEventListener('click', e => { const b = e.target.closest('button'); if (b) goView(b.dataset.view, VIEWS.indexOf(b.dataset.view) - VIEWS.indexOf(state.view)); });
-
-  /* ---------- Touch: tap, hold-and-drag to scrub, swipe to change view ---------- */
-  const tip = $('tip'), stage = $('stage');
-  let g = null, activeDot = null, tipTimer, stickyIndex = null;
-  function dotAt(x, y) { const el = document.elementFromPoint(x, y); return el && el.closest ? el.closest('#grid .dot') : null; }
-  function showTip(dot) {
-    if (!dot || dot === activeDot) return;
-    activeDot && activeDot.classList.remove('active');
-    activeDot = dot; dot.classList.add('active'); buzz(4);
-    const M = model(state.view), i = +dot.dataset.i, yi = M.yearIndex ? M.yearIndex(i) : null;
-    const done = Math.floor(M.done), tag = i === done && M.done < M.total ? ' · now' : '';
-    const name = yi != null ? state.names[yi] : null;
-    tip.innerHTML = name ? `<span class="nm"></span><span class="ac">${M.label(i)}${tag}</span>` : `${M.label(i)}${tag}`;
-    if (name) tip.querySelector('.nm').textContent = name;
-    const wrap = $('grid').getBoundingClientRect(), r = dot.getBoundingClientRect();
-    const half = tip.offsetWidth / 2 + 4;
-    tip.style.left = Math.min(Math.max(r.left + r.width / 2 - wrap.left, half), wrap.width - half) + 'px';
-    tip.style.top = (r.top - wrap.top + r.height * 0.2) + 'px';
-    tip.classList.add('show');
-  }
-  function hideTip(now) {
-    clearTimeout(tipTimer);
-    const go = () => { tip.classList.remove('show', 'sticky'); activeDot && activeDot.classList.remove('active'); activeDot = null; stickyIndex = null; };
-    now ? go() : (tipTimer = setTimeout(go, 3500));
-  }
-  function releaseTip() {
-    // after letting go on a year, the label stays and can be tapped to name that year
-    const M = model(state.view);
-    if (activeDot && M.yearIndex) {
-      const yi = M.yearIndex(+activeDot.dataset.i);
-      stickyIndex = yi; tip.classList.add('sticky');
-      if (!state.names[yi]) tip.innerHTML = `${tip.innerHTML}<span class="ac">Tap to name this year</span>`;
-    }
-    hideTip(false);
-  }
-  stage.addEventListener('pointerdown', e => {
-    if (e.target.closest('.tip')) return;
-    hideTip(true);
-    g = { x0: e.clientX, y0: e.clientY, mode: null, dot: dotAt(e.clientX, e.clientY), id: e.pointerId };
-    stage.setPointerCapture(e.pointerId);
-    if (g.dot) g.hold = setTimeout(() => { if (g && !g.mode) { g.mode = 'scrub'; showTip(g.dot); } }, 140);
-  });
-  stage.addEventListener('pointermove', e => {
-    if (!g || e.pointerId !== g.id) return;
-    const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
-    if (!g.mode && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.2) { g.mode = 'swipe'; clearTimeout(g.hold); stage.classList.add('dragging'); }
-    else if (!g.mode && g.dot && Math.hypot(dx, dy) > 12) { g.mode = 'scrub'; clearTimeout(g.hold); }
-    if (g.mode === 'scrub') showTip(dotAt(e.clientX, e.clientY));
-    if (g.mode === 'swipe') { const i = VIEWS.indexOf(state.view), edge = (dx > 0 && i === 0) || (dx < 0 && i === VIEWS.length - 1); stage.style.transform = `translateX(${dx * (edge ? .15 : .45)}px)`; stage.style.opacity = 1 - Math.min(.5, Math.abs(dx) / 600); }
-  });
-  function up(e) {
-    if (!g || e.pointerId !== g.id) return;
-    clearTimeout(g.hold);
-    const dx = e.clientX - g.x0;
-    stage.classList.remove('dragging');
-    if (g.mode === 'swipe') {
-      stage.style.opacity = '';
-      if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1); else stage.style.transform = '';
-    } else if (g.mode === 'scrub') releaseTip();
-    else if (g.dot && e.type === 'pointerup') { showTip(g.dot); releaseTip(); }
-    g = null;
-  }
-  stage.addEventListener('pointerup', up);
-  stage.addEventListener('pointercancel', up);
-  tip.addEventListener('click', () => { if (stickyIndex != null) openMilestone(stickyIndex); });
-
-  /* ---------- Sheets ---------- */
-  function openLayer(id) { buzz(); $(id).classList.add('open'); }
-  function closeLayer(id) { $(id).classList.remove('open'); }
-  document.querySelectorAll('.layer').forEach(l => {
-    l.querySelector('.scrim').addEventListener('click', () => closeLayer(l.id));
-    l.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeLayer(l.id)));
-  });
-
-  /* Milestones */
-  let msIndex = null;
-  function openMilestone(yi) {
-    msIndex = yi; hideTip(true);
-    $('msTitle').textContent = `Age ${yi} · ${bparts()[0] + yi}`;
-    $('msText').value = state.names[yi] || '';
-    $('msDel').hidden = !state.names[yi];
-    openLayer('msLayer');
-    setTimeout(() => $('msText').focus(), 350);
-  }
-  function saveMilestone() {
-    const v = $('msText').value.trim();
-    if (v) state.names[msIndex] = v; else delete state.names[msIndex];
-    save(); closeLayer('msLayer'); render(); buzz(10);
-    toast(v ? 'Year named' : 'Name removed');
-  }
-  $('msSave').addEventListener('click', saveMilestone);
-  $('msText').addEventListener('keydown', e => { if (e.key === 'Enter') saveMilestone(); });
-  $('msDel').addEventListener('click', () => { $('msText').value = ''; saveMilestone(); });
-
-  /* Settings */
-  const setDate = $('setDate');
-  function syncSettings() {
-    setDate.value = state.birth; $('span').textContent = state.span;
-    const btns = [...$('seg').querySelectorAll('button')], idx = btns.findIndex(b => b.dataset.style === state.style);
-    btns.forEach((b, k) => b.classList.toggle('sel', k === idx));
-    $('thumb').style.transform = `translateX(${idx * 100}%)`;
-    $('sunSw').setAttribute('aria-checked', state.sun);
-    $('ripSw').setAttribute('aria-checked', state.ripple);
-  }
-  $('moreBtn').addEventListener('click', () => { syncSettings(); openLayer('settings'); });
-  setDate.addEventListener('change', () => { if (validBirth(setDate.value)) { state.birth = setDate.value; save(); render(true); } });
-  const stepSpan = d => { state.span = Math.min(120, Math.max(40, state.span + d)); $('span').textContent = state.span; buzz(4); save(); render(true); };
-  $('minus').addEventListener('click', () => stepSpan(-1));
-  $('plus').addEventListener('click', () => stepSpan(1));
-  $('seg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.style = b.dataset.style; buzz(); save(); syncSettings(); render(); });
-  $('sunSw').addEventListener('click', () => { state.sun = !state.sun; buzz(); save(); syncSettings(); applySun(); });
-  $('ripSw').addEventListener('click', () => { state.ripple = !state.ripple; buzz(); save(); syncSettings(); if (state.ripple) ripple(250); });
-
-  /* Header toggles */
-  const swapHead = fn => { buzz(); $('head').style.opacity = 0; setTimeout(() => { fn(); save(); render(); $('head').style.opacity = ''; }, 170); };
-  $('head').style.transition = 'opacity .17s ease';
-  $('modeBtn').addEventListener('click', () => swapHead(() => { state.mode = state.mode === 'left' ? 'lived' : 'left'; }));
-  $('pctBtn').addEventListener('click', () => swapHead(() => { state.pct = !state.pct; }));
-
-  /* ---------- Wallpapers ---------- */
-  function circle(x, cx, cy, r, fill, frac, partial = '#3a3a3c') {
-    x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2);
-    if (frac == null) { x.fillStyle = fill; x.fill(); return; }
-    x.fillStyle = partial; x.fill(); x.save(); x.clip(); x.fillStyle = fill;
-    x.fillRect(cx - r, cy + r - 2 * r * frac, 2 * r, 2 * r * frac); x.restore();
-  }
-  function caption(x, W, y, s, color) {
-    const left = Math.max(0, Math.floor(state.span - ageNow()));
-    x.fillStyle = color; x.textAlign = 'center';
-    x.font = `500 ${Math.round(W * 0.036)}px ${getComputedStyle(document.body).fontFamily}`;
-    x.fillText(`${plural(left, 'year')} left`, W / 2, y);
-  }
-  const WALLS = {
-    quiet(x, W, H, lit = '#fff') {
-      const age = ageNow(), lived = Math.floor(age), span = state.span, cols = 10, rows = Math.ceil(span / cols);
-      const gw = W * 0.62, cell = gw / cols, r = cell * 0.3, x0 = (W - gw) / 2, gh = rows * cell, y0 = H * 0.58 - gh / 2;
-      for (let i = 0; i < span; i++) {
-        const cx = x0 + (i % cols + .5) * cell, cy = y0 + (Math.floor(i / cols) + .5) * cell;
-        if (i < lived) circle(x, cx, cy, r, lit);
-        else if (i === lived && age < span) circle(x, cx, cy, r, lit, age - lived);
-        else circle(x, cx, cy, r, '#232323');
-        if (state.names[i]) { x.beginPath(); x.arc(cx, cy, cell * 0.43, 0, Math.PI * 2); x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = Math.max(1, W * 0.0025); x.stroke(); }
+      if (this.tipI != null) { const [cx, cy] = this.center(this.tipI); circle(x, cx, cy, r0 * 2.6, '#fff'); }
+    } else {
+      for (let i = 0; i < m.total; i++) {
+        if (i === done && m.done < m.total) continue;
+        const [cx, cy] = this.center(i);
+        const l = Math.max(0, Math.min(1, (this.appear * D - i * .009) / .7)), e = 1 - Math.pow(1 - l, 3);
+        if (e <= 0) continue;
+        let k = .4 + .6 * e;
+        if (this.ripple < 1 && i <= done) { const lr = (this.ripple * rD - i * .016) / .9; if (lr > 0 && lr < 1) k *= 1 + .32 * Math.sin(lr * Math.PI); }
+        if (i === this.tipI) k *= 1.38;
+        x.globalAlpha = e;
+        circle(x, cx, cy, r0 * k, i < done ? L : '#232323');
+        const yi = m.year ? m.year(i) : null;
+        if (yi != null && (S.names[yi] || sealed.has(yi))) { x.beginPath(); x.arc(cx, cy, r0 * 1.45, 0, Math.PI * 2); x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 1.5; x.stroke(); }
       }
-      caption(x, W, y0 + gh + W * 0.08, 1, '#8e8e93');
-    },
-    daylight(x, W, H) { WALLS.quiet(x, W, H, litColor(sunLevel())); },
-    hourglass(x, W, H) {
-      const age = ageNow(), lived = Math.min(Math.floor(age), state.span), span = state.span;
-      const cx = W / 2, r = W * 0.019, stepD = r * 2.6, hw = W * 0.3;
-      const neck = H * 0.62, top = H * 0.40, bottom = H * 0.86;
-      x.strokeStyle = '#2a2a2c'; x.lineWidth = Math.max(1, W * 0.003);
-      x.beginPath(); x.moveTo(cx - hw, top - stepD * 1.5); x.lineTo(cx - r * 1.6, neck); x.lineTo(cx - hw, bottom + stepD * 0.6);
-      x.moveTo(cx + hw, top - stepD * 1.5); x.lineTo(cx + r * 1.6, neck); x.lineTo(cx + hw, bottom + stepD * 0.6); x.stroke();
-      let left = span - lived - (age < span ? 1 : 0), row = 0;
-      while (left > 0 && row < 40) { const y = neck - stepD * 1.3 - row * stepD; const width = Math.max(stepD, (neck - y) / (neck - top + stepD * 1.5) * hw * 1.8); const n = Math.max(1, Math.min(left, Math.floor(width / stepD))); for (let k = 0; k < n; k++) circle(x, cx + (k - (n - 1) / 2) * stepD, y, r, '#2c2c2e'); left -= n; row++; }
-      let l = lived; row = 0;
-      while (l > 0 && row < 40) { const y = bottom - row * stepD; const width = Math.max(stepD, (y - neck) / (bottom - neck) * hw * 1.85); const n = Math.max(1, Math.min(l, Math.floor(width / stepD))); for (let k = 0; k < n; k++) circle(x, cx + (k - (n - 1) / 2) * stepD, y, r, '#fff'); l -= n; row++; }
-      if (age < span) circle(x, cx, neck + stepD * 0.2, r, '#fff', age - Math.floor(age));
-    },
-    stars(x, W, H) {
-      const age = ageNow(), lived = Math.floor(age), [by, bm, bd] = bparts();
-      let s = by * 10000 + bm * 100 + bd; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-      for (let i = 0; i < state.span; i++) {
-        const cx = W * (0.1 + rnd() * 0.8), cy = H * (0.36 + rnd() * 0.52), sz = 0.6 + rnd() * 0.8, r = W * 0.011 * sz;
-        if (i < lived) { x.globalAlpha = 0.55 + rnd() * 0.45; circle(x, cx, cy, r, '#fff'); x.globalAlpha = 1; }
-        else if (i === lived) circle(x, cx, cy, r * 1.5, '#fff', age - lived);
-        else circle(x, cx, cy, r, '#262628');
-      }
+      x.globalAlpha = 1;
     }
+    // the year you're in breathes on its own small layer
+    if (done < m.total) {
+      const [cx, cy] = this.center(done);
+      let r = this.big ? Math.max(r0 * 1.8, 3) : r0;
+      if (!this.big) {
+        const l = Math.max(0, Math.min(1, (this.appear * D - done * .009) / .7)); r *= .4 + .6 * (1 - Math.pow(1 - l, 3));
+        if (this.ripple < 1) { const lr = (this.ripple * rD - done * .016) / .9; if (lr > 0 && lr < 1) r *= 1 + .32 * Math.sin(lr * Math.PI); }
+        if (done === this.tipI) r *= 1.38;
+      }
+      const f = ((m.done - done) * 100).toFixed(1);
+      Object.assign(this.now.style, { left: (cx - r) + 'px', top: (cy - r) + 'px', width: 2 * r + 'px', height: 2 * r + 'px', background: `linear-gradient(to top, ${L} ${f}%, #3a3a3c ${f}%)`, display: '' });
+    } else this.now.style.display = 'none';
+  }
+  showTip(i, sticky) {
+    const m = this.m; this.tipI = i; this.sticky = sticky;
+    const done = Math.floor(m.done), yi = m.year ? m.year(i) : null, isNow = i === done && m.done < m.total;
+    let name = yi != null ? S.names[yi] : null;
+    if (yi != null && !name && S.letters.some(l => !l.opened && l.age === yi)) name = 'Sealed letter';
+    if (m.unit === 'day') name = LINES[iso(m.dayDate(i))] || null;
+    const label = m.label(i) + (isNow ? ' · now' : '');
+    const hint = sticky && yi != null && !S.names[yi] ? (i <= done ? 'Tap to name this year' : 'Tap to plan this year') : '';
+    this.tip.innerHTML = name ? `<b></b><span>${label}</span>` : `${label}`;
+    if (name) this.tip.querySelector('b').textContent = name;
+    if (hint) this.tip.insertAdjacentHTML('beforeend', `<span>${hint}</span>`);
+    const [cx, cy] = this.center(i), half = this.cell * this.ratio * .7;
+    this.tip.classList.add('show'); this.tip.classList.toggle('sticky', sticky && yi != null);
+    const w = this.tip.offsetWidth, h = this.tip.offsetHeight;
+    const left = Math.min(Math.max(cx, w / 2 + 2), this.W - w / 2 - 2);
+    let top = cy - half - h - 8; if (top < -this.box.offsetTop + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--st')) || 0) + 60 && top < 0) top = cy + half + 8;
+    if (top < 0) top = cy + half + 8;
+    this.tip.style.left = left + 'px'; this.tip.style.top = top + 'px';
+    this.draw();
+    clearTimeout(this.tipT); if (sticky) this.tipT = setTimeout(() => this.hideTip(), 3500);
+  }
+  hideTip() { this.tipI = null; this.sticky = false; this.tip.classList.remove('show', 'sticky'); this.draw(); }
+  bind() {
+    const box = this.box; let hold = null, mode = null, sx = 0, sy = 0, base = 0;
+    const local = t => { const r = box.getBoundingClientRect(); return [t.clientX - r.left, t.clientY - r.top]; };
+    const pick = t => { const [px, py] = local(t), i = this.idxAt(px, py); if (i != null && i !== this.tipI) { this.showTip(i, false); tick(); } };
+    box.addEventListener('touchstart', e => {
+      if (e.target.closest('.tip')) return;
+      if (e.touches.length === 2 && this.kind === 'life') { clearTimeout(hold); mode = 'pinch'; const [a, b] = e.touches; base = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); return; }
+      if (e.touches.length > 1) return;
+      const t = e.touches[0]; sx = t.clientX; sy = t.clientY; mode = null;
+      clearTimeout(hold); hold = setTimeout(() => { mode = 'scrub'; clearTimeout(this.tipT); pick(t); }, 170);
+    }, { passive: true });
+    box.addEventListener('touchmove', e => {
+      if (mode === 'pinch' && e.touches.length === 2) {
+        e.preventDefault();
+        const [a, b] = e.touches, d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), k = d / base;
+        if (k > 1.3 && S.zoom < 4) { setZoom(S.zoom + 1); base = d; } else if (k < .77 && S.zoom > 0) { setZoom(S.zoom - 1); base = d; }
+        return;
+      }
+      const t = e.touches[0];
+      if (mode === 'scrub') { e.preventDefault(); pick(t); return; }
+      if (!mode && Math.hypot(t.clientX - sx, t.clientY - sy) > 10) { clearTimeout(hold); mode = 'pass'; }
+    }, { passive: false });
+    box.addEventListener('touchend', e => {
+      clearTimeout(hold);
+      if (mode === 'scrub') { if (this.tipI != null) this.showTip(this.tipI, true); }
+      else if (!mode && e.changedTouches.length === 1) { const [px, py] = local(e.changedTouches[0]); const i = this.idxAt(px, py); if (i != null) { this.showTip(i, true); tick(); } else this.hideTip(); }
+      if (e.touches.length === 0) mode = null;
+    });
+    box.addEventListener('touchcancel', () => { clearTimeout(hold); mode = null; });
+    // mouse, for desktops
+    box.addEventListener('mousedown', e => { if (e.target.closest('.tip')) return; const [px, py] = local(e); const i = this.idxAt(px, py); if (i != null) this.showTip(i, true); });
+    this.tip.addEventListener('click', () => { const yi = this.m.year ? this.m.year(this.tipI) : null; if (this.sticky && yi != null) { tick(); this.hideTip(); openSheet('milestone', yi); } });
+  }
+}
+
+// ================================================= wallpapers and share images (same drawing as the app)
+function wallpaper(x, W, H, style, t = 0, caption = true) {
+  x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
+  const b = birth(), a = age(b), lived = Math.floor(a), span = S.span, done = Math.min(a, span);
+  if (style === 'grid' || style === 'daylight') {
+    const L = style === 'daylight' ? litColor(sunLevel()) : '#fff', gw = W * .62, cell = gw / 9.6, inset = cell * .2, r = cell * .3, gh = Math.ceil(span / 10) * cell - 2 * inset, x0 = (W - gw) / 2, top = H * .46 - gh / 2;
+    for (let i = 0; i < span; i++) {
+      const cx = x0 - inset + (i % 10 + .5) * cell, cy = top - inset + (Math.floor(i / 10) + .5) * cell;
+      if (i < Math.floor(done)) circle(x, cx, cy, r, L); else if (i === Math.floor(done) && done < span) circle(x, cx, cy, r, L, done - Math.floor(done)); else circle(x, cx, cy, r, '#232323');
+      if (S.names[i]) { x.beginPath(); x.arc(cx, cy, r * 1.45, 0, Math.PI * 2); x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = Math.max(1, W * .0025); x.stroke(); }
+    }
+    if (caption) {
+      x.textAlign = 'center'; x.fillStyle = '#8e8e93'; x.font = `500 ${Math.round(W * .036)}px -apple-system, Inter, sans-serif`;
+      const left = Math.max(0, Math.floor(span - a)); x.fillText(`${left} ${left === 1 ? 'year' : 'years'} left`, W / 2, top + gh + W * .085);
+      x.fillStyle = 'rgba(142,142,147,.6)'; x.font = `400 ${Math.round(W * .03)}px -apple-system, Inter, sans-serif`; x.fillText(lineOfDay(), W / 2, top + gh + W * .135);
+    }
+  } else if (style === 'hourglass') {
+    const cx = W / 2, r = W * .019, step = r * 2.6, hw = W * .3, neck = H * .5, top = H * .3, bottom = H * .72;
+    x.strokeStyle = '#2a2a2c'; x.lineWidth = Math.max(1, W * .003); x.beginPath();
+    x.moveTo(cx - hw, top - step * 1.5); x.lineTo(cx - r * 1.6, neck); x.lineTo(cx - hw, bottom + step * .6);
+    x.moveTo(cx + hw, top - step * 1.5); x.lineTo(cx + r * 1.6, neck); x.lineTo(cx + hw, bottom + step * .6); x.stroke();
+    let left = span - Math.min(lived, span) - (a < span ? 1 : 0), row = 0;
+    while (left > 0 && row < 60) { const y = neck - step * 1.3 - row * step, w = Math.max(step, (neck - y) / (neck - top + step * 1.5) * hw * 1.8), n = Math.max(1, Math.min(left, Math.floor(w / step))); for (let k = 0; k < n; k++) circle(x, cx + (k - (n - 1) / 2) * step, y, r, '#2c2c2e'); left -= n; row++; }
+    let l = Math.min(lived, span); row = 0;
+    while (l > 0 && row < 60) { const y = bottom - row * step, w = Math.max(step, (y - neck) / (bottom - neck) * hw * 1.85), n = Math.max(1, Math.min(l, Math.floor(w / step))); for (let k = 0; k < n; k++) circle(x, cx + (k - (n - 1) / 2) * step, y, r, '#fff'); l -= n; row++; }
+    if (a < span) circle(x, cx, neck + step * (.2 + .15 * Math.sin((t % 6000) / 6000 * Math.PI * 2)), r, '#fff', a - lived);
+  } else {
+    let s = b.getFullYear() * 10000 + (b.getMonth() + 1) * 100 + b.getDate(); const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647, T = t / 1000;
+    for (let i = 0; i < span; i++) {
+      const bx = W * (.1 + rnd() * .8), by = H * (.3 + rnd() * .42), sz = .6 + rnd() * .8, ph = rnd() * 6.283, dx = Math.sin(T / 40 + ph) * W * .01, dy = Math.cos(T / 55 + ph) * W * .01, r = W * .011 * sz;
+      if (i < lived) { x.globalAlpha = .55 + .45 * (.5 + .5 * Math.sin(T / 9 + ph * 3)); circle(x, bx + dx, by + dy, r, '#fff'); x.globalAlpha = 1; }
+      else if (i === lived) circle(x, bx + dx, by + dy, r * 1.5, '#fff', a - lived); else circle(x, bx + dx, by + dy, r, '#262628');
+    }
+  }
+}
+function lineOfDay(t = new Date()) {
+  const opts = [`Day ${fmt(dayOfLife(t))}`, `${fmt(daysLeftExact())} days left`];
+  S.people.forEach(p => { const v = together(p).v; if (v > 0) opts.push(`${fmt(v)} more ${p.per === 365 ? 'days' : 'visits'} with ${p.name}`); });
+  Object.entries(S.names).forEach(([y, n]) => { if (+y <= Math.floor(age(birth()))) opts.push(`${n} · ${birth().getFullYear() + +y}`); });
+  const up = S.events.filter(e => parse(e.date) >= day0(t)).sort((p, q) => p.date < q.date ? -1 : 1)[0];
+  if (up) { const d = Math.round((parse(up.date) - day0(t)) / 864e5); opts.push(d === 0 ? `${up.name} · today` : `${up.name} · in ${d} ${d === 1 ? 'day' : 'days'}`); }
+  const doy = Math.floor((day0(t) - new Date(t.getFullYear(), 0, 0)) / 864e5);
+  return opts[(doy + t.getFullYear()) % opts.length];
+}
+async function shareCanvas(cv, name, title) {
+  const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+  const file = new File([blob], name, { type: 'image/png' });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title }); return true; } } catch (e) { if (e && e.name === 'AbortError') return false; }
+  const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000); toast('Image saved'); return true;
+}
+function saveWallpaper() {
+  const d = Math.min(3, devicePixelRatio || 2), W = Math.round(screen.width * d), H = Math.round(screen.height * d);
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; wallpaper(cv.getContext('2d'), W, H, S.sun && S.wall === 'grid' ? 'daylight' : S.wall);
+  shareCanvas(cv, 'yrs-wallpaper.png', 'yrs. wallpaper').then(ok => ok && toast('Choose "Save Image", then set it in Photos'));
+}
+function shareCard() {
+  const W = 1080, H = 1350, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d');
+  x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
+  const a = age(birth()), left = Math.max(0, S.span - a), pad = 110;
+  x.fillStyle = '#fff'; x.font = '200 230px -apple-system, "SF Pro Display", Inter, sans-serif'; x.fillText(fmt(left), pad - 8, 330);
+  x.fillStyle = '#8e8e93'; x.font = '500 44px -apple-system, Inter, sans-serif'; x.fillText(`${Math.floor(left) === 1 ? 'year' : 'years'} left`, pad, 410);
+  const gw = W - 2 * pad, cell = gw / 9.6, inset = cell * .2, r = cell * .3;
+  for (let i = 0; i < S.span; i++) { const cx = pad - inset + (i % 10 + .5) * cell, cy = 500 - inset + (Math.floor(i / 10) + .5) * cell; if (i < Math.floor(a)) circle(x, cx, cy, r, '#fff'); else if (i === Math.floor(a)) circle(x, cx, cy, r, '#fff', a - Math.floor(a)); else circle(x, cx, cy, r, '#232323'); }
+  x.fillStyle = '#48484a'; x.font = '700 34px -apple-system, Inter, sans-serif'; x.fillText('yrs.', pad, H - 90);
+  shareCanvas(cv, 'yrs.png', 'My years');
+}
+
+// ================================================= toast
+let toastT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
+
+// ================================================= wheels
+function wheel(items, index, width, onChange) {
+  const w = document.createElement('div'); w.className = 'wheel'; w.style.width = width + 'px';
+  w.innerHTML = '<div class="pad"></div>' + items.map(t => `<div class="it">${t}</div>`).join('') + '<div class="pad"></div>';
+  const its = () => w.querySelectorAll('.it');
+  let cur = -1, settle;
+  const mark = i => { if (i === cur) return; its()[cur]?.classList.remove('c'); its()[i]?.classList.add('c'); if (cur !== -1) tick(); cur = i; };
+  const idx = () => Math.max(0, Math.min(items.length - 1, Math.round(w.scrollTop / 44)));
+  w.addEventListener('scroll', () => { mark(idx()); clearTimeout(settle); settle = setTimeout(() => onChange(idx()), 90); }, { passive: true });
+  w.set = (i, smooth) => { cur = -1; mark(i); w.scrollTo({ top: i * 44, behavior: smooth ? 'smooth' : 'instant' }); };
+  requestAnimationFrame(() => w.set(index, false));
+  return w;
+}
+/** Day · Month · Year wheels. */
+function dateWheels(value, onChange, { from = 1920, to = new Date().getFullYear(), latest = day0(new Date()), earliest = null } = {}) {
+  const box = document.createElement('div'); box.className = 'wheels';
+  let v = new Date(value), dW, mW, yW;
+  const years = []; for (let y = from; y <= to; y++) years.push(y);
+  const days = () => { const n = new Date(v.getFullYear(), v.getMonth() + 1, 0).getDate(); return Array.from({ length: n }, (_, i) => i + 1); };
+  const commit = (y, m, d) => {
+    const max = new Date(y, m + 1, 0).getDate(); let nv = new Date(y, m, Math.min(d, max));
+    if (latest && nv > latest) nv = new Date(latest); if (earliest && nv < earliest) nv = new Date(earliest);
+    const daysChanged = new Date(nv.getFullYear(), nv.getMonth() + 1, 0).getDate() !== new Date(v.getFullYear(), v.getMonth() + 1, 0).getDate();
+    const clamped = nv.getFullYear() !== y || nv.getMonth() !== m || nv.getDate() !== d;
+    v = nv;
+    if (daysChanged) { const nd = wheel(days(), v.getDate() - 1, 56, i => commit(v.getFullYear(), v.getMonth(), i + 1)); dW.replaceWith(nd); dW = nd; }
+    if (clamped) { dW.set(v.getDate() - 1, true); mW.set(v.getMonth(), true); yW.set(years.indexOf(v.getFullYear()), true); }
+    onChange(new Date(v));
   };
-  function paint(canvas, kind, W, H) {
-    canvas.width = W; canvas.height = H;
-    const x = canvas.getContext('2d');
-    x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
-    WALLS[kind](x, W, H);
-    return canvas;
+  dW = wheel(days(), v.getDate() - 1, 56, i => commit(v.getFullYear(), v.getMonth(), i + 1));
+  mW = wheel(MONTHS, v.getMonth(), 150, i => commit(v.getFullYear(), i, v.getDate()));
+  yW = wheel(years, Math.max(0, years.indexOf(v.getFullYear())), 84, i => commit(years[i], v.getMonth(), v.getDate()));
+  box.append(dW, mW, yW);
+  return box;
+}
+
+// ================================================= onboarding
+const OB = { step: 0, date: new Date(1995, 5, 15), span: 80 };
+function obRender(dir = 1) {
+  const st = $('obStage'), old = st.querySelector('.step.in');
+  const el = document.createElement('div'); el.className = 'step' + (dir < 0 ? ' back' : '');
+  if (OB.step === 0) {
+    el.innerHTML = `<div class="welcome"><div class="mark" style="font-size:96px">yrs<span class="p" id="obDot" style="--f:0%"></span></div>
+      <h1 style="margin-top:28px">Your life,<br>in dots.</h1><p class="sub" style="line-height:1.45">Every year you've lived, and every year still ahead. Seen at a glance, so you spend them well.</p></div>`;
+  } else if (OB.step === 1) {
+    el.innerHTML = `<h1>When were<br>you born?</h1><p class="sub">Only you will ever see this. Nothing leaves your phone.</p><div style="height:40px"></div><div id="obWheels"></div><p class="sub" id="obAlive" style="margin-top:28px;font-size:17px"></p>`;
+    const alive = () => { const d = Math.max(0, Math.floor((day0(new Date()) - OB.date) / 864e5)); el.querySelector('#obAlive').textContent = d ? `You've been alive for ${fmt(d)} days.` : 'Welcome to the world.'; };
+    el.querySelector('#obWheels').append(dateWheels(OB.date, d => { OB.date = d; alive(); }));
+    alive();
+  } else if (OB.step === 2) {
+    el.innerHTML = `<h1>How long<br>is a life?</h1><p class="sub">80 years is a fair average. You can refine it later.</p>
+      <div style="display:flex;align-items:center;margin-top:18px"><div style="flex:1;display:flex;align-items:baseline;gap:8px"><span class="bignum" id="obSpan"></span><span class="sub" style="margin:0;font-size:17px">years</span></div>
+      <div class="plusminus"><button data-d="-1">−</button><button data-d="1">+</button></div></div>
+      <div class="chips">${[70, 75, 80, 85, 90].map(v => `<button data-v="${v}">${v}</button>`).join('')}</div>
+      <div style="width:82%;margin:28px auto 0"><canvas id="obGrid" style="display:block;width:100%"></canvas></div><p class="sub" id="obLeft" style="margin-top:16px"></p>`;
+    const paint = () => {
+      el.querySelector('#obSpan').textContent = OB.span;
+      el.querySelectorAll('.chips button').forEach(b => b.classList.toggle('sel', +b.dataset.v === OB.span));
+      const a = Math.min(OB.span, age(OB.date)), cv = el.querySelector('#obGrid'), W = cv.clientWidth || 280, cell = W / 9.6, H = Math.ceil(OB.span / 10) * cell - cell * .4, x = sizeCanvas(cv, W, H);
+      for (let i = 0; i < OB.span; i++) { const cx = -cell * .2 + (i % 10 + .5) * cell, cy = -cell * .2 + (Math.floor(i / 10) + .5) * cell; if (i < Math.floor(a)) circle(x, cx, cy, cell * .3, '#fff'); else if (i === Math.floor(a)) circle(x, cx, cy, cell * .3, '#fff', a - Math.floor(a)); else circle(x, cx, cy, cell * .3, '#232323'); }
+      const end = new Date(OB.date.getFullYear() + OB.span, OB.date.getMonth(), OB.date.getDate());
+      el.querySelector('#obLeft').textContent = `${fmt(OB.span - a)} years · ${fmt((end - new Date()) / 864e5)} days left`;
+    };
+    el.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { tick(); OB.span = Math.min(120, Math.max(40, OB.span + +b.dataset.d)); paint(); });
+    el.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { tick(); OB.span = +b.dataset.v; paint(); });
+    requestAnimationFrame(paint);
+  } else {
+    el.innerHTML = `<h1>This is<br>your life.</h1><p class="sub">Each dot is one year.</p><canvas id="obReveal" style="display:block;width:100%;margin-top:28px"></canvas>
+      <div id="obDone" style="margin-top:24px;opacity:0;transform:translateY(12px);transition:opacity .7s var(--ease),transform .9s var(--ease)"><div class="h-title"></div><p class="sub" style="margin-top:4px">Make the next one count.</p></div>`;
+    const a = Math.min(OB.span, age(OB.date)), lived = Math.floor(a);
+    el.querySelector('#obDone .h-title').textContent = `${lived} ${lived === 1 ? 'year' : 'years'} lived. ${fmt(OB.span - a)} to go.`;
+    const drawTo = p => { const cv = el.querySelector('#obReveal'), W = cv.clientWidth || 340, cell = W / 9.6, H = Math.ceil(OB.span / 10) * cell - cell * .4, x = sizeCanvas(cv, W, H), w = Math.floor(p);
+      for (let i = 0; i < OB.span; i++) { const cx = -cell * .2 + (i % 10 + .5) * cell, cy = -cell * .2 + (Math.floor(i / 10) + .5) * cell; if (i < w) circle(x, cx, cy, cell * .3, '#fff'); else if (i === w && p < OB.span) circle(x, cx, cy, cell * .3, '#fff', p - w); else circle(x, cx, cy, cell * .3, '#232323'); } };
+    let last = -1;
+    const finish = () => { const d = el.querySelector('#obDone'); d.style.opacity = 1; d.style.transform = 'none'; };
+    requestAnimationFrame(() => {
+      if (reduce) { drawTo(a); finish(); return; }
+      drawTo(0); const dur = Math.min(3800, 900 + a * 45), t0 = performance.now() + 350;
+      const step = t => { const k = Math.max(0, Math.min(1, (t - t0) / dur)), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, p = a * e; drawTo(p); if (Math.floor(p) !== last) { last = Math.floor(p); if (k > 0) tick(); } if (k < 1) requestAnimationFrame(step); else finish(); };
+      requestAnimationFrame(step);
+    });
   }
-  $('wallBtn').addEventListener('click', () => {
-    closeLayer('settings');
-    setTimeout(() => {
-      openLayer('wallLayer');
-      document.querySelectorAll('.wall canvas').forEach(c => { const w = c.clientWidth || 150, d = devicePixelRatio || 2; paint(c, c.parentElement.dataset.wall, Math.round(w * d), Math.round(w * d * 19.5 / 9)); });
-    }, 200);
+  st.append(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.add('in'); if (old) { old.classList.remove('in'); old.classList.add('out'); if (dir < 0) old.classList.add('back'); setTimeout(() => old.remove(), 600); } }));
+  if (OB.step === 0) setTimeout(() => { const d = $('obDot'); if (d) d.style.setProperty('--f', '62%'); }, 250);
+  $('obBack').hidden = $('obProg').hidden = OB.step === 0;
+  $('obProg').querySelectorAll('i').forEach((i, k) => { i.classList.toggle('on', k + 1 <= OB.step); i.classList.toggle('cur', k + 1 === OB.step); });
+  $('obGo').textContent = ['Begin', 'Continue', 'Continue', 'Enter yrs.'][OB.step];
+  $('obNote').textContent = OB.step === 0 ? 'Private by design. Nothing leaves your phone.' : '';
+}
+$('obGo').onclick = () => {
+  if (OB.step < 3) { tick(); OB.step++; obRender(1); return; }
+  thump();
+  S.birth = iso(OB.date); S.span = OB.span; S.reviewedAge = Math.floor(age(OB.date)); save();
+  $('ob').hidden = true; startHome();
+};
+$('obBack').onclick = () => { if (OB.step > 0) { tick(); OB.step--; obRender(-1); } };
+
+// ================================================= home
+const PAGES = ['life', 'decade', 'year', 'people', 'ledger'];
+const grids = {};
+let started = false;
+function startHome() {
+  $('home').hidden = false;
+  if (!started) buildHome();
+  started = true;
+  renderAll(true);
+  requestAnimationFrame(() => { $('pager').scrollTo({ left: S.page * $('pager').clientWidth, behavior: 'instant' }); });
+  setTimeout(rippleNow, 700);
+  setTimeout(checkMoments, 900);
+  maybeInstallHint();
+}
+function buildHome() {
+  const pg = $('pager');
+  pg.innerHTML = PAGES.map((p, i) => `<section class="page" data-i="${i}"><div class="head" id="head-${p}"></div>${i < 3 ? `<div class="gridbox" id="grid-${p}"></div>` : ''}${i === 0 ? '<div class="zoombar" id="zoombar"></div>' : ''}<div id="extra-${p}"></div></section>`).join('');
+  ['life', 'decade', 'year'].forEach(k => grids[k] = new Grid($('grid-' + k), k));
+  $('pdots').innerHTML = PAGES.map((_, i) => `<button class="${i > 2 ? 'sm' : ''}" data-i="${i}" aria-label="Page ${i + 1}"><i></i></button>`).join('');
+  $('pdots').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { tick(); pg.scrollTo({ left: +b.dataset.i * pg.clientWidth, behavior: 'smooth' }); } });
+  let pageT;
+  pg.addEventListener('scroll', () => {
+    const i = Math.round(pg.scrollLeft / pg.clientWidth);
+    if (i !== S.page) { S.page = i; tick(); syncControls(); Object.values(grids).forEach(g => g.hideTip()); }
+    clearTimeout(pageT); pageT = setTimeout(save, 200);
+  }, { passive: true });
+  // header taps and the heartbeat hold
+  PAGES.slice(0, 3).forEach(k => {
+    const h = $('head-' + k); let holdT, beatT, held = false, start = null;
+    h.addEventListener('touchstart', e => { held = false; start = e.touches[0]; holdT = setTimeout(() => { held = true; beat(k, true); beatT = setInterval(() => thump(), 1000); thump(); }, 450); }, { passive: true });
+    h.addEventListener('touchmove', e => { if (start && Math.hypot(e.touches[0].clientX - start.clientX, e.touches[0].clientY - start.clientY) > 10) clearTimeout(holdT); }, { passive: true });
+    const end = () => { clearTimeout(holdT); clearInterval(beatT); if (held) { beat(k, false); } };
+    h.addEventListener('touchend', end); h.addEventListener('touchcancel', end);
+    h.addEventListener('click', () => {
+      if (held) { held = false; return; }
+      const m = grids[k].m;
+      if (k === 'life' && !S.pct && m.unit === 'year') { tick(); S.unit = (S.unit + 1) % MEASURES.length; save(); swapHead(); }
+    });
   });
-  document.querySelectorAll('.wall').forEach(b => b.addEventListener('click', async () => {
-    buzz(10);
-    const d = devicePixelRatio || 2, W = Math.round(screen.width * d), H = Math.round(screen.height * d);
-    const c = paint(document.createElement('canvas'), b.dataset.wall, W, H);
-    const blob = await new Promise(res => c.toBlob(res, 'image/png'));
-    const file = new File([blob], `years-${b.dataset.wall}.png`, { type: 'image/png' });
-    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); closeLayer('wallLayer'); return; } }
-    catch (e) { if (e && e.name === 'AbortError') return; }
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    closeLayer('wallLayer'); toast('Wallpaper saved to Downloads');
+  $('modeBtn').onclick = () => { tick(); S.lived = !S.lived; save(); swapHead(); renderExtras(); };
+  $('pctBtn').onclick = () => { tick(); S.pct = !S.pct; save(); swapHead(); };
+  $('moreBtn').onclick = () => { tick(); openSheet('settings'); };
+}
+function setZoom(z) {
+  if (z === S.zoom) return; S.zoom = z; save(); thump();
+  grids.life.hideTip(); grids.life.update(false); renderHead('life'); renderZoom();
+}
+function renderZoom() {
+  $('zoombar').innerHTML = ZOOMS.map((z, i) => `<button class="${i === S.zoom ? 'sel' : ''}" data-z="${i}">${z}</button>`).join('');
+  $('zoombar').querySelectorAll('button').forEach(b => b.onclick = () => { tick(); setZoom(+b.dataset.z); });
+}
+function syncControls() {
+  const on = S.page < 3;
+  $('modeBtn').classList.toggle('faded', !on); $('pctBtn').classList.toggle('faded', !on);
+  $('modeLabel').textContent = S.lived ? 'Lived' : 'Left'; $('pctBtn').classList.toggle('on', S.pct);
+  $('pdots').querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === S.page));
+}
+let liveRAF = 0;
+function renderHead(k) {
+  const m = grids[k].m, hl = headline(m), b = birth(), el = $('head-' + k);
+  let sub = m.context ? `${m.context} · ${m.sub}` : m.sub;
+  if (k === 'life' && isBirthday(b)) sub = `Happy birthday · you're ${Math.floor(age(b))} today`;
+  if (S.style === 'hero') {
+    const num = S.pct ? `${Math.floor(hl.pct)}<small>%</small>` : fmt(hl.v), len = (S.pct ? String(Math.floor(hl.pct)) : fmt(hl.v)).length;
+    const fs = len <= 3 ? 104 : len <= 5 ? 78 : 58;
+    el.innerHTML = `<div class="h-hero"><div class="h-num" style="font-size:${fs}px">${num}</div><div class="h-unit">${S.pct ? hl.word : `${hl.noun} ${hl.word}`}</div></div><div class="h-sub">${sub}</div>`;
+  } else if (S.style === 'live') {
+    el.innerHTML = `<div class="h-live" data-live></div><div class="h-sub">${S.pct ? hl.word : `${hl.many} ${hl.word}`} · ${sub}</div>`;
+    paintLive(k);
+  } else {
+    let title;
+    if (S.pct) title = `${Math.floor(hl.pct)}% ${hl.word}`;
+    else if (m.kind === 'life' && !S.lived && hl.v <= 0) title = 'Every year is a gift';
+    else if (!S.lived && Math.floor(hl.v) === 0) title = `Less than a ${hl.one} left`;
+    else title = `${fmt(hl.v)} ${hl.noun} ${hl.word}`;
+    el.innerHTML = `<div class="h-title">${title}</div><div class="h-sub">${sub}</div>`;
+  }
+}
+function paintLive(k) {
+  const el = $('head-' + k)?.querySelector('[data-live]'); if (!el) return;
+  const hl = headline(model(k)), v = S.pct ? hl.pct.toFixed(7) : hl.v.toLocaleString('en-US', { minimumFractionDigits: 8, maximumFractionDigits: 8 });
+  const [i, f] = v.split('.'); el.style.fontSize = v.length > 13 ? '34px' : '44px';
+  el.innerHTML = `${i}<span class="fr">.${f}${S.pct ? '%' : ''}</span>`;
+}
+function liveLoop() {
+  cancelAnimationFrame(liveRAF);
+  if (S.style !== 'live' || document.hidden) return;
+  let last = 0;
+  const step = t => { if (t - last > 50) { last = t; PAGES.slice(0, 3).forEach(paintLive); } liveRAF = requestAnimationFrame(step); };
+  liveRAF = requestAnimationFrame(step);
+}
+function beat(k, on) {
+  const el = $('head-' + k);
+  if (!on) { clearInterval(el._bt); renderHead(k); return; }
+  const paint = () => { el.innerHTML = `<div class="beat">${fmt(yearsLeft() * 365.2425 * 86400)}</div><div class="h-sub">seconds left · each beat is one of them</div>`; };
+  paint(); el._bt = setInterval(paint, 250);
+}
+function swapHead() {
+  PAGES.slice(0, 3).forEach(k => $('head-' + k).classList.add('swap'));
+  setTimeout(() => { PAGES.slice(0, 3).forEach(k => { renderHead(k); $('head-' + k).classList.remove('swap'); }); syncControls(); liveLoop(); }, 170);
+}
+function renderAll(playIn) {
+  ['life', 'decade', 'year'].forEach(k => { grids[k].update(playIn); renderHead(k); });
+  renderZoom(); renderExtras(); syncControls(); liveLoop();
+}
+function rippleNow() {
+  if (!S.ripple || reduce || S.zoom !== 1) return;
+  const g = grids.life; if (!g.m) return; g.play('ripple', 900 + Math.floor(g.m.done) * 16);
+}
+
+// ---------- extra content: this year, people, ledger
+function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function renderExtras() {
+  const today = day0(new Date());
+  // this year
+  const line = LINES[iso(today)];
+  let mem = null; for (let y = 1; y <= 30 && !mem; y++) { const d = new Date(today); d.setFullYear(d.getFullYear() - y); if (LINES[iso(d)]) mem = [y, LINES[iso(d)]]; }
+  const up = S.events.map((e, i) => ({ ...e, i })).filter(e => parse(e.date) >= today).sort((p, q) => p.date < q.date ? -1 : 1);
+  $('extra-year').innerHTML = `<div class="caps">Today</div><button class="card" id="todayCard" style="display:block;width:100%;text-align:left"><div class="k">Day ${fmt(dayOfLife())}</div><div class="tx ${line ? 'on' : ''}">${line ? esc(line) : 'Write one line about today. Years from now it will be the only thing left of it.'}</div></button>` +
+    (mem ? `<div class="card" style="margin-top:10px"><div class="small">${mem[0] === 1 ? 'A year ago today' : mem[0] + ' years ago today'}</div><div class="tx on">“${esc(mem[1])}”</div></div>` : '') +
+    `<div class="caps">Ahead</div><div class="group">${up.map(e => { const d = Math.round((parse(e.date) - today) / 864e5), dt = parse(e.date); return `<button class="row" data-ev="${e.i}"><span class="t">${esc(e.name)}<small>${dt.getDate()} ${MON[dt.getMonth()]} ${dt.getFullYear()}</small></span><span class="v">${d === 0 ? 'Today' : `in ${fmt(d)} ${d === 1 ? 'day' : 'days'}`}</span></button>`; }).join('')}<button class="row" data-ev="new"><span class="t">Add a countdown</span><span class="chev">›</span></button></div>`;
+  $('todayCard').onclick = () => { tick(); openSheet('line', iso(today)); };
+  $('extra-year').querySelectorAll('[data-ev]').forEach(b => b.onclick = () => { tick(); openSheet('event', b.dataset.ev === 'new' ? null : +b.dataset.ev); });
+
+  // people
+  $('head-people').innerHTML = `<div class="h-title">People</div><div class="h-sub">The time you have left together</div>`;
+  $('extra-people').innerHTML = `<div style="height:24px"></div>` + (S.people.length ? S.people.map((p, i) => {
+    const t = together(p), n = Math.min(t.v, 120), unit = p.per === 365 ? (t.v === 1 ? 'day' : 'days') : (t.v === 1 ? 'visit' : 'visits');
+    return `<button class="card person" data-p="${i}" style="display:block;width:100%;text-align:left"><div class="hd"><b>${esc(p.name)}</b><span>${OFTEN.find(o => o[1] === p.per)?.[0] || ''}</span></div>
+      <div class="num"><b>${fmt(t.v)}</b><span>more ${unit} together</span></div><div class="ft">About ${fmt(t.yrs)} summers left together · ${esc(p.name)} is ${t.a}</div>
+      ${n ? `<canvas data-visits="${n}"></canvas>` : '<div class="small">No more visits at this rate. Change how often.</div>'}${t.v > n ? `<div class="small" style="margin-top:6px">+ ${fmt(t.v - n)} more</div>` : ''}</button>`;
+  }).join('') + `<button class="card" data-p="new" style="display:flex;width:100%;margin-top:12px;align-items:center"><span style="flex:1;text-align:left">Add someone</span><span class="chev">›</span></button>`
+    : `<p class="sub" style="font-size:16px;line-height:1.45;color:var(--mute)">Most of the time you'll ever spend with your parents, you've already spent. Add the people you love and see how many more times you'll be together, at the rate you see them now.</p><div style="height:24px"></div><button class="primary" data-p="new">Add someone</button>`);
+  $('extra-people').querySelectorAll('[data-p]').forEach(b => b.onclick = () => { tick(); openSheet('person', b.dataset.p === 'new' ? null : +b.dataset.p); });
+  requestAnimationFrame(() => $('extra-people').querySelectorAll('canvas[data-visits]').forEach(cv => {
+    const n = +cv.dataset.visits, W = cv.clientWidth, cell = W / 20, H = Math.ceil(n / 20) * cell, x = sizeCanvas(cv, W, H);
+    for (let i = 0; i < n; i++) circle(x, (i % 20 + .5) * cell, (Math.floor(i / 20) + .5) * cell, cell * .28, '#fff');
   }));
 
-  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
+  // ledger
+  const left = yearsLeft(), a = age(birth()), sleep = left / 3, work = Math.max(0, Math.min(left, 65 - a)) * 1920 / 8766, upkeep = left / 8;
+  const phone = Math.min(left * S.phoneH / 24, Math.max(0, left - sleep - work - upkeep)), free = Math.max(0, left - sleep - work - phone - upkeep);
+  const sl = [['Asleep', sleep, '#2c2c2e'], ['Working', work, '#48484a'], ['On your phone', phone, '#8e8e93'], ['Eating, chores, commuting', upkeep, '#3a3a3c'], ['Truly yours', free, '#ffffff']];
+  $('head-ledger').innerHTML = `<div class="h-title">Your ${fmt(left)} years</div><div class="h-sub">Where the time you have left will go</div>`;
+  $('extra-ledger').innerHTML = `<canvas id="ledgerGrid" style="display:block;width:100%;margin-top:28px"></canvas><div class="legend" style="margin-top:22px">${sl.map((s, i) => `<div class="lr ${i === 4 ? 'y' : ''}"><i style="background:${s[2]}"></i>${s[0]}<b>${s[1].toFixed(1)} yrs</b></div>`).join('')}</div>
+    <div class="card" style="margin-top:20px"><div class="k">Your phone time</div><div class="small" style="margin-top:4px">Check Settings → Screen Time on your iPhone, then set your daily average.</div>
+    <input class="range" id="phoneR" type="range" min="0" max="12" step="0.25" value="${S.phoneH}"><div class="small" id="phoneV">${S.phoneH} hours a day</div></div>
+    <p class="small" style="margin-top:12px;color:var(--faint)">Sleep 8 h a day, work 40 h a week until 65, 3 h a day eating, chores and getting around.</p>`;
+  const total = Math.max(1, Math.round(left)), raw = sl.map(s => s[1] / Math.max(.01, left) * total), ints = raw.map(Math.floor);
+  let rest = total - ints.reduce((p, c) => p + c, 0); raw.map((v, i) => [v - Math.floor(v), i]).sort((p, q) => q[0] - p[0]).forEach(([, i]) => { if (rest > 0) { ints[i]++; rest--; } });
+  const colors = ints.flatMap((n, i) => Array(n).fill(sl[i][2]));
+  requestAnimationFrame(() => { const cv = $('ledgerGrid'); if (!cv) return; const W = cv.clientWidth, cell = W / 9.6, H = Math.ceil(colors.length / 10) * cell - cell * .4, x = sizeCanvas(cv, W, H);
+    colors.forEach((c, i) => circle(x, -cell * .2 + (i % 10 + .5) * cell, -cell * .2 + (Math.floor(i / 10) + .5) * cell, cell * .3, c)); });
+  const r = $('phoneR'); let rT;
+  r.oninput = () => { S.phoneH = +r.value; $('phoneV').textContent = `${S.phoneH} hours a day`; if (Math.round(S.phoneH * 4) % 4 === 0) tick(); clearTimeout(rT); rT = setTimeout(() => { save(); const y = $('pager').querySelector('[data-i="4"]').scrollTop; renderExtras(); $('pager').querySelector('[data-i="4"]').scrollTop = y; }, 250); };
+}
 
-  /* ---------- Start ---------- */
-  function show() {
-    const ready = validBirth(state.birth);
-    $('ask').hidden = ready; $('home').hidden = !ready;
-    if (ready) { render(true); ripple(state.view === 'life' ? 900 : 0); }
-  }
-  const askDate = $('askDate');
-  askDate.max = today(); setDate.max = today();
-  askDate.addEventListener('input', () => { $('askGo').disabled = !validBirth(askDate.value); });
-  $('askGo').addEventListener('click', () => { if (validBirth(askDate.value)) { state.birth = askDate.value; save(); buzz(10); show(); } });
-  document.addEventListener('keydown', e => {
-    if ($('home').hidden || document.querySelector('.layer.open')) { if (e.key === 'Escape') document.querySelectorAll('.layer.open').forEach(l => closeLayer(l.id)); return; }
-    if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1);
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { cancelAnimationFrame(raf); return; }
-    if (validBirth(state.birth)) { render(); ripple(150); }
-  });
-  setInterval(() => { if (validBirth(state.birth) && !document.hidden) render(); }, 60_000);
+// ================================================= moments
+function checkMoments() {
+  if ($('layer').classList.contains('open') || !S.birth) return;
+  const b = birth(), lived = Math.floor(age(b));
+  const li = S.letters.findIndex(l => !l.opened && l.age <= lived);
+  if (li >= 0) { openSheet('letter', li); return; }
+  const days = (day0(new Date()) - lastBirthday(b, new Date())) / 864e5;
+  if (S.reviewedAge >= 0 && S.reviewedAge < lived && days <= 30) openSheet('review');
+}
 
-  show();
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+// ================================================= sheets
+const layer = $('layer'), sheet = $('sheet'), body = $('sheetBody');
+let onClose = null;
+function closeSheet() { if (!layer.classList.contains('open')) return; layer.classList.remove('open'); sheet.style.transform = ''; const f = onClose; onClose = null; if (f) f(); setTimeout(() => { if (!layer.classList.contains('open')) body.innerHTML = ''; }, 500); }
+layer.querySelector('.scrim').onclick = closeSheet;
+// drag down to dismiss
+(() => { let y0 = null, dy = 0;
+  const startDrag = e => { if (e.target.closest('.grab') || body.scrollTop <= 0) { y0 = e.touches[0].clientY; dy = 0; } };
+  sheet.addEventListener('touchstart', startDrag, { passive: true });
+  sheet.addEventListener('touchmove', e => { if (y0 == null) return; dy = e.touches[0].clientY - y0; if (dy > 0 && (e.target.closest('.grab') || body.scrollTop <= 0) && !e.target.closest('.wheel')) { sheet.classList.add('drag'); sheet.style.transform = `translate3d(0, ${dy}px, 0)`; } else if (dy < 0) y0 = null; }, { passive: true });
+  sheet.addEventListener('touchend', () => { sheet.classList.remove('drag'); if (y0 != null && dy > 110) closeSheet(); else sheet.style.transform = ''; y0 = null; });
+})();
+function openSheet(kind, arg) {
+  body.innerHTML = ''; onClose = null;
+  SHEETS[kind](arg);
+  requestAnimationFrame(() => { layer.classList.add('open'); body.scrollTop = 0; });
+}
+const H2 = (t, lead) => `<h2>${t}</h2>${lead ? `<p class="lead">${lead}</p>` : ''}`;
+function seg(options, value, onPick) {
+  const el = document.createElement('div'); el.className = 'seg'; el.style.gridTemplateColumns = `repeat(${options.length}, 1fr)`;
+  el.innerHTML = `<div class="thumb" style="width:calc((100% - 4px)/${options.length})"></div>` + options.map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('');
+  const sync = v => { const i = options.findIndex(o => o[0] === v); el.querySelector('.thumb').style.transform = `translateX(${i * 100}%)`; el.querySelectorAll('button').forEach((b, k) => b.classList.toggle('sel', k === i)); };
+  el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tick(); sync(b.dataset.v); onPick(b.dataset.v); });
+  sync(value); return el;
+}
+function sw(on, onToggle) { const b = document.createElement('button'); b.className = 'switch' + (on ? ' on' : ''); b.setAttribute('role', 'switch'); b.onclick = e => { e.stopPropagation(); tick(); b.classList.toggle('on'); onToggle(b.classList.contains('on')); }; return b; }
+function refresh() { save(); renderAll(false); }
+
+const SHEETS = {
+  settings() {
+    const b = birth();
+    body.innerHTML = H2('Settings') + `<div class="caps">You</div><div class="group">
+      <button class="row" id="sBday"><span class="t">Birthday</span><span class="v" id="sBdayV">${b.getDate()} ${MON[b.getMonth()]} ${b.getFullYear()}</span></button><div id="sBdayW" hidden style="padding:8px"></div>
+      <div class="row"><span class="t">Lifespan</span><div class="stepper"><button data-s="-1">−</button><output id="sSpan">${S.span}</output><button data-s="1">+</button></div></div>
+      <button class="row" id="sEst"><span class="t">Estimate my lifespan<small>Five honest questions</small></span><span class="chev">›</span></button></div>
+      <div class="caps">Number</div><div id="sStyle"></div>
+      <div class="caps">Feel</div><div class="group"><div class="row" id="rSun"><span class="t">Daylight<small>Dots glow by day and dim at night</small></span></div><div class="row" id="rRip"><span class="t">Ripple<small>A wave runs through your years each time you come back</small></span></div></div>
+      <div class="caps">Lock screen</div><div class="walls" id="sWalls"></div><div style="height:14px"></div>
+      <div class="group"><button class="row" id="sSave"><span class="t">Save as lock screen<small>Then in Photos: Share → Use as Wallpaper</small></span><span class="chev">›</span></button><button class="row" id="sShare"><span class="t">Share your grid</span><span class="chev">›</span></button></div>
+      <div class="caps">On your iPhone</div><div class="group"><div class="row"><span class="t">${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'yrs. is on your Home Screen' : 'Add to Home Screen'}<small>${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'Opens full screen and works offline.' : 'In Safari: Share → Add to Home Screen. It opens full screen and works offline.'}</small></span></div></div>
+      <p class="small" style="margin:20px 4px 0">Swipe for your decade, this year, the people you love and where your years go. Pinch the life grid to zoom from all of history to single days. Hold a dot and drag to travel through time. Tap a year to name it, or seal a letter to a future one. Tap the number to count in days, weeks, summers, weekends or full moons. Hold it to feel the seconds.<br><br>Everything stays on this phone. Nothing is ever sent anywhere.</p>
+      <div style="height:20px"></div><button class="primary" id="sDone">Done</button>`;
+    $('sBday').onclick = () => { tick(); const w = $('sBdayW'); w.hidden = !w.hidden; if (!w.hidden && !w.firstChild) w.append(dateWheels(birth(), d => { S.birth = iso(d); $('sBdayV').textContent = `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; refresh(); })); };
+    body.querySelectorAll('[data-s]').forEach(x => x.onclick = () => { tick(); S.span = Math.min(120, Math.max(40, S.span + +x.dataset.s)); $('sSpan').textContent = S.span; refresh(); });
+    $('sEst').onclick = () => { tick(); openSheet('lifespan'); };
+    $('sStyle').append(seg([['classic', 'Classic'], ['hero', 'Large'], ['live', 'Live']], S.style, v => { S.style = v; save(); swapHead(); }));
+    $('rSun').append(sw(S.sun, v => { S.sun = v; refresh(); paintWalls(); }));
+    $('rRip').append(sw(S.ripple, v => { S.ripple = v; save(); }));
+    const paintWalls = () => {
+      $('sWalls').innerHTML = [['grid', 'Grid'], ['daylight', 'Daylight'], ['hourglass', 'Hourglass'], ['stars', 'Stars']].map(([k, l]) => `<button class="${k === S.wall ? 'sel' : ''}" data-w="${k}"><canvas></canvas>${l}</button>`).join('');
+      $('sWalls').querySelectorAll('button').forEach(bt => { const cv = bt.querySelector('canvas'); requestAnimationFrame(() => { const W = cv.clientWidth, H = W * 19.5 / 9, x = sizeCanvas(cv, W, H); wallpaper(x, W, H, bt.dataset.w, 0, false); });
+        bt.onclick = () => { tick(); S.wall = bt.dataset.w; save(); paintWalls(); }; });
+    };
+    paintWalls();
+    $('sSave').onclick = () => { tick(); saveWallpaper(); };
+    $('sShare').onclick = () => { tick(); shareCard(); };
+    $('sDone').onclick = () => { tick(); closeSheet(); };
+  },
+  milestone(year) {
+    const lived = Math.floor(age(birth())), past = year <= lived, sealed = S.letters.find(l => l.age === year && !l.opened);
+    body.innerHTML = H2(`Age ${year} · ${birth().getFullYear() + year}`, past ? 'What happened this year?' : 'What do you want this year to hold?') +
+      `<input class="field" id="mName" maxlength="40" placeholder="${past ? 'Moved to a new city' : 'See the northern lights'}" value="${esc(S.names[year] || '')}" enterkeyhint="done">
+      <p class="small" style="margin:10px 4px 0">Named years get a thin ring.</p>
+      ${past ? '' : `<div class="caps">A letter to yourself at ${year}</div>${sealed ? '<p class="small" style="margin:0 4px 10px">A letter is sealed for this year. Writing a new one replaces it.</p>' : ''}<textarea class="field" id="mLetter" rows="5" maxlength="2000" placeholder="Dear me at ${year}…"></textarea><p class="small" style="margin:10px 4px 0">It stays sealed until your birthday that year. Not even you can read it before then.</p>`}
+      <div style="height:20px"></div><button class="primary" id="mSave">Save</button>${S.names[year] ? '<button class="quiet" id="mDel">Remove name</button>' : ''}`;
+    const saveIt = () => {
+      const n = $('mName').value.trim().slice(0, 40); if (n) S.names[year] = n; else delete S.names[year];
+      const l = $('mLetter')?.value.trim(); if (!past && l) { S.letters = S.letters.filter(x => x.age !== year || x.opened); S.letters.push({ age: year, text: l, written: iso(new Date()), opened: false }); }
+      thump(); refresh(); closeSheet(); toast(l && !past ? 'Letter sealed' : n ? 'Year named' : 'Saved');
+    };
+    $('mSave').onclick = saveIt; $('mName').onkeydown = e => { if (e.key === 'Enter') saveIt(); };
+    if ($('mDel')) $('mDel').onclick = () => { $('mName').value = ''; saveIt(); };
+  },
+  letter(i) {
+    const l = S.letters[i], w = parse(l.written);
+    body.innerHTML = H2('A letter from you', `Written ${w.getDate()} ${MON[w.getMonth()]} ${w.getFullYear()}, for you at ${l.age}`) + `<p style="font-size:18px;line-height:1.5;white-space:pre-wrap;-webkit-user-select:text;user-select:text">${esc(l.text)}</p><div style="height:28px"></div><button class="primary" id="lKeep">Keep it</button>`;
+    onClose = () => { S.letters[i].opened = true; refresh(); };
+    $('lKeep').onclick = () => { tick(); closeSheet(); };
+  },
+  person(i) {
+    const p = i == null ? { name: '', born: 1965, per: 4 } : { ...S.people[i] };
+    const years = []; for (let y = 1900; y <= new Date().getFullYear(); y++) years.push(y);
+    body.innerHTML = H2(i == null ? 'Add someone' : esc(p.name)) + `<input class="field" id="pName" maxlength="24" placeholder="Mum" value="${esc(p.name)}"><div class="caps">Born in</div><div class="wheels" id="pYear" style="justify-content:center"></div><div class="caps">You see each other</div><div class="group" id="pOften"></div><div style="height:20px"></div><button class="primary" id="pSave">Save</button>${i != null ? '<button class="quiet" id="pDel">Remove</button>' : ''}`;
+    $('pYear').append(wheel(years, years.indexOf(p.born), 120, k => p.born = years[k]));
+    const paintOften = () => { $('pOften').innerHTML = OFTEN.map(([l, v]) => `<button class="row" data-v="${v}"><span class="t">${l}</span>${v === p.per ? '<span>✓</span>' : ''}</button>`).join(''); $('pOften').querySelectorAll('button').forEach(b => b.onclick = () => { tick(); p.per = +b.dataset.v; paintOften(); }); };
+    paintOften();
+    $('pSave').onclick = () => { p.name = $('pName').value.trim().slice(0, 24); if (!p.name) { closeSheet(); return; } if (i == null) S.people.push(p); else S.people[i] = p; thump(); refresh(); closeSheet(); };
+    if ($('pDel')) $('pDel').onclick = () => { S.people.splice(i, 1); tick(); refresh(); closeSheet(); };
+  },
+  event(i) {
+    const t = day0(new Date()), e = i == null ? { name: '', date: iso(addMonths(t, 1)) } : { ...S.events[i] };
+    body.innerHTML = H2(i == null ? 'Add a countdown' : esc(e.name)) + `<input class="field" id="eName" maxlength="30" placeholder="Trip to Japan" value="${esc(e.name)}"><div class="caps">On</div><div id="eDate"></div><div style="height:20px"></div><button class="primary" id="eSave">Save</button>${i != null ? '<button class="quiet" id="eDel">Remove</button>' : ''}`;
+    $('eDate').append(dateWheels(parse(e.date), d => e.date = iso(d), { from: t.getFullYear(), to: t.getFullYear() + 30, latest: null, earliest: t }));
+    $('eSave').onclick = () => { e.name = $('eName').value.trim().slice(0, 30); if (!e.name) { closeSheet(); return; } if (i == null) S.events.push(e); else S.events[i] = e; thump(); refresh(); closeSheet(); };
+    if ($('eDel')) $('eDel').onclick = () => { S.events.splice(i, 1); tick(); refresh(); closeSheet(); };
+  },
+  line(key) {
+    const d = parse(key);
+    body.innerHTML = H2(`Day ${fmt(dayOfLife(d))}`, `${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`) +
+      `<textarea class="field" id="lText" rows="3" maxlength="140" placeholder="One line. What made today today?">${esc(LINES[key] || '')}</textarea><p class="small" id="lCount" style="margin:10px 4px 0"></p><div style="height:20px"></div><button class="primary" id="lSave">Save</button>`;
+    const c = () => $('lCount').textContent = `${$('lText').value.length}/140 · One line is enough. In ten years you'll be glad you wrote it.`;
+    $('lText').oninput = c; c();
+    $('lSave').onclick = () => { const v = $('lText').value.trim(); if (v) LINES[key] = v; else delete LINES[key]; saveLines(); thump(); renderExtras(); closeSheet(); };
+  },
+  review() {
+    const b = birth(), lived = Math.floor(age(b)), end = lastBirthday(b, new Date()), start = birthdayIn(b, end.getFullYear() - 1);
+    const lines = Object.entries(LINES).filter(([k]) => { const d = parse(k); return d >= start && d < end; }).sort();
+    body.innerHTML = `<h2 style="font-size:30px;font-weight:700">Age ${lived - 1}, complete</h2><p class="lead">${start.getFullYear()}–${end.getFullYear()} · one more white dot</p>
+      <div class="group"><div class="row"><span class="t">Days lived</span><span class="v">${fmt((end - start) / 864e5)}</span></div><div class="row"><span class="t">Lines written</span><span class="v">${lines.length}</span></div>${S.names[lived - 1] ? `<div class="row"><span class="t">You called it</span><span class="v">${esc(S.names[lived - 1])}</span></div>` : ''}</div>
+      ${lines.length ? `<div class="caps">First line of the year</div><p style="font-size:17px;line-height:1.45">“${esc(lines[0][1])}”</p>` : ''}${lines.length > 1 ? `<div class="caps">Last line of the year</div><p style="font-size:17px;line-height:1.45">“${esc(lines[lines.length - 1][1])}”</p>` : ''}
+      <div style="height:26px"></div><button class="primary" id="rGo">Begin year ${lived + 1}</button>`;
+    onClose = () => { S.reviewedAge = lived; save(); };
+    $('rGo').onclick = () => { thump(); closeSheet(); };
+  },
+  lifespan() {
+    const h = new Set(S.habits);
+    const est = () => Math.max(40, Math.min(120, 80 + HABITS.filter(x => h.has(x[0])).reduce((p, x) => p + x[2], 0)));
+    body.innerHTML = H2('Estimate my lifespan', 'Starting from 80, adjusted by habits with the clearest evidence.') + `<div class="group" id="hab"></div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-top:26px"><span class="bignum" style="font-size:72px" id="est"></span><span class="sub" style="margin:0;font-size:17px;color:var(--mute)">years</span></div>
+      <p class="small" style="margin-top:6px">A rough population average to reflect on, not medical advice.</p><div style="height:22px"></div><button class="primary" id="useEst"></button>`;
+    HABITS.forEach(([k, l, d]) => { const r = document.createElement('div'); r.className = 'row'; r.innerHTML = `<span class="t">${l}<small>${d > 0 ? '+' : ''}${d} years</small></span>`; r.append(sw(h.has(k), on => { on ? h.add(k) : h.delete(k); paint(); })); $('hab').append(r); });
+    const paint = () => { $('est').textContent = est(); $('useEst').textContent = `Use ${est()} years`; }; paint();
+    $('useEst').onclick = () => { S.span = est(); S.habits = [...h]; thump(); refresh(); closeSheet(); toast(`Lifespan set to ${S.span}`); };
+  },
+};
+
+// ================================================= install hint (Safari only, once a week at most)
+function maybeInstallHint() {
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const ios = /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (standalone || !ios) return;
+  const last = +(localStorage.getItem('yrs.hint') || 0); if (Date.now() - last < 7 * 864e5) return;
+  const hide = () => { $('install').classList.remove('show'); try { localStorage.setItem('yrs.hint', Date.now()); } catch {} };
+  setTimeout(() => { $('install').classList.add('show'); setTimeout(hide, 9000); $('pager').addEventListener('scroll', hide, { once: true, passive: true }); }, 2500);
+  $('installX').onclick = hide;
+}
+
+// ================================================= lifecycle
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { cancelAnimationFrame(liveRAF); return; }
+  if (S.birth && started) { renderAll(false); setTimeout(rippleNow, 350); setTimeout(checkMoments, 600); }
+});
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (started) { renderAll(false); $('pager').scrollTo({ left: S.page * $('pager').clientWidth, behavior: 'instant' }); } }, 150); });
+setInterval(() => { if (S.birth && started && !document.hidden) { ['life', 'decade', 'year'].forEach(k => { grids[k].update(false); if (S.style !== 'live') renderHead(k); }); } }, 30000);
+
+if (S.birth) startHome(); else { $('ob').hidden = false; obRender(1); }
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
 </script>
 </body>

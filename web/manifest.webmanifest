@@ -1,7 +1,8 @@
 {
-  "name": "Years",
-  "short_name": "Years",
-  "description": "See the years you have left, in dots.",
+  "name": "yrs.",
+  "short_name": "yrs.",
+  "description": "Your life, in dots.",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

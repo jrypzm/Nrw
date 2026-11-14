@@ -1,25 +1,25 @@
-# Years
+# yrs.
 
-A minimal web app (PWA) that shows how many years you have left, as a grid of dots.
-Pure black (OLED) background, white dots for years lived, dim dots for years remaining.
-The current year fills up as it passes.
+Your life, in dots. Pure black, white dots for years lived, dim dots for years left; the year you're in fills as it passes.
 
-- **Three views**: swipe sideways (or tap the page dots) for Life, This decade, and This year of life.
-- **Number styles**: Classic, Large (thin hero number) and Live (ticking decimals).
-- **Touch**: drag across dots to travel through time; tap a year, then tap its label to name it (milestones get a ring).
-- **Feel**: Daylight dims the dots at night; a ripple runs through your years each time you open the app; birthday greeting.
-- **Lock screen wallpaper**: export Quiet grid, Daylight, Hourglass or Constellation at your screen's resolution.
+- Website: `index.html` at the repo root (GitHub Pages) → https://jrypzm.github.io/yrs./
+- iPhone app: `web/` → https://jrypzm.github.io/yrs./web/ — open in Safari, Share → **Add to Home Screen**.
+  It runs full screen and offline, uses the iPhone's own SF Pro, and keeps everything in `localStorage` on the device.
+- Android app: `android/` (below).
 
-Edit `tools/index.src.html`, then run `python3 tools/build.py` to regenerate `web/index.html`.
+## iPhone web app (`web/`)
 
-- Website: `index.html` at the repo root (GitHub Pages). Web app: `web/`.
-- On your phone: browser menu → **Add to Home Screen** to use it full-screen and offline.
-- Birthday and lifespan (default 80) are stored only on the device (`localStorage`).
+A single-file port of the Android app (`web/index.html`, no build step):
 
-## Next: native app (planned)
-- Bundle SF Pro (Display Semibold/Bold, Text Regular/Medium/Semibold) inside the app build.
-  For the web version, `tools/embed_fonts.py` can inline them into `index.html` once the font files are supplied.
-- Home-screen / lock-screen widget showing the years grid.
+- Onboarding: birthday wheels, lifespan, a reveal of your grid.
+- Five pages you swipe between: Life (pinch or tap to zoom History → Years → Months → Weeks → Days), This decade,
+  This year (a line a day, "on this day", countdowns), People (time left together) and the Ledger.
+- The headline counts in the zoom's own unit; on Years, tap it to count in days, weeks, summers, weekends or full moons;
+  hold it to feel the seconds. Left/Lived and % toggles; Classic, Large and Live number styles.
+- Hold a dot and drag to scrub through time; tap a year to name it or seal a letter to it (opens on that birthday);
+  a review sheet after each birthday.
+- Lock-screen wallpapers (Grid, Daylight, Hourglass, Stars) exported at the phone's resolution, and a share card.
+- Launch screens for current iPhones in `web/splash/`, icons in `web/icons/`, offline cache in `web/sw.js`.
 
 ## Android app
 
