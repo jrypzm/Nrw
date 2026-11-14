@@ -54,3 +54,8 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.10.0")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 }
+
+// Screenshot tests (Paparazzi) run in their own CI job: gradle :app:recordPaparazziDebug -Pshots
+if (providers.gradleProperty("shots").isPresent) {
+    apply(plugin = "app.cash.paparazzi")
+}

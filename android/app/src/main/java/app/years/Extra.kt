@@ -33,17 +33,19 @@ import java.util.concurrent.TimeUnit
 
 /** Android's own screen-time numbers, read on the phone and never sent anywhere. */
 object ScreenTime {
-    fun allowed(c: Context): Boolean {
+    fun allowed(c: Context): Boolean = runCatching {
         val ops = c.getSystemService(AppOpsManager::class.java) ?: return false
-        return ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), c.packageName) == AppOpsManager.MODE_ALLOWED
-    }
+        ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), c.packageName) == AppOpsManager.MODE_ALLOWED
+    }.getOrDefault(false)
 
     fun openSettings(c: Context) {
         runCatching { c.startActivity(Intent(AndroidSettings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     }
 
     /** Average hours a day over the last 7 days, or null when not allowed. */
-    fun hoursPerDay(c: Context): Double? {
+    fun hoursPerDay(c: Context): Double? = runCatching { hours(c) }.getOrNull()
+
+    private fun hours(c: Context): Double? {
         if (!allowed(c)) return null
         val usm = c.getSystemService(UsageStatsManager::class.java) ?: return null
         // exactly the last 7 full days, midnight to midnight

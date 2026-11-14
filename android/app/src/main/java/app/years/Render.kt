@@ -100,13 +100,13 @@ object Render {
 
     // ---------------------------------------------------------------- widgets
 
-    fun widget(c: Context, kind: WidgetKind, wDp: Float, hDp: Float): Bitmap {
+    fun widget(c: Context, kind: WidgetKind, wDp: Float, hDp: Float, settings: Settings? = null): Bitmap {
         val d = min(c.resources.displayMetrics.density, 3f)
         val w = (wDp * d).roundToInt().coerceIn(48, 1500)
         val h = (hDp * d).roundToInt().coerceIn(48, 1500)
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val cv = Canvas(bmp)
-        val s = Prefs.load(c)
+        val s = settings ?: Prefs.load(c)
         val W = w.toFloat(); val H = h.toFloat()
         val p = Paint(Paint.ANTI_ALIAS_FLAG)
         val rad = min(26 * d, min(W, H) / 2.2f)

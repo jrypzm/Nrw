@@ -53,3 +53,29 @@ jobs:
             --target "${{ github.sha }}" --prerelease \
             --title "Years 1.0.${{ github.run_number }}" \
             --notes "Android build of Years from ${{ github.ref_name }} (${{ github.sha }}). Download the APK below and open it on your phone to install."
+
+  screens:
+    # Real renders of every screen, attached to the same release. Never blocks the APK.
+    needs: build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Render screens
+        working-directory: android
+        run: gradle :app:recordPaparazziDebug -Pshots --no-daemon
+      - name: Attach screens to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd android/app/src/test/snapshots/images
+          zip -q -r "$GITHUB_WORKSPACE/screens-1.0.${{ github.run_number }}.zip" .
+          gh release upload "years-1.0.${{ github.run_number }}" "$GITHUB_WORKSPACE/screens-1.0.${{ github.run_number }}.zip" --clobber
