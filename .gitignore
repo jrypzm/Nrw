@@ -1,1 +1,4 @@
 *.zip
+fonts/*.otf
+fonts/*.ttf
+fonts/*.woff2
