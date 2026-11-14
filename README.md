@@ -2,8 +2,8 @@
 
 Your life, in dots. Pure black, white dots for years lived, dim dots for years left; the year you're in fills as it passes.
 
-- Website: `index.html` at the repo root (GitHub Pages) → https://jrypzm.github.io/yrs./
-- iPhone app: `web/` → https://jrypzm.github.io/yrs./web/ — open in Safari, Share → **Add to Home Screen**.
+- Website: `index.html` at the repo root (GitHub Pages) → https://jrypzm.github.io/yrs/
+- iPhone app: `web/` → https://jrypzm.github.io/yrs/web/ — open in Safari, Share → **Add to Home Screen**.
   It runs full screen and offline, uses the iPhone's own SF Pro, and keeps everything in `localStorage` on the device.
 - Android app: `android/` (below).
 

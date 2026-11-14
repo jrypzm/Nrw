@@ -9,7 +9,7 @@
 <meta name="description" content="yrs. shows your whole life as dots: the years behind you, the years ahead, and the one you're in. Free for Android and iPhone. Nothing leaves your phone.">
 <meta property="og:title" content="yrs. · Your life, in dots">
 <meta property="og:description" content="Every year you've lived, and every year still ahead. Seen at a glance.">
-<meta property="og:image" content="https://jrypzm.github.io/yrs./web/icons/icon-512.png">
+<meta property="og:image" content="https://jrypzm.github.io/yrs/web/icons/icon-512.png">
 <link rel="icon" href="web/icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="web/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -236,7 +236,7 @@ footer .row a:hover { color: var(--fg); }
     <h1><span class="ln"><span>Your life,</span></span><span class="ln"><span>in dots.</span></span></h1>
     <p class="lede fade-in d1">Born in <span class="yr"><span id="yrLabel">1995</span><select id="yrSel" aria-label="Year you were born"></select></span>? Then about <b class="num" id="heroLeft">49 years</b> are still ahead of you. yrs. puts every one of them on your screen, so you spend them on purpose.</p>
     <div class="cta fade-in d2">
-      <a class="btn big dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 7.5 8 11.5 12 7.5M2.5 14h11"/></svg>Download for Android</a>
+      <a class="btn big dl" href="https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 7.5 8 11.5 12 7.5M2.5 14h11"/></svg>Download for Android</a>
       <a class="btn big ghost" href="web/">Open on iPhone</a>
     </div>
     <p class="ticker fade-in d3"><b class="num" id="ticker">0</b> seconds left, give or take</p>
@@ -332,11 +332,11 @@ footer .row a:hover { color: var(--fg); }
       <div class="plat soft">
         <h3>Android</h3><p class="sub">The full app, with widgets and a lock screen that keeps itself up to date.</p>
         <ol><li><span>Tap <b>Download</b>. You always get the latest build.</span></li><li><span>Open <b>yrs.apk</b> from your notifications. If asked, allow installs from your browser.</span></li><li><span>yrs. isn't on the Play Store yet, so Play Protect may ask. Tap <b>Install anyway</b>. Updates keep your data.</span></li></ol>
-        <div class="go"><a class="btn big dl" href="https://github.com/jrypzm/yrs./releases/latest/download/yrs.apk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 7.5 8 11.5 12 7.5M2.5 14h11"/></svg>Download</a><span class="ver" id="ver">Android 10 or newer</span></div>
+        <div class="go"><a class="btn big dl" href="https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 7.5 8 11.5 12 7.5M2.5 14h11"/></svg>Download</a><span class="ver" id="ver">Android 10 or newer</span></div>
       </div>
       <div class="plat soft">
         <h3>iPhone</h3><p class="sub">The same app on the web, full screen and offline once it's on your Home Screen.</p>
-        <ol><li><span>Open <b>jrypzm.github.io/yrs./web</b> in Safari.</span></li><li><span>Tap <b>Share</b>, then <b>Add to Home Screen</b>.</span></li><li><span>Open yrs. from your Home Screen. Save the lock screen from Settings.</span></li></ol>
+        <ol><li><span>Open <b>jrypzm.github.io/yrs/web</b> in Safari.</span></li><li><span>Tap <b>Share</b>, then <b>Add to Home Screen</b>.</span></li><li><span>Open yrs. from your Home Screen. Save the lock screen from Settings.</span></li></ol>
         <div class="go"><a class="btn big ghost" href="web/">Open on iPhone</a><span class="ver">iOS 16 or newer</span></div>
       </div>
     </div>
@@ -344,7 +344,7 @@ footer .row a:hover { color: var(--fg); }
 </section>
 
 <footer>
-  <div class="wrap"><div class="row"><span>yrs. · Your life, in dots.</span><span><a href="https://github.com/jrypzm/yrs.">Source</a> &nbsp;·&nbsp; <a href="https://github.com/jrypzm/yrs./releases">Releases</a></span></div></div>
+  <div class="wrap"><div class="row"><span>yrs. · Your life, in dots.</span><span><a href="https://github.com/jrypzm/yrs">Source</a> &nbsp;·&nbsp; <a href="https://github.com/jrypzm/yrs/releases">Releases</a></span></div></div>
   <svg class="bleed" id="bleed" viewBox="18 26 72 64" aria-hidden="true"></svg>
 </footer>
 
@@ -679,7 +679,7 @@ function drawBleed() {
 }
 
 // ================================================= release info
-fetch('https://api.github.com/repos/jrypzm/yrs./releases/latest').then(r => r.ok ? r.json() : null).then(rel => {
+fetch('https://api.github.com/repos/jrypzm/yrs/releases/latest').then(r => r.ok ? r.json() : null).then(rel => {
   if (!rel) return;
   const a = (rel.assets || []).find(x => x.name === 'yrs.apk') || (rel.assets || [])[0];
   const v = (rel.tag_name || '').replace(/^years-/, ''), mb = a ? (a.size / 1048576).toFixed(1) + ' MB' : '';
