@@ -76,15 +76,13 @@ fun PreviewGrid(total: Int, done: Double) {
 @Composable
 fun ZoomBar(st: AppState) {
     val view = LocalView.current
-    Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Life.ZOOMS.forEachIndexed { i, z ->
             Text(
                 z, style = T.small.copy(color = if (i == st.s.zoom) C.Fg else C.Faint, fontWeight = if (i == st.s.zoom) FontWeight.SemiBold else FontWeight.Normal),
                 modifier = Modifier.clickable(remember { MutableInteractionSource() }, indication = null) { view.tick(); st.update(refresh = false) { it.copy(zoom = i) } },
             )
         }
-        Box(Modifier.weight(1f))
-        Text("pinch", style = T.small.copy(color = C.Faint, fontSize = 12.sp))
     }
 }
 
@@ -95,7 +93,7 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
     val view = LocalView.current
     val lit = if (s.sun) Color(Life.litColor(Life.sunLevel())) else C.Fg
     val big = m.total > 200
-    val ratio = when { big -> 0.64f; m.cols == 10 -> 0.6f; else -> 0.56f }
+    val ratio = when { big -> 0.64f; m.cols == 10 -> 0.6f; m.cols == 5 -> 0.4f; else -> 0.5f } // medium dots for decade and year
     val appear = remember(m.kind, m.total) { Animatable(if (big) 1f else 0f) }
     LaunchedEffect(appear) { if (!big) appear.animateTo(1f, tween(700 + m.total * 9, easing = LinearEasing)) }
     val breathe by rememberInfiniteTransition(label = "br").animateFloat(1f, .55f, infiniteRepeatable(tween(1600, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "b")
@@ -178,7 +176,7 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
                                 if (base == 0f) base = dist
                                 val k = dist / base
                                 val z = st.s.zoom
-                                if (k > 1.3f && z < 3) { tip = null; view.confirm(); st.update(refresh = false) { it.copy(zoom = z + 1) }; base = dist }
+                                if (k > 1.3f && z < Life.ZOOMS.lastIndex) { tip = null; view.confirm(); st.update(refresh = false) { it.copy(zoom = z + 1) }; base = dist }
                                 else if (k < 0.77f && z > 0) { tip = null; view.confirm(); st.update(refresh = false) { it.copy(zoom = z - 1) }; base = dist }
                                 ev.changes.forEach { it.consume() }
                             }
