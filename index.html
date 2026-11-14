@@ -9,7 +9,7 @@
 <meta name="color-scheme" content="dark">
 <meta property="og:title" content="yrs. · Your life, in dots">
 <meta property="og:description" content="Every year you've lived, and every year still ahead. Free for Android.">
-<meta property="og:image" content="assets/life.webp">
+
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='14' fill='%233a3a3c'/%3E%3Cpath d='M18.6 28.2A14 14 0 1 0 45.4 28.2z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,12 +78,6 @@
   .meta b { color: var(--fg); font-weight: 600; }
 
   /* phone frames around real renders */
-  .phone { position: relative; width: min(100%, 330px); aspect-ratio: 9 / 20; border-radius: 46px; background: #000; padding: 10px; box-shadow: 0 0 0 1.5px #2a2a2c, 0 0 0 10px #0d0d0f, 0 0 0 11px #262628, 0 50px 120px -30px rgba(255,255,255,.12); margin: 0 auto; }
-  .phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 36px; }
-  .phone::before { content: ""; position: absolute; top: 20px; left: 50%; width: 90px; height: 24px; border-radius: 12px; background: #000; transform: translateX(-50%); z-index: 2; }
-  .hero .phone { transform: rotate(-3deg); transition: transform .8s cubic-bezier(.2,.9,.25,1); }
-  @media (max-width: 900px) { .hero .phone { width: min(72%, 300px); margin-top: 20px; } }
-  .hero .phone:hover { transform: rotate(0deg) translateY(-6px); }
 
   /* ---------- sections ---------- */
   section { padding: clamp(70px, 11vw, 140px) 0; border-top: 1px solid var(--line); }
@@ -114,8 +108,6 @@
   .copy li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--fg); margin-top: 9px; }
   .copy li b { color: var(--fg); font-weight: 600; }
   .shots { display: flex; gap: 22px; justify-content: center; }
-  .shots .phone { width: min(46%, 280px); }
-  .shots .phone:nth-child(2) { transform: translateY(40px); }
   .zoomwords { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 26px; font-size: 15px; color: var(--faint); }
   .zoomwords span:nth-child(4) { color: var(--fg); font-weight: 600; }
 
@@ -133,8 +125,70 @@
   /* widgets */
   .widgets { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 90px); align-items: center; }
   @media (max-width: 900px) { .widgets { grid-template-columns: 1fr; } }
-  .widgetboard { border-radius: 36px; padding: clamp(18px, 3vw, 34px); background: radial-gradient(120% 90% at 20% 0%, #1b1b1e, #050506 70%); box-shadow: inset 0 0 0 1px #1f1f22; }
-  .widgetboard img { width: 100%; border-radius: 18px; }
+
+
+  /* ---------- devices: every screen is drawn live, so it stays sharp at any size ---------- */
+  .device {
+    --w: min(100%, 320px);
+    position: relative; width: var(--w); aspect-ratio: 9 / 19.5; margin: 0 auto;
+    border-radius: 13.5% / 6.2%; padding: 2.4%;
+    background: linear-gradient(150deg, #5b5b60 0%, #1b1b1d 18%, #0b0b0c 50%, #1d1d20 82%, #57575c 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.10), inset 0 0 0 3px #050506, 0 60px 120px -40px rgba(255,255,255,.14), 0 30px 60px -10px rgba(0,0,0,.8);
+  }
+  .device::before { content: ""; position: absolute; right: -1.2%; top: 21%; width: 1.4%; height: 9%; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, #2a2a2d, #5a5a5f); }
+  .device::after { content: ""; position: absolute; right: -1.2%; top: 33%; width: 1.4%; height: 5%; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, #2a2a2d, #5a5a5f); }
+  .screen { position: relative; height: 100%; border-radius: 11.6% / 5.4%; background: #000; overflow: hidden; container-type: inline-size; color: #f5f5f7; font-feature-settings: "tnum" 1; }
+  .screen .cam { position: absolute; top: 2.9cqw; left: 50%; width: 3.6cqw; height: 3.6cqw; margin-left: -1.8cqw; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #2a2a33 0 18%, #0a0a0c 45%, #000 70%); box-shadow: 0 0 0 .5cqw #050505; z-index: 5; }
+  .sb { position: absolute; top: 0; left: 0; right: 0; height: 9cqw; display: flex; align-items: center; justify-content: space-between; padding: 0 7cqw; font-size: 3.6cqw; font-weight: 600; letter-spacing: -0.01em; z-index: 4; }
+  .sb svg { height: 3.2cqw; width: auto; margin-left: 1.4cqw; }
+  .app { position: absolute; inset: 9cqw 0 0 0; padding: 4cqw 6cqw 0; }
+  .app .top { display: flex; align-items: center; justify-content: space-between; height: 8cqw; }
+  .app .top b { font-weight: 750; letter-spacing: -0.06em; font-size: 4.4cqw; color: #48484a; font-variation-settings: "opsz" 32; }
+  .app .more { width: 8cqw; height: 8cqw; border-radius: 50%; background: #1c1c1e; display: grid; place-items: center; }
+  .app .more i { display: flex; gap: .8cqw; } .app .more i::before, .app .more i::after, .app .more i span { content: ""; width: .95cqw; height: .95cqw; border-radius: 50%; background: #f5f5f7; display: block; }
+  .app h4 { margin: 7cqw 0 0; font-size: 5.7cqw; font-weight: 640; letter-spacing: -0.025em; line-height: 1.15; font-variation-settings: "opsz" 32; }
+  .app .s { margin-top: .8cqw; font-size: 3.85cqw; color: #8e8e93; font-weight: 500; }
+  .app canvas.g { display: block; width: 100%; margin-top: 7cqw; }
+  .zoom { display: flex; justify-content: space-between; margin-top: 4.5cqw; font-size: 3.2cqw; color: #48484a; }
+  .zoom .on { color: #f5f5f7; font-weight: 600; }
+  .ctl { position: absolute; left: 6cqw; right: 6cqw; bottom: 6.5cqw; display: flex; align-items: center; justify-content: space-between; }
+  .ctl .pl { height: 9cqw; padding: 0 3.2cqw 0 4.2cqw; border-radius: 4.5cqw; background: #1c1c1e; display: flex; align-items: center; gap: 1.6cqw; font-size: 3.85cqw; font-weight: 500; }
+  .ctl .pl svg { width: 2cqw; height: 3cqw; }
+  .ctl .pd { display: flex; gap: 2.4cqw; align-items: center; }
+  .ctl .pd i { width: 1.8cqw; height: 1.8cqw; border-radius: 50%; background: #48484a; } .ctl .pd i.on { background: #f5f5f7; } .ctl .pd i.sm { width: 1.3cqw; height: 1.3cqw; }
+  .ctl .rb { width: 9cqw; height: 9cqw; border-radius: 50%; background: #1c1c1e; display: grid; place-items: center; font-size: 3.85cqw; font-weight: 600; }
+  .home-ind { position: absolute; bottom: 1.8cqw; left: 50%; width: 34cqw; height: 1.2cqw; margin-left: -17cqw; border-radius: 1cqw; background: rgba(255,255,255,.55); }
+  .card2 { margin-top: 3.6cqw; border-radius: 4.6cqw; background: #1c1c1e; padding: 4.6cqw; }
+  .card2 .hd { display: flex; justify-content: space-between; align-items: baseline; font-size: 4.2cqw; font-weight: 600; }
+  .card2 .hd span { font-size: 3.1cqw; font-weight: 400; color: #8e8e93; }
+  .card2 .num { display: flex; align-items: baseline; gap: 2cqw; margin-top: 2cqw; }
+  .card2 .num b { font-weight: 200; font-size: 13cqw; letter-spacing: -0.045em; line-height: 1; font-variation-settings: "opsz" 32; }
+  .card2 .num span { font-size: 3.7cqw; color: #8e8e93; }
+  .card2 .f { font-size: 3.1cqw; color: #8e8e93; margin: 1cqw 0 3cqw; }
+  .card2 canvas { display: block; width: 100%; }
+  .legend { margin-top: 5cqw; display: grid; gap: 2.6cqw; font-size: 3.7cqw; }
+  .legend div { display: flex; align-items: center; gap: 3cqw; color: #8e8e93; }
+  .legend div i { width: 2.4cqw; height: 2.4cqw; border-radius: 50%; }
+  .legend div b { margin-left: auto; color: #f5f5f7; font-weight: 500; }
+  .legend div.y { color: #f5f5f7; } .legend div.y b { font-weight: 650; }
+  .hero .device { --w: min(100%, 340px); transform: rotate(-3deg); transition: transform .9s cubic-bezier(.2,.9,.25,1); }
+  .hero .device:hover { transform: rotate(0) translateY(-6px); }
+  .shots .device { --w: min(47%, 290px); margin: 0; }
+  .shots .device:nth-child(2) { transform: translateY(44px); }
+  @media (max-width: 900px) { .hero .device { --w: min(78%, 320px); margin-top: 24px; } }
+
+  /* widgets, drawn live */
+  .widgetboard { container-type: inline-size; padding: 5cqw; border-radius: 9cqw; background: radial-gradient(130% 100% at 15% 0%, #222226 0%, #0b0b0d 55%, #050506 100%); box-shadow: inset 0 0 0 1px #1f1f22, 0 40px 100px -40px rgba(255,255,255,.12); display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; }
+  .wd { position: relative; border-radius: 8cqw; background: #000; box-shadow: inset 0 0 0 .35cqw #262628; padding: 6cqw; aspect-ratio: 1; overflow: hidden; }
+  .wd.wide { grid-column: span 2; aspect-ratio: 2.05; }
+  .wd.slim { grid-column: span 2; aspect-ratio: 4.3; display: flex; align-items: center; gap: 5cqw; }
+  .wd .cap { font-size: 3.3cqw; color: #8e8e93; font-weight: 500; }
+  .wd .n { position: absolute; left: 6cqw; bottom: 5cqw; font-weight: 200; font-size: 17cqw; letter-spacing: -0.05em; line-height: .9; font-variation-settings: "opsz" 32; }
+  .wd .n small { display: block; font-size: 3.3cqw; letter-spacing: 0; font-weight: 500; color: #8e8e93; margin-top: 1.6cqw; }
+  .wd.wide .row { display: grid; grid-template-columns: 1fr 1.25fr; gap: 6cqw; align-items: center; height: 100%; }
+  .wd.wide .n { position: static; font-size: 16cqw; }
+  .wd .t { font-size: 4cqw; font-weight: 600; } .wd .t + .cap { margin-top: .6cqw; }
+  .wd canvas { display: block; width: 100%; }
 
   /* small cards */
   .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border-radius: 26px; overflow: hidden; margin-top: 60px; }
@@ -202,7 +256,7 @@
           <div class="meta">Android 10 and newer<br><b>No account. No ads. No internet.</b></div>
         </div>
       </div>
-      <div class="phone rise"><img src="assets/life.webp" alt="yrs. app: 63 years left, shown as a grid of 80 dots" width="450" height="1000"></div>
+      <div class="device hero-device rise" data-screen="life" role="img" aria-label="yrs. on a phone: years left, shown as a grid of 80 dots"></div>
     </div>
   </header>
 
@@ -245,8 +299,8 @@
         </ul>
       </div>
       <div class="shots rise">
-        <div class="phone"><img src="assets/weeks.webp" alt="Weeks view: 3,294 weeks left" loading="lazy" width="450" height="1000"></div>
-        <div class="phone"><img src="assets/history.webp" alt="History view: one life among 3,750" loading="lazy" width="450" height="1000"></div>
+        <div class="device" data-screen="weeks" role="img" aria-label="Weeks view: every week of a life"></div>
+        <div class="device" data-screen="history" role="img" aria-label="History view: one life among 3,750"></div>
       </div>
     </div>
   </section>
@@ -264,8 +318,8 @@
         </ul>
       </div>
       <div class="shots rise">
-        <div class="phone"><img src="assets/people.webp" alt="People: 10,950 more days with Mum" loading="lazy" width="450" height="1000"></div>
-        <div class="phone"><img src="assets/ledger.webp" alt="Ledger: where your remaining years will go" loading="lazy" width="450" height="1000"></div>
+        <div class="device" data-screen="people" role="img" aria-label="People: visits left with the people you love"></div>
+        <div class="device" data-screen="ledger" role="img" aria-label="Ledger: where the years you have left will go"></div>
       </div>
     </div>
   </section>
@@ -293,7 +347,7 @@
         <h2 class="rise">Seven widgets. One idea each.</h2>
         <p class="sub rise">Your life, years left, days left, this decade, this year of life, today's line, and the people you love. Black or glass. Add them in one tap from the app.</p>
       </div>
-      <div class="widgetboard rise"><img src="assets/widgets.webp" alt="yrs. widgets: years left, days left, life grid, decade, year of life, people, today" loading="lazy"></div>
+      <div class="widgetboard rise" id="wboard" role="img" aria-label="yrs. widgets on a home screen"></div>
     </div>
   </section>
 
@@ -439,6 +493,100 @@
   // start empty, fill when the section comes into view
   drawGrid(0);
   new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { update(); o.disconnect(); } }, { threshold: .3 }).observe(grid);
+
+
+  // ---------- devices and widgets, drawn live (sharp at any size) ----------
+  const SB = '<div class="cam"></div><div class="sb"><span>9:41</span><span>' +
+    '<svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#f5f5f7"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="#f5f5f7"/><rect x="10" y="3" width="3" height="9" rx="1" fill="#f5f5f7"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#f5f5f7"/></svg>' +
+    '<svg viewBox="0 0 16 12"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0z" fill="#f5f5f7"/><path d="M3.4 6.8a6.5 6.5 0 0 1 9.2 0l-1.4 1.4a4.5 4.5 0 0 0-6.4 0z" fill="#f5f5f7"/><path d="M1.2 4.6a9.6 9.6 0 0 1 13.6 0l-1.4 1.4a7.6 7.6 0 0 0-10.8 0z" fill="#f5f5f7"/></svg>' +
+    '<svg viewBox="0 0 27 12"><rect x=".5" y=".5" width="23" height="11" rx="3.2" fill="none" stroke="#8e8e93"/><rect x="2" y="2" width="16" height="8" rx="2" fill="#f5f5f7"/><rect x="24.5" y="4" width="1.8" height="4" rx=".9" fill="#8e8e93"/></svg>' +
+    '</span></div>';
+  const TOP = '<div class="top"><b>yrs.</b><span class="more"><i><span></span></i></span></div>';
+  const CTL = page => '<div class="ctl">' +
+    (page < 3 ? '<span class="pl">Left<svg viewBox="0 0 8 12" fill="none" stroke="#8e8e93" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 4 4 1.5 6.5 4M1.5 8 4 10.5 6.5 8"/></svg></span>' : '<span></span>') +
+    '<span class="pd">' + [0,1,2,3,4].map(i => `<i class="${i === page ? 'on' : ''} ${i > 2 ? 'sm' : ''}"></i>`).join('') + '</span>' +
+    (page < 3 ? '<span class="rb">%</span>' : '<span style="width:9cqw"></span>') + '</div><div class="home-ind"></div>';
+  const dots = (o) => `<canvas class="g" data-dots='${JSON.stringify(o)}'></canvas>`;
+
+  // one sample life, the same everywhere on the page
+  const B0 = new Date(1995, 5, 15), S0 = 80, A0 = age(B0), L0 = S0 - A0;
+  const daysLeft0 = Math.floor((new Date(B0.getFullYear() + S0, 5, 15) - new Date()) / 864e5);
+  const daysLived0 = Math.floor((new Date() - B0) / 864e5);
+  const together = (born, perYear) => { const a = new Date().getFullYear() - born; const theirs = Math.max(S0 - a, a < 105 ? Math.max(2, (100 - a) / 3) : 1); return { v: Math.floor(Math.min(L0, theirs) * perYear), yrs: Math.min(L0, theirs), a }; };
+  const zoom = on => '<div class="zoom">' + ['History', 'Years', 'Months', 'Weeks', 'Days'].map(z => `<span class="${z === on ? 'on' : ''}">${z}</span>`).join('') + '</div>';
+
+  const screens = {
+    life: () => TOP + `<h4>${fmt(L0)} years left</h4><div class="s">Age ${Math.floor(A0)} · ${S0} year life</div>` +
+      dots({ total: S0, done: A0, cols: 10, ratio: .6, ring: [24] }) + zoom('Years') + CTL(0),
+    weeks: () => TOP + `<h4>${fmt(L0 * 52.1775)} weeks left</h4><div class="s">Age ${Math.floor(A0)} · ${S0} year life</div>` +
+      dots({ total: Math.round(S0 * 52.1775), done: A0 * 52.1775, cols: 52, ratio: .66 }) + zoom('Weeks') + CTL(0),
+    history: () => TOP + `<h4>3,750 lives of human history</h4><div class="s">Yours is the last one, filling now</div>` +
+      dots({ total: 3750, done: 3749 + A0 / S0, cols: 50, ratio: .66 }) + zoom('History') + CTL(0),
+    people: () => {
+      const card = (name, often, born, per, unit) => { const t = together(born, per); const n = Math.min(t.v, 100);
+        return `<div class="card2"><div class="hd">${name}<span>${often}</span></div><div class="num"><b>${fmt(t.v)}</b><span>more ${unit} together</span></div>` +
+          `<div class="f">About ${fmt(t.yrs)} summers left together · ${name} is ${t.a}</div>` + `<canvas data-dots='${JSON.stringify({ total: n, done: n, cols: 20, ratio: .56 })}'></canvas>` +
+          (t.v > n ? `<div class="f" style="margin:2cqw 0 0">+ ${fmt(t.v - n)} more</div>` : '') + '</div>'; };
+      return TOP + `<h4 style="margin-top:6cqw">People</h4><div class="s">The time you have left together</div><div style="height:2cqw"></div>` +
+        card('Mum', 'Every month', 1966, 12, 'visits') + card('Grandpa', 'A few times a year', 1946, 4, 'visits') + CTL(3);
+    },
+    ledger: () => {
+      const left = L0, a = A0, sleep = left / 3, work = Math.max(0, Math.min(left, 65 - a)) * 1920 / 8766, upkeep = left / 8, phone = Math.min(left * 3 / 24, left - sleep - work - upkeep), free = left - sleep - work - phone - upkeep;
+      const sl = [['Asleep', sleep, '#2c2c2e'], ['Working', work, '#48484a'], ['On your phone', phone, '#8e8e93'], ['Eating, chores, commuting', upkeep, '#3a3a3c'], ['Truly yours', free, '#f5f5f7']];
+      const total = Math.round(left), raw = sl.map(x => x[1] / left * total), ints = raw.map(Math.floor);
+      let rest = total - ints.reduce((p, c) => p + c, 0); raw.map((v, i) => [v - Math.floor(v), i]).sort((p, q) => q[0] - p[0]).forEach(([, i]) => { if (rest > 0) { ints[i]++; rest--; } });
+      const colors = ints.flatMap((n, i) => Array(n).fill(sl[i][2]));
+      return TOP + `<h4 style="margin-top:6cqw">Your ${fmt(left)} years</h4><div class="s">Where the time you have left will go</div>` +
+        dots({ total: colors.length, done: 0, cols: 10, ratio: .6, colors }) +
+        '<div class="legend">' + sl.map((x, i) => `<div class="${i === 4 ? 'y' : ''}"><i style="background:${x[2]}"></i>${x[0]}<b>${x[1].toFixed(1)} yrs</b></div>`).join('') + '</div>' + CTL(4);
+    },
+  };
+  document.querySelectorAll('.device[data-screen]').forEach(d => {
+    d.innerHTML = `<div class="screen">${SB}<div class="app">${screens[d.dataset.screen]()}</div></div>`;
+  });
+
+  // widgets
+  const lb = (() => { const t = new Date(); let y = t.getFullYear(); if (birthdayIn(B0, y) > t) y--; return birthdayIn(B0, y); })();
+  let mo = 0; while (mo < 11 && new Date(lb.getFullYear(), lb.getMonth() + mo + 1, Math.min(lb.getDate(), 28)) <= new Date()) mo++;
+  const mStart = new Date(lb.getFullYear(), lb.getMonth() + mo, lb.getDate()), mEnd = new Date(lb.getFullYear(), lb.getMonth() + mo + 1, lb.getDate());
+  const monthsDone = mo + Math.min(1, (new Date() - mStart) / (mEnd - mStart));
+  const decStart = Math.floor(A0 / 10) * 10;
+  const mum = together(1966, 12), gp = together(1946, 4);
+  const wb = document.getElementById('wboard');
+  if (wb) wb.innerHTML =
+    `<div class="wd"><div class="cap">Years left</div><div class="n">${fmt(L0)}</div></div>` +
+    `<div class="wd"><div class="cap">Days left</div><div class="n" style="font-size:11.5cqw">${fmt(daysLeft0)}<small>Today is day ${fmt(daysLived0 + 1)}</small></div></div>` +
+    `<div class="wd wide"><div class="row"><div><div class="n">${fmt(L0)}<small>years left</small></div></div>${dots({ total: S0, done: A0, cols: 10, ratio: .6 })}</div></div>` +
+    `<div class="wd slim"><div style="flex:0 0 auto"><div class="t">Your ${decStart}s</div><div class="cap">${Math.floor(A0 - decStart)} of 10 years</div></div><div style="flex:1">${dots({ total: 10, done: A0 - decStart, cols: 10, ratio: .62 })}</div></div>` +
+    `<div class="wd" style="display:flex;flex-direction:column;justify-content:space-between">${dots({ total: 12, done: monthsDone, cols: 4, ratio: .62 })}<div><div class="t">Age ${Math.floor(A0)}</div><div class="cap">${Math.floor(monthsDone)} of 12 months</div></div></div>` +
+    `<div class="wd" style="display:flex;flex-direction:column;justify-content:center;gap:5cqw"><div><div class="cap">Mum</div><div class="t" style="font-size:6.4cqw">${fmt(mum.v)} visits</div></div><div><div class="cap">Grandpa</div><div class="t" style="font-size:6.4cqw">${fmt(gp.v)} visits</div></div></div>` +
+    `<div class="wd slim" style="aspect-ratio:3.2;align-items:flex-start;flex-direction:column;justify-content:center;gap:1.6cqw"><div class="t" style="font-size:5cqw">Day ${fmt(daysLived0 + 1)}</div><div style="font-size:3.8cqw;color:#f5f5f7">Long walk by the sea with Mum. Rain at the end, still worth it.</div></div>`;
+
+  // paint every dot grid at the real pixel density
+  function paintDots(cv) {
+    const o = JSON.parse(cv.dataset.dots), d = Math.min(3, devicePixelRatio || 1), W = cv.clientWidth;
+    if (!W) return;
+    const cell = W / (o.cols - (1 - o.ratio)), inset = cell * (1 - o.ratio) / 2, r = cell * o.ratio / 2;
+    const rows = Math.ceil(o.total / o.cols), H = rows * cell - 2 * inset;
+    cv.style.height = H + 'px'; cv.width = Math.round(W * d); cv.height = Math.round(H * d);
+    const x = cv.getContext('2d'); x.scale(d, d);
+    const whole = Math.floor(o.done);
+    for (let i = 0; i < o.total; i++) {
+      const cx = -inset + (i % o.cols + .5) * cell, cy = -inset + (Math.floor(i / o.cols) + .5) * cell;
+      x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2);
+      if (o.colors) { x.fillStyle = o.colors[i]; x.fill(); continue; }
+      if (i < whole) { x.fillStyle = '#f5f5f7'; x.fill(); }
+      else if (i === whole && o.done < o.total) {
+        const rr = o.total > 300 ? Math.max(r * 1.8, 2.2) : r; x.beginPath(); x.arc(cx, cy, rr, 0, Math.PI * 2);
+        x.fillStyle = '#3a3a3c'; x.fill(); x.save(); x.clip(); x.fillStyle = '#f5f5f7'; const f = o.done - whole; x.fillRect(cx - rr, cy + rr - 2 * rr * f, 2 * rr, 2 * rr * f); x.restore();
+      } else { x.fillStyle = '#232323'; x.fill(); }
+      if (o.ring && o.ring.includes(i)) { x.beginPath(); x.arc(cx, cy, r * 1.45, 0, Math.PI * 2); x.strokeStyle = 'rgba(245,245,247,.55)'; x.lineWidth = Math.max(1, cell * .035); x.stroke(); }
+    }
+  }
+  const paintAll = () => document.querySelectorAll('canvas[data-dots]').forEach(paintDots);
+  paintAll();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(paintAll);
+  let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(paintAll, 120); });
 
   // ---------- live wallpapers (same drawing as the app) ----------
   const AGE = 31.4, SPAN = 80, LIVED = 31, FRAC = AGE - LIVED;
