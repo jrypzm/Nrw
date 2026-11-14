@@ -22,7 +22,7 @@
     --bg: #000;
     --fg: #fff;
     --dim: #8e8e93;          /* iOS secondaryLabel */
-    --empty: #262626;        /* remaining dots, quiet on OLED */
+    --empty: #232323;        /* remaining dots, quiet on OLED */
     --surface: #1c1c1e;      /* iOS secondarySystemBackground */
     --separator: #38383a;
     --pad: 24px;
@@ -48,7 +48,7 @@
   [hidden] { display: none !important; }
 
   /* ---------- Top bar ---------- */
-  .bar { display: flex; justify-content: flex-end; height: 32px; margin-bottom: 44px; }
+  .bar { display: flex; justify-content: flex-end; height: 32px; margin-bottom: 36px; }
   .more {
     width: 32px; height: 32px; border-radius: 50%;
     background: var(--surface);
@@ -60,35 +60,62 @@
 
   /* ---------- Header ---------- */
   .headline {
-    font-size: 30px; font-weight: 600; letter-spacing: -0.022em; line-height: 1.1;
+    font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15;
+    transition: opacity .18s ease;
   }
   .sub {
-    margin-top: 6px; font-size: 15px; font-weight: 500; color: var(--dim); letter-spacing: -0.01em;
+    margin-top: 3px; font-size: 15px; font-weight: 500; color: var(--dim); letter-spacing: -0.01em;
+    transition: opacity .18s ease;
   }
+  .swap { opacity: 0; }
 
   /* ---------- Grid ---------- */
   .grid {
-    margin-top: 40px;
+    margin: 32px -2.08% 0;   /* pull outer dots flush with the text edge */
     display: grid;
     grid-template-columns: repeat(10, 1fr);
-    gap: clamp(10px, 3.4vw, 16px);
   }
+  /* each dot sits centred in a perfectly square cell → equal spacing both ways */
   .dot {
-    aspect-ratio: 1; border-radius: 50%; background: var(--empty);
+    --c: var(--empty);
+    aspect-ratio: 1; cursor: pointer;
+    background: radial-gradient(circle closest-side, var(--c) calc(100% - 1px), transparent 100%) center / 60% 60% no-repeat;
     opacity: 0; transform: scale(.6);
     animation: in .5s cubic-bezier(.2,.8,.2,1) forwards;
     animation-delay: calc(var(--i) * 7ms);
   }
-  .dot.lived { background: var(--fg); }
-  .dot.now { background: var(--fg); animation: in .5s cubic-bezier(.2,.8,.2,1) forwards, breathe 2.8s ease-in-out 1s infinite; animation-delay: calc(var(--i) * 7ms), calc(var(--i) * 7ms + 600ms); }
+  .dot.lived { --c: var(--fg); }
+  .dot.now { --c: var(--fg); animation: in .5s cubic-bezier(.2,.8,.2,1) forwards, breathe 2.8s ease-in-out 1s infinite; animation-delay: calc(var(--i) * 7ms), calc(var(--i) * 7ms + 600ms); }
   @keyframes in { to { opacity: 1; transform: scale(1); } }
-  @keyframes breathe { 0%,100% { opacity: 1; } 50% { opacity: .28; } }
+  @keyframes breathe { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
 
   .caption {
     margin-top: 28px; height: 18px; font-size: 13px; font-weight: 500; color: var(--dim);
     transition: opacity .25s ease; opacity: 0;
   }
   .caption.show { opacity: 1; }
+
+  /* ---------- Bottom controls ---------- */
+  .controls {
+    position: fixed; left: 0; right: 0; bottom: 0; max-width: 520px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 calc(env(safe-area-inset-right) + var(--pad)) calc(env(safe-area-inset-bottom) + 24px) calc(env(safe-area-inset-left) + var(--pad));
+    pointer-events: none;
+  }
+  .controls > * { pointer-events: auto; }
+  .pill {
+    height: 36px; padding: 0 12px 0 16px; border-radius: 18px; background: var(--surface);
+    display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 500;
+    transition: transform .2s ease, background .2s ease;
+  }
+  .pill svg { width: 8px; height: 12px; opacity: .55; }
+  .round {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--surface);
+    display: grid; place-items: center; font-size: 15px; font-weight: 600;
+    transition: transform .2s ease, background .2s ease;
+  }
+  .pill:active, .round:active { transform: scale(.94); background: #2c2c2e; }
+  .round.on { background: var(--fg); color: #000; }
 
   /* ---------- Onboarding ---------- */
   .ask { padding-top: 15vh; }
@@ -170,6 +197,13 @@
   <div class="sub" id="sub"></div>
   <div class="grid" id="grid" role="img"></div>
   <div class="caption" id="caption"></div>
+  <div class="controls">
+    <button class="pill" id="modeBtn" aria-label="Switch between years left and years lived">
+      <span id="modeLabel">Left</span>
+      <svg viewBox="0 0 8 12" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 4 4 1.5 6.5 4M1.5 8 4 10.5 6.5 8"/></svg>
+    </button>
+    <button class="round" id="pctBtn" aria-label="Show percentage" aria-pressed="false">%</button>
+  </div>
 </main>
 
 <!-- Settings -->
@@ -201,7 +235,8 @@
 
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
   const save = s => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
-  let state = Object.assign({ birth: null, span: 80 }, load());
+  let state = Object.assign({ birth: null, span: 80, mode: 'left', pct: false }, load());
+  const tick = () => { try { navigator.vibrate && navigator.vibrate(6); } catch {} };
 
   const today = () => new Date().toISOString().slice(0, 10);
   const validBirth = v => v && v <= today() && v >= '1900-01-01';
@@ -220,10 +255,21 @@
     const pct = Math.min(100, Math.floor((age / span) * 100));
     const yearsLeft = Math.floor(left);
 
-    $('headline').textContent = left <= 0 ? 'Every year is a gift'
-      : yearsLeft === 0 ? 'Less than a year left'
-      : `${yearsLeft} ${yearsLeft === 1 ? 'year' : 'years'} left`;
-    $('sub').textContent = `${pct}% · age ${lived} of ${span}`;
+    const yrs = n => `${n} ${n === 1 ? 'year' : 'years'}`;
+    let head, sub;
+    if (state.mode === 'left') {
+      head = state.pct ? `${Math.max(0, 100 - pct)}% left`
+        : left <= 0 ? 'Every year is a gift'
+        : yearsLeft === 0 ? 'Less than a year left' : `${yrs(yearsLeft)} left`;
+    } else {
+      head = state.pct ? `${pct}% lived` : `${yrs(lived)} lived`;
+    }
+    sub = `Age ${lived} · ${span} year life`;
+    $('headline').textContent = head;
+    $('sub').textContent = sub;
+    $('modeLabel').textContent = state.mode === 'left' ? 'Left' : 'Lived';
+    $('pctBtn').classList.toggle('on', state.pct);
+    $('pctBtn').setAttribute('aria-pressed', state.pct);
 
     const key = `${lived}|${span}`;
     if (key === lastKey && !force) return;
@@ -243,12 +289,23 @@
     grid.dataset.birthYear = birthYear;
   }
 
+  // Header toggles, with a soft cross-fade
+  const swapHeader = fn => {
+    tick();
+    const els = [$('headline'), $('sub')];
+    els.forEach(e => e.classList.add('swap'));
+    setTimeout(() => { fn(); save(state); render(); els.forEach(e => e.classList.remove('swap')); }, 160);
+  };
+  $('modeBtn').addEventListener('click', () => swapHeader(() => { state.mode = state.mode === 'left' ? 'lived' : 'left'; }));
+  $('pctBtn').addEventListener('click', () => swapHeader(() => { state.pct = !state.pct; }));
+
   // Tap a dot to see which year it is
   let capTimer;
   $('grid').addEventListener('click', e => {
     const i = e.target.dataset && e.target.dataset.i;
     if (i == null) return;
     const year = +$('grid').dataset.birthYear + +i;
+    tick();
     const c = $('caption');
     c.textContent = `Age ${i} · ${year}`;
     c.classList.add('show');
@@ -277,6 +334,7 @@
   const setDate = $('setDate');
   setDate.max = today();
   const openSheet = () => {
+    tick();
     setDate.value = state.birth; $('span').textContent = state.span;
     settings.classList.add('open');
   };
