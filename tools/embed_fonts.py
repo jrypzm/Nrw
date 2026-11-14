@@ -12,8 +12,8 @@ from fontTools import subset
 from fontTools.ttLib import TTFont
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-html_path = ROOT / "index.html"
-fonts_dir = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "fonts"
+html_path = ROOT / "web" / "index.html"
+fonts_dir = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "web" / "fonts"
 UNICODES = "U+0020-007E,U+00A0-00FF,U+2010-2027,U+2030,U+2032-2033,U+2039-203A,U+2212"
 
 html = html_path.read_text()

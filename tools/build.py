@@ -10,5 +10,5 @@ for cut, weights in [("Display", [(200, "Thin"), (300, "Light"), (400, "Regular"
         faces.append(f'''  @font-face {{ font-family: "SFP {cut}"; font-weight: {w}; font-display: swap;
     src: local("SF Pro {cut} {n}"), local("SFPro{cut}-{n}"), url("fonts/SF-Pro-{cut}-{n}.otf") format("opentype"); }}''')
 src = (ROOT / "tools/index.src.html").read_text()
-(ROOT / "index.html").write_text(src.replace("/*FACES*/", "\n".join(faces)))
-print("built index.html")
+(ROOT / "web" / "index.html").write_text(src.replace("/*FACES*/", "\n".join(faces)))
+print("built web/index.html")
