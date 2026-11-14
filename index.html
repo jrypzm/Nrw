@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Years">
+<meta name="description" content="See the years you have left, in dots.">
+<title>Years</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000;
+    --fg: #fff;
+    --dim: #8e8e93;          /* iOS secondaryLabel */
+    --empty: #262626;        /* remaining dots, quiet on OLED */
+    --surface: #1c1c1e;      /* iOS secondarySystemBackground */
+    --separator: #38383a;
+    --pad: 24px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--fg); }
+  body {
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "tnum" 1, "cv11" 1;
+    overscroll-behavior: none;
+    user-select: none; -webkit-user-select: none;
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+  .screen {
+    min-height: 100%;
+    padding: calc(env(safe-area-inset-top) + 20px) calc(env(safe-area-inset-right) + var(--pad))
+             calc(env(safe-area-inset-bottom) + 32px) calc(env(safe-area-inset-left) + var(--pad));
+    max-width: 520px; margin: 0 auto;
+  }
+  [hidden] { display: none !important; }
+
+  /* ---------- Top bar ---------- */
+  .bar { display: flex; justify-content: flex-end; height: 32px; margin-bottom: 44px; }
+  .more {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface);
+    display: grid; place-items: center;
+    transition: transform .2s ease, background .2s ease;
+  }
+  .more:active { transform: scale(.92); background: #2c2c2e; }
+  .more svg { width: 16px; height: 4px; }
+
+  /* ---------- Header ---------- */
+  .headline {
+    font-size: 30px; font-weight: 600; letter-spacing: -0.022em; line-height: 1.1;
+  }
+  .sub {
+    margin-top: 6px; font-size: 15px; font-weight: 500; color: var(--dim); letter-spacing: -0.01em;
+  }
+
+  /* ---------- Grid ---------- */
+  .grid {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: clamp(10px, 3.4vw, 16px);
+  }
+  .dot {
+    aspect-ratio: 1; border-radius: 50%; background: var(--empty);
+    opacity: 0; transform: scale(.6);
+    animation: in .5s cubic-bezier(.2,.8,.2,1) forwards;
+    animation-delay: calc(var(--i) * 7ms);
+  }
+  .dot.lived { background: var(--fg); }
+  .dot.now { background: var(--fg); animation: in .5s cubic-bezier(.2,.8,.2,1) forwards, breathe 2.8s ease-in-out 1s infinite; animation-delay: calc(var(--i) * 7ms), calc(var(--i) * 7ms + 600ms); }
+  @keyframes in { to { opacity: 1; transform: scale(1); } }
+  @keyframes breathe { 0%,100% { opacity: 1; } 50% { opacity: .28; } }
+
+  .caption {
+    margin-top: 28px; height: 18px; font-size: 13px; font-weight: 500; color: var(--dim);
+    transition: opacity .25s ease; opacity: 0;
+  }
+  .caption.show { opacity: 1; }
+
+  /* ---------- Onboarding ---------- */
+  .ask { padding-top: 15vh; }
+  .ask h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.1; }
+  .ask p { margin-top: 10px; font-size: 15px; color: var(--dim); }
+  .field {
+    margin-top: 40px; width: 100%;
+    background: var(--surface); border-radius: 14px; border: 0;
+    color: var(--fg); font: 500 20px/1 var(--font); padding: 18px;
+    color-scheme: dark; appearance: none; -webkit-appearance: none; min-height: 60px;
+  }
+  .field:focus { outline: 1px solid #48484a; }
+  .primary {
+    margin-top: 16px; width: 100%; height: 54px; border-radius: 27px;
+    background: var(--fg); color: #000; font-size: 17px; font-weight: 600;
+    transition: opacity .2s ease, transform .15s ease;
+  }
+  .primary:active { transform: scale(.98); }
+  .primary:disabled { opacity: .25; }
+
+  /* ---------- Settings sheet ---------- */
+  .scrim {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 520px;
+    background: var(--surface); border-radius: 22px 22px 0 0;
+    padding: 10px var(--pad) calc(env(safe-area-inset-bottom) + 24px);
+    transform: translateY(105%); transition: transform .38s cubic-bezier(.2,.9,.25,1);
+  }
+  .open .scrim { opacity: 1; pointer-events: auto; }
+  .open .sheet { transform: none; }
+  .grabber { width: 36px; height: 5px; border-radius: 3px; background: #48484a; margin: 0 auto 18px; }
+  .sheet h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; margin-bottom: 18px; }
+  .group { background: #2c2c2e; border-radius: 12px; overflow: hidden; }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    min-height: 52px; padding: 0 16px; font-size: 17px;
+  }
+  .row + .row { border-top: .5px solid var(--separator); }
+  .row input[type=date] {
+    background: none; border: 0; color: var(--dim); font: 400 17px var(--font);
+    color-scheme: dark; text-align: right;
+  }
+  .stepper { display: flex; align-items: center; gap: 14px; }
+  .stepper button {
+    width: 32px; height: 32px; border-radius: 50%; background: #3a3a3c;
+    font-size: 20px; line-height: 1; display: grid; place-items: center;
+  }
+  .stepper button:active { background: #48484a; }
+  .stepper output { min-width: 28px; text-align: center; color: var(--dim); font-size: 17px; }
+  .note { margin: 10px 4px 0; font-size: 13px; color: var(--dim); line-height: 1.4; }
+  .sheet .primary { margin-top: 22px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dot, .dot.now { animation: none; opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Onboarding -->
+<main class="screen ask" id="ask" hidden>
+  <h1>When were<br>you born?</h1>
+  <p>Stays on this device. Nothing is sent anywhere.</p>
+  <input class="field" id="askDate" type="date" aria-label="Birthday">
+  <button class="primary" id="askGo" disabled>Continue</button>
+</main>
+
+<!-- Main -->
+<main class="screen" id="home" hidden>
+  <div class="bar">
+    <button class="more" id="moreBtn" aria-label="Settings">
+      <svg viewBox="0 0 16 4" fill="#fff"><circle cx="2" cy="2" r="1.6"/><circle cx="8" cy="2" r="1.6"/><circle cx="14" cy="2" r="1.6"/></svg>
+    </button>
+  </div>
+  <div class="headline" id="headline"></div>
+  <div class="sub" id="sub"></div>
+  <div class="grid" id="grid" role="img"></div>
+  <div class="caption" id="caption"></div>
+</main>
+
+<!-- Settings -->
+<div id="settings">
+  <div class="scrim" id="scrim"></div>
+  <section class="sheet" role="dialog" aria-label="Settings">
+    <div class="grabber"></div>
+    <h2>Settings</h2>
+    <div class="group">
+      <label class="row">Birthday <input type="date" id="setDate"></label>
+      <div class="row">Lifespan
+        <div class="stepper">
+          <button id="minus" aria-label="Decrease">−</button>
+          <output id="span">80</output>
+          <button id="plus" aria-label="Increase">+</button>
+        </div>
+      </div>
+    </div>
+    <p class="note">Each dot is one year of an expected lifespan. The blinking dot is the year you're living now.</p>
+    <button class="primary" id="done">Done</button>
+  </section>
+</div>
+
+<script>
+(() => {
+  const KEY = 'years.v1';
+  const YEAR_MS = 365.2425 * 864e5;
+  const $ = id => document.getElementById(id);
+
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+  const save = s => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
+  let state = Object.assign({ birth: null, span: 80 }, load());
+
+  const today = () => new Date().toISOString().slice(0, 10);
+  const validBirth = v => v && v <= today() && v >= '1900-01-01';
+
+  function ageYears(birth) {
+    const [y, m, d] = birth.split('-').map(Number);
+    return (Date.now() - new Date(y, m - 1, d).getTime()) / YEAR_MS;
+  }
+
+  let lastKey = '';
+  function render(force) {
+    const age = ageYears(state.birth);
+    const span = state.span;
+    const lived = Math.floor(age);
+    const left = Math.max(0, span - age);
+    const pct = Math.min(100, Math.floor((age / span) * 100));
+    const yearsLeft = Math.floor(left);
+
+    $('headline').textContent = left <= 0 ? 'Every year is a gift'
+      : yearsLeft === 0 ? 'Less than a year left'
+      : `${yearsLeft} ${yearsLeft === 1 ? 'year' : 'years'} left`;
+    $('sub').textContent = `${pct}% · age ${lived} of ${span}`;
+
+    const key = `${lived}|${span}`;
+    if (key === lastKey && !force) return;
+    lastKey = key;
+    const grid = $('grid');
+    grid.setAttribute('aria-label', `${lived} of ${span} years lived`);
+    const frag = document.createDocumentFragment();
+    const birthYear = +state.birth.slice(0, 4);
+    for (let i = 0; i < span; i++) {
+      const el = document.createElement('div');
+      el.className = 'dot' + (i < lived ? ' lived' : i === lived && left > 0 ? ' now' : '');
+      el.style.setProperty('--i', i);
+      el.dataset.i = i;
+      frag.appendChild(el);
+    }
+    grid.replaceChildren(frag);
+    grid.dataset.birthYear = birthYear;
+  }
+
+  // Tap a dot to see which year it is
+  let capTimer;
+  $('grid').addEventListener('click', e => {
+    const i = e.target.dataset && e.target.dataset.i;
+    if (i == null) return;
+    const year = +$('grid').dataset.birthYear + +i;
+    const c = $('caption');
+    c.textContent = `Age ${i} · ${year}`;
+    c.classList.add('show');
+    clearTimeout(capTimer);
+    capTimer = setTimeout(() => c.classList.remove('show'), 1800);
+  });
+
+  function show() {
+    const ready = validBirth(state.birth);
+    $('ask').hidden = ready;
+    $('home').hidden = !ready;
+    if (ready) render(true);
+  }
+
+  // Onboarding
+  const askDate = $('askDate');
+  askDate.max = today();
+  askDate.addEventListener('input', () => { $('askGo').disabled = !validBirth(askDate.value); });
+  $('askGo').addEventListener('click', () => {
+    if (!validBirth(askDate.value)) return;
+    state.birth = askDate.value; save(state); show();
+  });
+
+  // Settings
+  const settings = $('settings');
+  const setDate = $('setDate');
+  setDate.max = today();
+  const openSheet = () => {
+    setDate.value = state.birth; $('span').textContent = state.span;
+    settings.classList.add('open');
+  };
+  const closeSheet = () => settings.classList.remove('open');
+  $('moreBtn').addEventListener('click', openSheet);
+  $('scrim').addEventListener('click', closeSheet);
+  $('done').addEventListener('click', closeSheet);
+  setDate.addEventListener('change', () => {
+    if (validBirth(setDate.value)) { state.birth = setDate.value; save(state); render(true); }
+  });
+  const step = d => {
+    state.span = Math.min(120, Math.max(40, state.span + d));
+    $('span').textContent = state.span; save(state); render(true);
+  };
+  $('minus').addEventListener('click', () => step(-1));
+  $('plus').addEventListener('click', () => step(1));
+
+  // Stay current across midnights / birthdays
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && validBirth(state.birth)) render(); });
+  setInterval(() => { if (validBirth(state.birth)) render(); }, 60_000);
+
+  show();
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
