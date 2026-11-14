@@ -38,6 +38,8 @@ jobs:
         run: |
           mkdir -p out
           cp android/app/build/outputs/apk/release/app-release.apk "out/Years-1.0.${{ github.run_number }}.apk"
+          # fixed name, so the website can always link to .../releases/latest/download/yrs.apk
+          cp android/app/build/outputs/apk/release/app-release.apk out/yrs.apk
           ls -la out
 
       - uses: actions/upload-artifact@v4
@@ -50,9 +52,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "years-1.0.${{ github.run_number }}" out/*.apk \
-            --target "${{ github.sha }}" --prerelease \
-            --title "Years 1.0.${{ github.run_number }}" \
-            --notes "Android build of Years from ${{ github.ref_name }} (${{ github.sha }}). Download the APK below and open it on your phone to install."
+            --target "${{ github.sha }}" --latest \
+            --title "yrs. 1.0.${{ github.run_number }}" \
+            --notes "Android build of yrs. from ${{ github.ref_name }} (${{ github.sha }}). Download the APK below and open it on your phone to install."
 
   screens:
     # Real renders of every screen, attached to the same release. Never blocks the APK.
