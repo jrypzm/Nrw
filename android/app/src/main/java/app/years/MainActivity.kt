@@ -343,23 +343,30 @@ fun Header(st: AppState, m: GridModel) {
     val view = LocalView.current
     val scope = rememberCoroutineScope()
     var beating by remember { mutableStateOf(false) }
+    var held by remember { mutableStateOf(false) }
     val hl = Life.headline(s, m)
     val birth = s.birth
     val sub = when {
-        m.kind == ViewKind.LIFE && birth != null && Life.isBirthday(birth) -> "Happy birthday · year ${Life.age(birth).toInt() + 1} begins"
+        m.kind == ViewKind.LIFE && birth != null && Life.isBirthday(birth) -> "Happy birthday · you're ${Life.age(birth).toInt()} today"
         m.context != null -> "${m.context} · ${m.sub}"
         else -> m.sub
     }
-    val canCycle = m.kind == ViewKind.LIFE && !s.pct
+    val canCycle = m.kind == ViewKind.LIFE && !s.pct && m.unit != "lifetime"
     val key = if (beating) "beat" else "${s.style}|${s.lived}|${s.pct}|${s.unit}|${m.kind}"
     AnimatedContent(
         targetState = key, label = "hdr",
         modifier = Modifier.pointerInput(canCycle) {
             detectTapGestures(
-                onTap = { if (canCycle) { view.tick(); st.update(refresh = false) { it.copy(unit = (it.unit + 1) % Life.MEASURES.size) } } },
+                onTap = {
+                    // letting go after a heartbeat is not a tap
+                    if (held) held = false
+                    else if (canCycle) { view.tick(); st.update(refresh = false) { it.copy(unit = (it.unit + 1) % Life.MEASURES.size) } }
+                },
                 onPress = {
+                    held = false
                     val job = scope.launch {
                         delay(450)
+                        held = true
                         beating = true
                         while (true) { Heart.beat(ctx); delay(1000) }
                     }
