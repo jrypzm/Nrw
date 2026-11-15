@@ -202,6 +202,73 @@ nav .links a:not(.btn) { transition: color .2s; } nav .links a:not(.btn):hover {
 .aboutlist span { color: var(--mute); font-size: 16px; line-height: 1.5; }
 @media (max-width: 899px) { .aboutgrid { grid-template-columns: 1fr; } }
 
+
+/* ---------- hover labels on the dots ---------- */
+.dtip { position: fixed; z-index: 6; left: 0; top: 0; padding: 8px 12px; border-radius: 12px; background: #f5f5f7; color: #000; font-size: 13px; line-height: 1.3; white-space: nowrap; pointer-events: none; opacity: 0; transform: translate(-50%, calc(-100% + 6px)) scale(.96); transition: opacity .15s, transform .3s var(--spring); }
+.dtip.on { opacity: 1; transform: translate(-50%, -100%); }
+.dtip b { display: block; font-weight: 600; font-size: 14px; } .dtip span { color: #6e6e73; font-weight: 500; }
+/* ---------- the tail end ---------- */
+.tail { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(28px, 4vw, 64px); align-items: stretch; }
+.tform { display: flex; flex-direction: column; gap: 26px; padding: clamp(24px, 3vw, 40px); border-radius: 28px; background: var(--panel); }
+.tf { display: flex; flex-direction: column; gap: 10px; } .tf > span { font-size: 13px; color: var(--mute); letter-spacing: .01em; }
+.tf input:not([type]) , #tName { font: 600 clamp(28px, 2.6vw, 38px)/1.1 var(--display); letter-spacing: -0.03em; color: var(--fg); background: none; border: 0; border-bottom: 1px solid #2c2c2e; padding: 0 0 8px; outline: none; transition: border-color .2s; width: 100%; }
+#tName:focus { border-color: var(--fg); }
+.tage { display: flex; align-items: center; gap: 18px; } .tage output { font: 300 34px/1 var(--display); letter-spacing: -0.03em; min-width: 2.2ch; text-align: right; font-variant-numeric: tabular-nums; }
+.tage input { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: #2c2c2e; outline: none; cursor: pointer; }
+.tage input::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.5); transition: transform .2s var(--spring); }
+.tage input::-webkit-slider-thumb:hover { transform: scale(1.12); }
+.tage input::-moz-range-thumb { width: 26px; height: 26px; border: 0; border-radius: 50%; background: #fff; }
+.topts { display: flex; flex-wrap: wrap; gap: 8px; }
+.topts button { height: 38px; padding: 0 16px; border-radius: 19px; background: #161618; color: var(--mute); font-size: 14px; font-weight: 500; transition: background .2s, color .2s, transform .3s var(--spring); }
+.topts button:hover { color: var(--fg); background: #1f1f21; } .topts button.on { background: var(--fg); color: #000; }
+.topts button:active { transform: scale(.96); }
+.tchk { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 15px; color: var(--mute); user-select: none; }
+.tchk input { position: absolute; opacity: 0; pointer-events: none; }
+.tchk i { width: 44px; height: 26px; border-radius: 13px; background: #2c2c2e; position: relative; transition: background .25s; flex: 0 0 auto; }
+.tchk i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .35s var(--spring), background .25s; }
+.tchk input:checked + i { background: #fff; } .tchk input:checked + i::after { transform: translateX(18px); background: #000; }
+.tchk input:focus-visible + i { outline: 2px solid #fff; outline-offset: 3px; }
+.tout { display: flex; flex-direction: column; justify-content: center; padding: clamp(8px, 2vw, 24px) 0; }
+.tbig { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.tbig b { font: 200 clamp(96px, 11vw, 180px)/.85 var(--display); letter-spacing: -0.06em; }
+.tbig span { font: 500 clamp(20px, 1.8vw, 26px)/1.2 var(--display); color: var(--mute); letter-spacing: -0.02em; }
+.tline { margin-top: 18px; font-size: clamp(17px, 1.4vw, 20px); line-height: 1.5; color: var(--mute); max-width: 32em; } .tline b { color: var(--fg); font-weight: 500; }
+.tdots { margin-top: 30px; display: grid; grid-template-columns: repeat(25, 1fr); gap: 7px; max-width: 560px; }
+.tdots i { aspect-ratio: 1; border-radius: 50%; background: #232323; transition: background .5s var(--ease), transform .5s var(--spring); }
+.tdots i.w { background: var(--fg); }
+.tleg { margin-top: 16px; display: flex; gap: 22px; font-size: 13px; color: var(--mute); }
+.tleg i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3a3a3c; margin-right: 8px; vertical-align: 1px; } .tleg i.w { background: var(--fg); }
+.ledger { margin-top: clamp(72px, 9vw, 120px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.ledger div { padding: 28px 28px 30px 0; border-bottom: 1px solid var(--line); }
+.ledger div:not(:nth-child(3n + 1)) { padding-left: 28px; border-left: 1px solid var(--line); }
+.ledger b { display: block; font: 200 clamp(44px, 4.4vw, 68px)/1 var(--display); letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+.ledger span { display: block; margin-top: 10px; font-size: 16px; color: var(--fg); } .ledger small { display: block; margin-top: 2px; font-size: 14px; color: var(--mute); }
+/* ---------- time spent here ---------- */
+.spent { position: fixed; z-index: 40; left: 20px; bottom: max(20px, env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 8px 0 16px; border-radius: 20px; background: rgba(28,28,30,.86); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); color: var(--mute); font-size: 13px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.4); opacity: 0; transform: translateY(12px); transition: opacity .6s var(--ease), transform .8s var(--spring); pointer-events: none; }
+.spent.on { opacity: 1; transform: none; pointer-events: auto; }
+.spent b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.spent i { font-style: normal; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; color: var(--mute); transition: background .2s; } .spent:hover i { background: #3a3a3c; color: var(--fg); }
+@media (max-width: 899px) {
+  .tail { grid-template-columns: 1fr; } .tdots { grid-template-columns: repeat(20, 1fr); gap: 6px; }
+  .ledger { grid-template-columns: 1fr 1fr; } .ledger div, .ledger div:not(:nth-child(3n + 1)) { padding: 22px 0; border-left: 0; } .ledger div:nth-child(2n) { padding-left: 18px; border-left: 1px solid var(--line); }
+  .spent { left: 12px; height: 36px; font-size: 12px; }
+}
+
+/* ---------- the live app: phone, or a desktop window ---------- */
+.viewsw { display: none; }
+@media (hover: hover) and (pointer: fine) and (min-width: 1100px) {
+  .viewsw { display: inline-grid; grid-template-columns: 1fr 1fr; position: relative; margin-top: 40px; padding: 3px; border-radius: 20px; background: #161618; }
+  .viewsw button { position: relative; z-index: 1; height: 34px; padding: 0 22px; font-size: 14px; font-weight: 500; color: var(--mute); transition: color .25s; }
+  .viewsw button.on { color: #000; } .viewsw button:not(.on):hover { color: var(--fg); }
+  .viewsw i { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 17px; background: var(--fg); transition: transform .45s var(--spring); }
+  .viewsw.phone i { transform: translateX(100%); }
+  #app.desk .app { grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); margin-top: 40px; }
+  #app.desk .feats .t { font-size: clamp(19px, 1.5vw, 23px); }
+  #app.desk .feats button { padding: 20px 0; }
+  #app.desk .phonecol { top: max(96px, calc(50svh - 300px)); }
+  #app.desk .device { --w: 100%; width: 100%; aspect-ratio: 1280 / 800; border-radius: 18px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 50px 140px -30px rgba(0,0,0,.9); }
+  #app.desk .device .screen { border-radius: 18px; }
+}
 /* ---------- footer: the wordmark, bleeding off the page like the icon ---------- */
 footer { position: relative; z-index: 3; background: var(--bg); overflow: hidden; }
 footer .row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 40px 0 0; font-size: 13px; color: var(--faint); border-top: 1px solid var(--line); }
@@ -256,6 +323,8 @@ footer .row a:hover { color: var(--fg); }
 </div></nav>
 
 <div id="stage" aria-hidden="true"><canvas id="gl"></canvas></div>
+<div class="dtip" id="dtip" aria-hidden="true"></div>
+<button class="spent" id="spent" aria-live="off"><span id="spentT"></span><i aria-label="Dismiss">×</i></button>
 
 <header class="hero" id="top">
   <div class="wrap"><div class="copy">
@@ -280,10 +349,35 @@ footer .row a:hover { color: var(--fg); }
   </div>
 </section>
 
+<section class="sec" id="tail">
+  <div class="wrap">
+    <div class="kicker">The tail end</div>
+    <h2 class="h2 reveal"><span class="ln"><span>How many more times</span></span><span class="ln"><span class="m">will you see them?</span></span></h2>
+    <p class="lead soft">Most of the time you'll ever spend with the people you grew up with, you've already spent. Try it with someone you love.</p>
+    <div class="tail soft">
+      <div class="tform">
+        <label class="tf"><span>Someone you love</span><input id="tName" value="Mum" maxlength="20" autocomplete="off" spellcheck="false"></label>
+        <div class="tf"><span>Their age</span><div class="tage"><input type="range" id="tAge" min="20" max="100" value="60"><output id="tAgeV">60</output></div></div>
+        <div class="tf"><span>You see them</span><div class="topts" id="tOften"></div></div>
+        <label class="tchk"><input type="checkbox" id="tHome" checked><i></i><span>We lived together until I was 18</span></label>
+      </div>
+      <div class="tout">
+        <div class="tbig"><b class="num" id="tLeft">0</b><span id="tLeftL">more visits</span></div>
+        <p class="tline" id="tLine"></p>
+        <div class="tdots" id="tDots" aria-hidden="true"></div>
+        <div class="tleg"><span><i class="w"></i>Already spent</span><span><i></i>Still ahead</span></div>
+      </div>
+    </div>
+    <div class="ledger soft" id="ledger"></div>
+    <p class="small soft" style="margin-top:20px">Based on the birth year at the top of the page and an 80-year life. Rough on purpose: the point is the shape, not the decimal.</p>
+  </div>
+</section>
+
 <section class="sec" id="app">
   <div class="wrap">
     <div class="kicker">The app</div>
     <h2 class="h2 reveal"><span class="ln"><span>Everything in it</span></span><span class="ln"><span class="m">comes back to the dots.</span></span></h2>
+    <div class="viewsw" id="viewsw" role="tablist" aria-label="Show the app on"><button data-view="desk" class="on" role="tab">Desktop</button><button data-view="phone" role="tab">Phone</button><i></i></div>
     <div class="app">
       <ol class="feats" id="feats">
         <li class="on"><button data-act='{"page":0,"zoom":1,"ripple":1}' data-chip="Your years"><span class="t">One dot for every year</span><span class="d">White for the years behind you, dark for the years ahead. The one you're in fills a little every day, and a wave runs through your years each time you come back.</span></button></li>
@@ -461,13 +555,15 @@ function personalise(rebuild) {
   const n = NUM();
   $('yrLabel').textContent = birth.getFullYear();
   const yl = Math.floor(n.yearsLeft); $('heroLeft').textContent = `${yl} ${yl === 1 ? 'year' : 'years'}`;
-  document.querySelectorAll('[data-v]').forEach(el => el.textContent = fmt(n[el.dataset.v]));
+  document.querySelectorAll('b[data-v]').forEach(el => el.textContent = fmt(n[el.dataset.v]));
   document.querySelectorAll('[data-count]').forEach(el => el.dataset.target = n[el.dataset.count]);
   $('navDot').style.setProperty('--f', (n.a / span * 100).toFixed(1) + '%');
   if (rebuild && GL) { GL.build(); GL.intro(); }
   drawLocks(); drawWidgets(); drawBleed();
+  if (window.__tailReady) { tail(false); ledger(false); }
   const src = `web/?demo=${birth.getFullYear()}-${String(birth.getMonth() + 1).padStart(2, '0')}-${String(birth.getDate()).padStart(2, '0')}&span=${span}`;
-  const fr = $('liveApp'); if (fr.dataset.src !== src) { fr.dataset.src = src; if (fr.dataset.live) fr.src = src; }
+  const fr = $('liveApp'), want = src + (document.getElementById('app').classList.contains('desk') ? '&desk=1' : '');
+  if (fr.dataset.src !== want) { fr.dataset.src = want; if (fr.dataset.live) fr.src = want; }
 }
 
 // ================================================= the stage (WebGL)
@@ -478,7 +574,7 @@ const GL = (() => {
   if (!gl) return null;
   const VS = `
     attribute vec2 p0, p1, p2, p3; attribute vec4 rep, unit; attribute float d;
-    uniform vec4 uA, uB, uSize, uL; uniform float uT, uDpr, uAppear, uFill; uniform vec2 uRes;
+    uniform vec4 uA, uB, uSize, uL; uniform float uT, uDpr, uAppear, uFill; uniform vec2 uRes; uniform vec3 uMouse;
     varying float vFrac, vNow, vA, vS;
     float ez(float t) { return t < .5 ? 4. * t * t * t : 1. - pow(-2. * t + 2., 3.) / 2.; }
     void main() {
@@ -494,6 +590,9 @@ const GL = (() => {
       vNow = mix(fa > 0. && fa < 1. ? 1. : 0., fb > 0. && fb < 1. ? 1. : 0., t);
       float ap = clamp(uAppear * 1.8 - d * .8, 0., 1.); ap = 1. - pow(1. - ap, 3.);
       s *= .35 + .65 * ap;
+      // dots swell gently toward the cursor, like a field
+      vec2 pm = mix(a, b, t); float dm = distance(pm, uMouse.xy);
+      s *= 1. + uMouse.z * .5 * exp(-dm * dm / 9000.);
       vA = ap; vS = s * uDpr;
       gl_PointSize = vS;
       vec2 c = mix(a, b, t) / uRes * 2. - 1.;
@@ -515,7 +614,7 @@ const GL = (() => {
     }`;
   const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(o); return o; };
   const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
-  const U = {}; ['uA', 'uB', 'uSize', 'uL', 'uT', 'uDpr', 'uAppear', 'uFill', 'uRes', 'uTime'].forEach(k => U[k] = gl.getUniformLocation(pr, k));
+  const U = {}; ['uA', 'uB', 'uSize', 'uL', 'uT', 'uDpr', 'uAppear', 'uFill', 'uRes', 'uTime', 'uMouse'].forEach(k => U[k] = gl.getUniformLocation(pr, k));
   const buf = {}; const attr = (name, size, data) => {
     const loc = gl.getAttribLocation(pr, name); if (loc < 0) return;
     if (!buf[name]) buf[name] = gl.createBuffer();
@@ -525,7 +624,8 @@ const GL = (() => {
   gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.clearColor(0, 0, 0, 1);
 
   let N = 0, D = 0, W = 0, H = 0, RH = 0, dpr = 1, sizes = [0, 0, 0, 0];
-  const st = { from: 0, to: 0, t: 0, appear: reduce ? 1 : 0, fill: reduce ? 1 : 0, alive: true };
+  const st = { from: 0, to: 0, t: 0, appear: reduce ? 1 : 0, fill: reduce ? 1 : 0, alive: true, mx: -9999, my: -9999, mk: 0, mkTo: 0 };
+  let yrs = null; // where the years grid sits, for hover labels
 
   function region() {
     const desk = W >= 900;
@@ -543,7 +643,7 @@ const GL = (() => {
     let x0 = R.x + (R.w - gw) / 2, y0 = R.y + (R.h - gh) / 2;
     if (tiny) { x0 = Math.round(x0 * dpr) / dpr; y0 = Math.round(y0 * dpr) / dpr; }
     const size = tiny ? (cell * dpr - 1) / dpr : Math.max(1.1, cell * ratio), off = tiny ? size / 2 : cell / 2;
-    return { cell, at: (i, k) => { out[k * 2] = x0 + (i % cols) * cell + off; out[k * 2 + 1] = y0 + Math.floor(i / cols) * cell + off; }, size };
+    return { cell, x0, y0, cols, rows, at: (i, k) => { out[k * 2] = x0 + (i % cols) * cell + off; out[k * 2 + 1] = y0 + Math.floor(i / cols) * cell + off; }, size };
   }
   function build() {
     dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; const CH = $('stage').clientHeight || H;
@@ -553,6 +653,7 @@ const GL = (() => {
     const R = region();
     const Ly = fit(10, Math.ceil(span / 10), R, P[0], 0, .6), Lw = fit(52, Math.ceil(weeks / 52), R, P[1], 0, .7), Ld = fit(183, Math.ceil(D / 183), R, P[2], 0, .78), Lh = fit(50, Math.ceil(LIVES / 50), R, P[3], 0, .72);
     sizes = [Ly.size, Lw.size, Ld.size, Lh.size];
+    yrs = { x0: Ly.x0, y0: Ly.y0, cell: Ly.cell, rows: Ly.rows };
     let lastY = -1;
     for (let d = 0; d < D; d++) {
       const y = Math.floor(d / Y), w = Math.floor(d / 7);
@@ -575,6 +676,7 @@ const GL = (() => {
     gl.uniform4fv(U.uL, [n.a, n.a * WK * (Math.round(span * WK) / (span * WK)), n.daysLived, LIVES - 1 + n.a / span]);
     gl.uniform1f(U.uT, st.t); gl.uniform1f(U.uDpr, dpr); gl.uniform1f(U.uAppear, st.appear); gl.uniform1f(U.uFill, st.fill);
     gl.uniform2f(U.uRes, W, RH); gl.uniform1f(U.uTime, time / 1000);
+    st.mk += (st.mkTo - st.mk) * .12; gl.uniform3f(U.uMouse, st.mx, st.my, reduce ? 0 : st.mk);
     gl.drawArrays(gl.POINTS, 0, N);
   }
   function intro() {
@@ -583,7 +685,16 @@ const GL = (() => {
     const step = t => { const k = (t - t0) / 1000; st.appear = clamp(k / 1.4); st.fill = ease(clamp((k - .7) / 1.8)); if (k < 2.6) requestAnimationFrame(step); };
     requestAnimationFrame(step);
   }
-  return { build, draw, intro, st };
+  /** The year under a point on screen, while the years grid is showing. */
+  function yearAt(x, y) {
+    if (!yrs || st.t > .02 && st.t < .98 || (st.t >= .98 ? st.to : st.from) !== 0) return null;
+    const c = Math.floor((x - yrs.x0) / yrs.cell), r = Math.floor((y - yrs.y0) / yrs.cell);
+    if (c < 0 || c > 9 || r < 0) return null; const i = r * 10 + c; if (i >= span) return null;
+    const cx = yrs.x0 + (c + .5) * yrs.cell, cy = yrs.y0 + (r + .5) * yrs.cell;
+    if (Math.hypot(x - cx, y - cy) > yrs.cell * .5) return null;
+    return { i, cx, cy, r: yrs.cell * .3 };
+  }
+  return { build, draw, intro, st, yearAt };
 })();
 
 // ================================================= scroll: story progress, captions, nav
@@ -623,19 +734,122 @@ function onScroll(force) {
 }
 let stageOn = true;
 
+
+// ================================================= hover labels and the field around the cursor
+const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+const dtip = $('dtip');
+if (GL && fine) {
+  addEventListener('mousemove', e => {
+    if (!stageOn) { dtip.classList.remove('on'); GL.st.mkTo = 0; return; }
+    GL.st.mx = e.clientX; GL.st.my = e.clientY; GL.st.mkTo = 1;
+    const h = GL.yearAt(e.clientX, e.clientY);
+    if (!h) { dtip.classList.remove('on'); return; }
+    const a = age(), lived = Math.floor(a), y = birth.getFullYear() + h.i, ahead = h.i - lived;
+    const note = h.i === 0 ? 'The year you were born' : h.i < lived ? 'Behind you' : h.i === lived ? `You are here · ${Math.round((a - lived) * 100)}% through` : ahead === 1 ? 'Next year' : `${ahead} years from now`;
+    dtip.innerHTML = `<b>Age ${h.i} · ${y}</b><span>${note}</span>`;
+    dtip.style.left = h.cx + 'px'; dtip.style.top = (h.cy - h.r - 12) + 'px'; dtip.classList.add('on');
+  }, { passive: true });
+  document.documentElement.addEventListener('mouseleave', () => { GL.st.mkTo = 0; dtip.classList.remove('on'); });
+}
+
+// ================================================= the tail end
+const OFTEN = [['Every day', 365], ['Every week', 52], ['Every month', 12], ['A few times a year', 4], ['Once a year', 1]];
+let tPer = 4;
+$('tOften').innerHTML = OFTEN.map(([l, v]) => `<button data-per="${v}" class="${v === tPer ? 'on' : ''}">${l}</button>`).join('');
+$('tDots').innerHTML = '<i></i>'.repeat(100);
+const tDots = [...$('tDots').children];
+let tShown = 0, tAnim = 0;
+function tail(animate) {
+  const name = ($('tName').value.trim() || 'them'), them = +$('tAge').value, a = age(), you = Math.floor(a);
+  $('tAgeV').textContent = them;
+  // years you'll both still be here: your years left, and theirs (never less than a couple)
+  const theirs = Math.max(80 - them, them < 105 ? Math.max(2, (100 - them) / 3) : 1);
+  const yrs = Math.max(0, Math.min(80 - a, theirs)), left = Math.floor(yrs * tPer);
+  const home = $('tHome').checked;
+  const spent = home ? Math.min(a, 18) * 365 + Math.max(0, a - 18) * tPer : a * tPer;
+  const pct = spent + left > 0 ? spent / (spent + left) : 1;
+  const unit = tPer === 365 ? (left === 1 ? 'more day' : 'more days') : (left === 1 ? 'more visit' : 'more visits');
+  $('tLeftL').textContent = `${unit} with ${name}`;
+  const pctTxt = pct > .995 && left > 0 ? 'over 99%' : `${Math.round(pct * 100)}%`;
+  $('tLine').innerHTML = left > 0
+    ? `You've already had about <b>${fmt(spent)} ${home ? 'days and visits' : 'visits'}</b> together. That's <b>${pctTxt}</b> of all the time you'll ever spend with ${esc(name)}. About <b>${fmt(yrs)} summers</b> left together.`
+    : `At this rate there are no more visits left. Seeing ${esc(name)} more often changes that today.`;
+  const lit = Math.round(pct * 100);
+  tDots.forEach((d, i) => d.classList.toggle('w', i < lit));
+  // count the big number to its new value
+  const from = tShown, to = left, t0 = performance.now(), dur = animate ? 900 : 380;
+  cancelAnimationFrame(tAnim);
+  const stepN = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); tShown = Math.round(from + (to - from) * e); $('tLeft').textContent = fmt(tShown); if (k < 1) tAnim = requestAnimationFrame(stepN); };
+  tAnim = requestAnimationFrame(stepN);
+}
+function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+$('tAge').value = Math.max(20, Math.min(100, Math.floor(age()) + 28));
+window.__tailReady = true;
+$('tName').addEventListener('input', () => tail(false));
+$('tAge').addEventListener('input', () => tail(false));
+$('tHome').addEventListener('change', () => tail(false));
+$('tOften').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tPer = +b.dataset.per; $('tOften').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); tail(false); });
+new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { tail(true); ledger(true); o.disconnect(); } }, { threshold: .25 }).observe($('tail'));
+
+// what's left, in the units a life is actually lived in
+function ledger(animate) {
+  const n = NUM(), y = Math.max(0, n.yearsLeft), d = Math.max(0, n.secLeft / 86400);
+  const rows = [
+    [y, 'Summers', 'One a year, if you\'re lucky with the weather'],
+    [y * 52.1775, 'Weekends', 'Two days at a time'],
+    [y * 365.2425 / 29.530589, 'Full moons', 'Look up for the next one'],
+    [y, 'Birthdays', `Starting at ${Math.floor(n.a) + 1}`],
+    [y * 12, 'Books', 'If you read one a month'],
+    [d, 'Sunrises', 'Each one exactly once'],
+  ];
+  $('ledger').innerHTML = rows.map(([v, l, sub]) => `<div><b class="num" data-to="${Math.floor(v)}">${animate ? 0 : fmt(v)}</b><span>${l}</span><small>${sub}</small></div>`).join('');
+  if (!animate) return;
+  const els = [...$('ledger').querySelectorAll('b')], t0 = performance.now();
+  const stepL = t => { const k = Math.min(1, (t - t0) / 1400), e = 1 - Math.pow(1 - k, 4); els.forEach(el => el.textContent = fmt(+el.dataset.to * e)); if (k < 1) requestAnimationFrame(stepL); };
+  requestAnimationFrame(stepL);
+}
+
+// ================================================= time spent here
+// A quiet note, after a while: the minutes you've given this page are part of the count too.
+(() => {
+  const t0 = Date.now(), el = $('spent'); let off = false;
+  try { off = sessionStorage.getItem('yrs.spent.off') === '1'; } catch {}
+  el.querySelector('i').addEventListener('click', e => { e.stopPropagation(); off = true; el.classList.remove('on'); try { sessionStorage.setItem('yrs.spent.off', '1'); } catch {} });
+  el.addEventListener('click', () => { off = true; el.classList.remove('on'); });
+  setInterval(() => {
+    if (off || document.hidden) return;
+    const sec = Math.floor((Date.now() - t0) / 1000); if (sec < 45) return;
+    const m = Math.floor(sec / 60), s2 = sec % 60;
+    $('spentT').innerHTML = `You've spent <b>${m ? `${m}m ` : ''}${String(s2).padStart(m ? 2 : 1, '0')}s</b> of your life here`;
+    el.classList.add('on');
+  }, 1000);
+})();
+
 // ================================================= reveals
 const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -12% 0px' });
 document.querySelectorAll('.reveal, .soft, .statement').forEach(el => io.observe(el));
 
 // ================================================= live phone
 const fr = $('liveApp'), dev = $('liveDevice');
-function scalePhone() { const w = dev.querySelector('.screen').clientWidth; fr.style.transform = `scale(${w / 390})`; fr.style.height = (dev.querySelector('.screen').clientHeight / (w / 390)) + 'px'; }
+function scalePhone() { const base = $('app').classList.contains('desk') ? 1280 : 390, w = dev.querySelector('.screen').clientWidth; fr.style.width = base + 'px'; fr.style.transform = `scale(${w / base})`; fr.style.height = (dev.querySelector('.screen').clientHeight / (w / base)) + 'px'; }
 new ResizeObserver(scalePhone).observe(dev);
 const lazyApp = new IntersectionObserver(es => { if (es[0].isIntersecting) { fr.dataset.live = 1; fr.src = fr.dataset.src; lazyApp.disconnect(); } }, { rootMargin: '600px' });
 lazyApp.observe(dev);
-let appReady = false, pendingAct = null;
+let appReady = false, pendingAct = null, lastAct = null;
+// on a computer, the demo shows the desktop app in a window; the switch flips it to the phone
+const bigScreen = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1100px)');
+function setView(v) {
+  const desk = v === 'desk' && bigScreen.matches;
+  $('app').classList.toggle('desk', desk);
+  $('viewsw').classList.toggle('phone', !desk);
+  $('viewsw').querySelectorAll('button').forEach(b => b.classList.toggle('on', (b.dataset.view === 'desk') === desk));
+  const want = fr.dataset.src.replace(/&desk=1/, '') + (desk ? '&desk=1' : '');
+  if (fr.dataset.src !== want) { fr.dataset.src = want; if (fr.dataset.live) { appReady = false; pendingAct = lastAct; fr.src = want; } }
+  requestAnimationFrame(scalePhone);
+}
+$('viewsw').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setView(b.dataset.view); });
 fr.addEventListener('load', () => { setTimeout(() => { appReady = true; if (pendingAct) send(pendingAct); }, 900); });
-function send(act) { if (!appReady) { pendingAct = act; return; } const base = { close: 1, style: act.style || 'classic' }; fr.contentWindow.postMessage(Object.assign(base, act), '*'); }
+function send(act) { lastAct = act; if (!appReady) { pendingAct = act; return; } const base = { close: 1, style: act.style || 'classic' }; fr.contentWindow.postMessage(Object.assign(base, act), '*'); }
 const feats = [...document.querySelectorAll('#feats li')];
 function choose(i, fromChip) {
   feats.forEach((li, k) => li.classList.toggle('on', k === i));
@@ -774,6 +988,8 @@ addEventListener('resize', () => { if (innerWidth === lastW && Math.abs(innerHei
 sizeStory();
 if (GL) { try { GL.build(); } catch (e) { console.error(e); } }
 personalise(false);
+setView(bigScreen.matches ? 'desk' : 'phone');
+bigScreen.addEventListener('change', () => setView(bigScreen.matches ? 'desk' : 'phone'));
 onScroll(true);
 requestAnimationFrame(frame);
 const go = () => { document.documentElement.classList.add('ready'); if (GL) GL.intro(); };

@@ -1420,7 +1420,8 @@ const deskMQ = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 90
 let DESK = false;
 const MOD = /Mac|iP/.test(navigator.platform) ? '⌘' : 'Ctrl';
 function applyDesk() {
-  const d = deskMQ.matches && !DEMO;
+  // the website's live demo can ask for the desktop layout with &desk=1
+  const d = DEMO ? Q.get('desk') === '1' : deskMQ.matches;
   DESK = d; document.documentElement.classList.toggle('desk', d);
   if (!started) return;
   if (d) { $('snav').append($('pdots')); $('sfoot').append($('modeBtn'), $('pctBtn'), $('moreBtn')); }
