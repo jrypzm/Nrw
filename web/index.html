@@ -120,7 +120,7 @@
 
   /* ---------- home ---------- */
   #home .top { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; padding: calc(var(--st) + 8px) calc(24px + var(--sr)) 0 calc(24px + var(--sl)); height: calc(var(--st) + 52px); }
-  #home .brand { font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: -0.05em; color: var(--faint); }
+  #home .brand { font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: -0.05em; color: var(--fg); }
   .pager { position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
   .pager::-webkit-scrollbar { display: none; }
   .page { flex: 0 0 100%; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: contain; padding: calc(var(--st) + 82px) calc(24px + var(--sr)) calc(var(--sbm) + 110px) calc(24px + var(--sl)); scrollbar-width: none; }
@@ -159,9 +159,9 @@
   .zoombar { display: flex; justify-content: space-between; margin-top: 18px; font-size: 13px; }
   .zoombar button { color: var(--faint); padding: 6px 0; } .zoombar button.sel { color: var(--fg); font-weight: 600; }
 
-  .card { border-radius: 16px; background: var(--surface); padding: 18px; }
+  .card { border-radius: 22px; background: #0c0c0d; box-shadow: inset 0 0 0 1px #1e1e20; padding: 20px; }
   .card + .card { margin-top: 12px; }
-  .card:active { background: var(--surface2); }
+  .card:active { background: #121214; }
   .card .k { font-size: 15px; font-weight: 600; } .card .tx { margin-top: 6px; font-size: 16px; line-height: 1.4; color: var(--mute); }
   .card .tx.on { color: var(--fg); }
   .person .hd { display: flex; justify-content: space-between; align-items: baseline; }
@@ -501,7 +501,7 @@
   .fact-card.in, .fact-mini .tx.in { animation: factIn .6s var(--ease) both; }
   @keyframes factIn { from { opacity: 0; transform: translateY(10px); filter: blur(4px); } }
   .fact-nav { display: flex; } .fact-nav .quiet { flex: 1; } .fact-nav .quiet:disabled { opacity: .3; }
-  .fact-mini { display: block; width: 100%; padding: 18px; border-radius: 16px; background: var(--surface); text-align: left; transition: background .2s, transform .35s var(--spring); }
+  .fact-mini { display: block; width: 100%; padding: 20px; border-radius: 22px; background: #0c0c0d; box-shadow: inset 0 0 0 1px #1e1e20; text-align: left; transition: background .2s, transform .35s var(--spring); }
   .fact-mini:active { transform: scale(.985); }
   .fact-mini .cap { display: block; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
   .fact-mini .tx { display: block; margin-top: 8px; font-size: 17px; line-height: 1.42; color: var(--fg); }
@@ -515,6 +515,51 @@
   .st-left .fact-mini { margin-top: 26px; max-width: 34em; background: #0b0b0c; box-shadow: inset 0 0 0 1px #19191b; }
   .st-slider .lsl label { margin-top: 12px; }
   .ov-fact { padding: 0; } .ov-fact .fact-mini { background: transparent; padding: 24px 26px; } .ov-fact .fact-mini .tx { font-family: var(--display); font-size: 24px; font-weight: 500; letter-spacing: -0.015em; }
+
+  /* ---------- the redesign: the same header, bar and cards as the Android and Linux apps */
+  .cap2 { font-size: 11.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #636366; }
+  .bn { font-family: var(--display); font-weight: 200; line-height: .98; letter-spacing: -0.055em; margin: 6px 0 0 -0.05em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .bn small { font-size: .42em; font-weight: 300; color: var(--mute); margin-left: .06em; letter-spacing: 0; }
+  .bn .fr { color: #636366; }
+  .wd { font-family: var(--display); font-size: 28px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.12; margin-top: 2px; }
+  .head .h-sub { margin-top: 8px; }
+  .units { display: flex; gap: 18px; margin-top: 14px; overflow-x: auto; scrollbar-width: none; }
+  .units::-webkit-scrollbar { display: none; }
+  .units button { font-size: 15px; font-weight: 500; color: #636366; padding: 6px 0; white-space: nowrap; transition: color .25s; }
+  .units button.on { color: var(--fg); font-weight: 600; }
+  .ctl { display: flex; gap: 10px; margin-top: 20px; align-items: center; }
+  .head .ctl, .head .ctl *, .head .units, .head .units * { pointer-events: auto; }
+  .ll { position: relative; width: 156px; height: 42px; border-radius: 21px; background: #121214; box-shadow: inset 0 0 0 1px #1e1e20; padding: 4px; display: grid; grid-template-columns: 1fr 1fr; flex: 0 0 auto; }
+  .ll i { position: absolute; top: 4px; left: 4px; width: 74px; height: 34px; border-radius: 17px; background: var(--surface2); transition: transform .45s var(--spring); }
+  .ll.r i { transform: translateX(74px); }
+  .ll button { position: relative; font-size: 15px; font-weight: 500; color: var(--mute); transition: color .25s; }
+  .ll button.on { color: var(--fg); }
+  .rt { width: 42px; height: 42px; border-radius: 50%; background: #121214; box-shadow: inset 0 0 0 1px #1e1e20; font-weight: 600; font-size: 16px; color: var(--fg); transition: background .25s, color .25s, box-shadow .25s; flex: 0 0 auto; }
+  .rt.on { background: #fff; color: #000; box-shadow: none; }
+  .hl2 { font-family: var(--display); font-size: 36px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.08; margin-top: 12px; }
+  .hl2 span { color: #636366; }
+  .foot { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 30px; }
+  .foot .v { margin-top: 7px; font-size: 15px; font-weight: 500; line-height: 1.35; }
+  .foot .v span { color: var(--mute); }
+  /* the page bar: five words in a floating capsule, with a pill that glides along as you swipe */
+  .controls { display: block; padding: 26px calc(20px + var(--sr)) calc(var(--sbm) + 16px) calc(20px + var(--sl)); background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.86) 46%, #000); }
+  .controls .l, .controls .r { display: none !important; }
+  .pdots { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); height: 52px; border-radius: 26px; background: rgba(18,18,20,.94); box-shadow: inset 0 0 0 1px #1e1e20; padding: 5px; }
+  .pdots .th { position: absolute; top: 5px; bottom: 5px; left: 5px; width: calc((100% - 10px) / 5); border-radius: 21px; background: var(--surface2); will-change: transform; }
+  .pdots button { position: relative; width: auto; height: auto; font-size: 14px; font-weight: 500; color: var(--mute); transition: color .25s; }
+  .pdots button.on { color: var(--fg); font-weight: 600; }
+  .pdots button i { display: none; }
+  /* the zoom ruler */
+  .zoombar { display: block; margin-top: 22px; }
+  .zoombar .zl { display: grid; grid-template-columns: repeat(5, 1fr); }
+  .zoombar .zl button { color: #636366; padding: 8px 0; font-size: 13px; text-align: center; transition: color .25s; }
+  .zoombar .zl button.sel { color: var(--fg); font-weight: 600; }
+  .zoombar .zt { position: relative; height: 14px; margin: 0 10%; }
+  .zoombar .zt::before { content: ""; position: absolute; left: 0; right: 0; top: 6px; height: 1.5px; background: #2c2c2e; }
+  .zoombar .zt b { position: absolute; top: 5px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: #2c2c2e; }
+  .zoombar .zt i { position: absolute; top: 2px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #fff; transition: left .5s var(--spring); }
+  /* the opening */
+  #intro { position: fixed; inset: 0; z-index: 60; width: 100%; height: 100%; touch-action: none; }
 </style>
 </head>
 <body>
@@ -1073,20 +1118,76 @@ function startHome() {
   applyDesk();
   renderAll(true);
   requestAnimationFrame(() => { $('pager').scrollTo({ left: S.page * $('pager').clientWidth, behavior: 'instant' }); });
-  setTimeout(rippleNow, 700);
+  const intro = playIntro();
+  setTimeout(rippleNow, intro ? INTRO_MS - 450 : 700);
   setTimeout(checkMoments, 900);
   if (S.tourDone) offerInstall(2600);
-  if (!S.tourDone && !DEMO && tourAt < 0) setTimeout(() => { if (!layer.classList.contains('open')) tourGo(0); }, 1100);
+  if (!S.tourDone && !DEMO && tourAt < 0) setTimeout(() => { if (!layer.classList.contains('open')) tourGo(0); }, intro ? INTRO_MS + 400 : 1100);
+}
+// ================================================= the opening
+// The name rises in and its dot fills to how much of your life you've lived; the letters dissolve; the dot flies to
+// the year you're in on your grid; and your life opens outward from it in a widening circle. Same as the apps.
+const INTRO_MS = 2300;
+function playIntro() {
+  if (DEMO || reduce || !S.birth || playIntro.done) return false;
+  playIntro.done = true;
+  const cv = document.createElement('canvas'); cv.id = 'intro'; document.body.append(cv);
+  const d = DPR(), W = innerWidth, H = innerHeight; cv.width = W * d; cv.height = H * d;
+  const x = cv.getContext('2d'); x.scale(d, d);
+  const font = getComputedStyle(document.documentElement).getPropertyValue('--display') || 'sans-serif';
+  const size = Math.min(132, W * .26), a = age(birth()), lived = Math.min(1, a / S.span), yearFill = a - Math.floor(a);
+  x.font = `700 ${size}px ${font}`; x.letterSpacing = `${-0.065 * size}px`;
+  const tw = x.measureText('yrs').width, dd = size * .24, total = tw + dd * 1.15;
+  const ox = (W - total) / 2, base = H * .44 + size * .34;
+  const home = [ox + tw + dd * .15 + dd / 2, base - dd / 2 - size * .02];
+  // where the year you're in sits on screen, if the Life grid is showing years
+  const target = () => {
+    const g = DESK && studioOn ? (S.dpage === 1 && sgrids.life) : (S.page === 0 && grids.life);
+    if (!g || !g.m || g.m.unit !== 'year' || a >= S.span) return null;
+    const r = g.box.getBoundingClientRect(), [cx, cy] = g.center(Math.floor(a));
+    return [r.left + cx, r.top + cy, g.cell * g.ratio / 2];
+  };
+  const seg = (t, p, q) => Math.max(0, Math.min(1, (t - p) / (q - p)));
+  const e4 = t => 1 - Math.pow(1 - t, 4), io = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const dot = (cx, cy, r, f, al) => {
+    x.globalAlpha = al; x.fillStyle = '#3a3a3c'; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill();
+    x.save(); x.beginPath(); x.arc(cx, cy, r, 0, 7); x.clip(); x.fillStyle = '#fff'; x.fillRect(cx - r, cy + r - 2 * r * f, 2 * r, 2 * r * f); x.restore(); x.globalAlpha = 1;
+  };
+  cv.addEventListener('pointerdown', e => e.preventDefault());
+  const t0 = performance.now(); let ticked = false;
+  const frame = now => {
+    const ms = now - t0;
+    if (ms > INTRO_MS) { cv.remove(); return; }
+    const rise = e4(seg(ms, 0, 650)), fill = io(seg(ms, 250, 1150)), dis = e4(seg(ms, 1100, 1500)), fly = io(seg(ms, 1350, 1950)), open = io(seg(ms, 1720, 2300));
+    const tg = target(), dest = tg ? [tg[0], tg[1]] : [W / 2, H / 2], dr = tg ? tg[2] : dd / 2;
+    const arc = Math.sin(fly * Math.PI) * Math.min(W, H) * .08;
+    const px = home[0] + (dest[0] - home[0]) * fly - arc * .6, py = home[1] + (dest[1] - home[1]) * fly - arc + (1 - rise) * 26 * (1 - fly);
+    const r = (dd / 2) * (1 + .35 * e4(seg(ms, 1100, 1400)) * (1 - fly)) + (dr - dd / 2) * fly;
+    if (fly >= 1 && !ticked) { ticked = true; tick(); }
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
+    if (open > 0) { x.globalCompositeOperation = 'destination-out'; x.beginPath(); x.arc(px, py, r + Math.hypot(W, H) * open, 0, 7); x.fill(); x.globalCompositeOperation = 'source-over'; }
+    const al = rise * (1 - dis);
+    if (al > 0) { x.globalAlpha = al; x.fillStyle = '#fff'; x.textBaseline = 'alphabetic'; x.fillText('yrs', ox - dis * 24, base + (1 - rise) * 26 - dis * 6); x.globalAlpha = 1; }
+    if (fly > 0 && fly < 1) { x.globalAlpha = .1 * Math.sin(fly * Math.PI); x.fillStyle = '#fff'; x.beginPath(); x.arc(px, py, r * 2.6, 0, 7); x.fill(); x.globalAlpha = 1; }
+    const f = lived * fill + ((tg ? yearFill : lived) - lived * fill) * fly;
+    dot(px, py, r, Math.max(0, Math.min(1, f)), rise * (tg ? 1 : 1 - e4(seg(ms, 2050, 2300))));
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+  return true;
 }
 function buildHome() {
   const pg = $('pager');
   pg.innerHTML = PAGES.map((p, i) => `<section class="page" data-i="${i}"><div class="head" id="head-${p}"></div>${i < 3 ? `<div class="gridbox" id="grid-${p}"></div>` : ''}${i === 0 ? '<div class="zoombar" id="zoombar"></div>' : ''}<div id="extra-${p}"></div>${i < 3 ? `<aside class="insp" id="insp-${p}" aria-live="polite"></aside>` : ''}</section>`).join('');
   ['life', 'decade', 'year'].forEach(k => grids[k] = new Grid($('grid-' + k), k));
-  const NAMES = ['Life', 'This decade', 'This year', 'People', 'Where it goes'];
-  $('pdots').innerHTML = PAGES.map((_, i) => `<button class="${i > 2 ? 'sm' : ''}" data-i="${i}" aria-label="${NAMES[i]}"><i></i><span>${NAMES[i]}</span><kbd>${i + 1}</kbd></button>`).join('');
+  const NAMES = ['Life', 'This decade', 'This year', 'People', 'Where your time goes'], BAR = ['Life', 'Decade', 'Year', 'People', 'Time'];
+  $('pdots').innerHTML = '<div class="th" id="pthumb"></div>' + PAGES.map((_, i) => `<button data-i="${i}" aria-label="${NAMES[i]}">${BAR[i]}</button>`).join('');
   $('pdots').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { tick(); pg.scrollTo({ left: +b.dataset.i * pg.clientWidth, behavior: 'smooth' }); } });
   let pageT;
   pg.addEventListener('scroll', () => {
+    // the pill follows your finger, not just the page you land on
+    $('pthumb').style.transform = `translateX(${(pg.scrollLeft / Math.max(1, pg.clientWidth)) * 100}%)`;
     const i = Math.round(pg.scrollLeft / pg.clientWidth);
     if (i !== S.page) { S.page = i; tick(); syncControls(); Object.values(grids).forEach(g => g.hideTip()); }
     clearTimeout(pageT); pageT = setTimeout(save, 200);
@@ -1094,18 +1195,22 @@ function buildHome() {
   // header taps and the heartbeat hold
   PAGES.slice(0, 3).forEach(k => {
     const h = $('head-' + k); let holdT, beatT, held = false, start = null, pressing = false;
-    h.addEventListener('touchstart', e => { held = false; pressing = true; start = e.touches[0]; holdT = setTimeout(() => { held = true; beat(k, true); beatT = setInterval(() => thump(), 1000); thump(); }, 450); }, { passive: true });
+    h.addEventListener('touchstart', e => { if (e.target.closest('.ctl, .units')) return; held = false; pressing = true; start = e.touches[0]; holdT = setTimeout(() => { held = true; beat(k, true); beatT = setInterval(() => thump(), 1000); thump(); }, 450); }, { passive: true });
     h.addEventListener('touchmove', e => { if (start && Math.hypot(e.touches[0].clientX - start.clientX, e.touches[0].clientY - start.clientY) > 10) clearTimeout(holdT); }, { passive: true });
     // the heartbeat replaces what was under your finger, so the release is heard on the whole page
     const end = () => { if (!pressing) return; pressing = false; clearTimeout(holdT); clearInterval(beatT); if (held) { beat(k, false); } };
     document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
     h.addEventListener('mousedown', e => {
-      if (fromTouch() || e.button !== 0) return;
+      if (fromTouch() || e.button !== 0 || e.target.closest('.ctl, .units')) return;
       held = false; pressing = true; start = null;
       holdT = setTimeout(() => { held = true; beat(k, true); beatT = setInterval(() => thump(), 1000); }, 450);
     });
     document.addEventListener('mouseup', end);
-    h.addEventListener('click', () => {
+    h.addEventListener('click', e => {
+      const u = e.target.closest('[data-u]'), l = e.target.closest('[data-l]');
+      if (u) { if (+u.dataset.u !== S.unit % MEASURES.length) { tick(); S.unit = +u.dataset.u; save(); swapHead(); } return; }
+      if (l) { if ((l.dataset.l === '1') !== S.lived) $('modeBtn').click(); return; }
+      if (e.target.closest('.rt')) { $('pctBtn').click(); return; }
       if (held) { held = false; return; }
       const m = grids[k].m;
       if (k === 'life' && !S.pct && m.unit === 'year') { tick(); S.unit = (S.unit + 1) % MEASURES.length; save(); swapHead(); }
@@ -1127,40 +1232,60 @@ function setZoom(z) {
   }
 }
 function renderZoom() {
-  $('zoombar').innerHTML = ZOOMS.map((z, i) => `<button class="${i === S.zoom ? 'sel' : ''}" data-z="${i}">${z}</button>`).join('');
-  $('zoombar').querySelectorAll('button').forEach(b => b.onclick = () => { tick(); setZoom(+b.dataset.z); });
+  const zb = $('zoombar');
+  if (!zb.querySelector('.zt')) zb.innerHTML = `<div class="zl">${ZOOMS.map((z, i) => `<button data-z="${i}">${z}</button>`).join('')}</div><div class="zt">${ZOOMS.map((_, i) => `<b style="left:${i * 25}%"></b>`).join('')}<i></i></div>`;
+  zb.querySelectorAll('.zl button').forEach((b, i) => b.classList.toggle('sel', i === S.zoom));
+  zb.querySelector('.zt i').style.left = `${S.zoom * 25}%`;
+  zb.querySelectorAll('.zl button').forEach(b => b.onclick = () => { tick(); setZoom(+b.dataset.z); });
 }
 function syncControls() {
   const on = S.page < 3;
   $('modeBtn').classList.toggle('faded', !on); $('pctBtn').classList.toggle('faded', !on);
   $('modeLabel').textContent = S.lived ? 'Lived' : 'Left'; $('pctBtn').classList.toggle('on', S.pct);
   $('pdots').querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === S.page));
+  $('pthumb').style.transform = `translateX(${S.page * 100}%)`;
 }
 let liveRAF = 0;
+const HEADS = {};
+const ucFirst = t => t[0].toUpperCase() + t.slice(1);
+/** The big number glides from what it showed to its new value; a fresh page counts up from zero. */
+function rollNum(k, el, target, key, show) {
+  const h = HEADS[k] || (HEADS[k] = { key: null, shown: 0 });
+  cancelAnimationFrame(h.raf);
+  if (h.key === key || reduce || DEMO) { h.key = key; h.shown = target; el.innerHTML = show(target); return; }
+  const from = h.key === null ? 0 : h.shown, t0 = performance.now(); h.key = key;
+  const step = t => { const p = Math.min(1, (t - t0) / 900), e = 1 - Math.pow(1 - p, 4), v = from + (target - from) * e; h.shown = v; el.innerHTML = show(v); if (p < 1) h.raf = requestAnimationFrame(step); };
+  h.raf = requestAnimationFrame(step);
+}
 function renderHead(k) {
-  const m = grids[k].m, hl = headline(m), b = birth(), el = $('head-' + k);
-  let sub = m.context ? `${m.context} · ${m.sub}` : m.sub;
-  if (k === 'life' && isBirthday(b)) sub = `Happy birthday · you're ${Math.floor(age(b))} today`;
-  if (S.style === 'hero') {
-    const num = S.pct ? `${Math.floor(hl.pct)}<small>%</small>` : fmt(hl.v), len = (S.pct ? String(Math.floor(hl.pct)) : fmt(hl.v)).length;
-    const fs = len <= 3 ? 104 : len <= 5 ? 78 : 58;
-    el.innerHTML = `<div class="h-hero"><div class="h-num" style="font-size:${fs}px">${num}</div><div class="h-unit">${S.pct ? hl.word : `${hl.noun} ${hl.word}`}</div></div><div class="h-sub">${sub}</div>`;
-  } else if (S.style === 'live') {
-    el.innerHTML = `<div class="h-live" data-live></div><div class="h-sub">${S.pct ? hl.word : `${hl.many} ${hl.word}`} · ${sub}</div>`;
-    paintLive(k);
-  } else {
-    let title;
-    if (S.pct) title = `${Math.floor(hl.pct)}% ${hl.word}`;
-    else if (m.kind === 'life' && !S.lived && hl.v <= 0) title = 'Every year is a gift';
-    else if (!S.lived && Math.floor(hl.v) === 0) title = `Less than a ${hl.one} left`;
-    else title = `${fmt(hl.v)} ${hl.noun} ${hl.word}`;
-    el.innerHTML = `<div class="h-title">${title}</div><div class="h-sub">${sub}</div>`;
-  }
+  const m = grids[k].m, hl = headline(m), b = birth(), el = $('head-' + k), a = age(b), life = k === 'life';
+  const caption = life ? (m.unit === 'lifetime' ? 'All of history' : 'Your life') : k === 'decade' ? (m.context || 'This decade') : 'This year of your life';
+  let sub = k === 'decade' ? m.sub : m.context ? `${m.context} · ${m.sub}` : m.sub;
+  if (life && m.unit === 'year') sub += ` · ${Math.floor((a - Math.floor(a)) * 100)}% through this year`;
+  if (life && isBirthday(b)) sub = `Happy birthday · you're ${Math.floor(a)} today`;
+  const word = life && !S.lived && !S.pct && hl.v <= 0 ? 'Every year is a gift' : S.pct ? hl.word : `${hl.noun} ${hl.word}`;
+  const cycle = life && m.unit === 'year' && !S.pct;
+  const units = cycle ? `<div class="units">${MEASURES.map((u, i) => `<button data-u="${i}" class="${i === S.unit % MEASURES.length ? 'on' : ''}">${ucFirst(u[1])}</button>`).join('')}</div>` : '';
+  // the switches render where they were, then move, so their thumbs glide instead of jumping
+  const prev = HEADS[k] || {}, pl = prev.lived ?? S.lived, pp = prev.pct ?? S.pct;
+  el.innerHTML = `<div class="cap2">${caption}</div><div class="bn" data-num></div><div class="wd">${word}</div><div class="h-sub">${sub}</div>${units}
+    <div class="ctl"><div class="ll ${pl ? 'r' : ''}" id="ll-${k}"><i></i><button data-l="0" class="${pl ? '' : 'on'}">Left</button><button data-l="1" class="${pl ? 'on' : ''}">Lived</button></div><button class="rt ${pp ? 'on' : ''}" id="pct-${k}" aria-label="Show percentage">%</button></div>`;
+  requestAnimationFrame(() => {
+    const ll = $('ll-' + k), rt = $('pct-' + k); if (!ll) return;
+    ll.classList.toggle('r', S.lived); ll.querySelectorAll('button').forEach((x, i) => x.classList.toggle('on', (i === 1) === S.lived)); rt.classList.toggle('on', S.pct);
+  });
+  const h = HEADS[k] || (HEADS[k] = { key: null, shown: 0 }); h.lived = S.lived; h.pct = S.pct;
+  const num = el.querySelector('[data-num]');
+  if (S.style === 'live') { num.dataset.live = '1'; paintLive(k); return; }
+  const target = S.pct ? hl.pct : hl.v, txt = S.pct ? String(Math.floor(hl.pct)) : fmt(hl.v);
+  const W = el.clientWidth || 340, max = S.style === 'hero' ? 150 : 104;
+  num.style.fontSize = Math.max(40, Math.min(max, W / ((txt.length + (S.pct ? 1 : 0)) * .58))) + 'px';
+  rollNum(k, num, target, [S.unit, S.lived, S.pct, m.kind, m.unit, S.span, S.style].join('|'), v => S.pct ? `${Math.floor(v)}<small>%</small>` : fmt(v));
 }
 function paintLive(k) {
   const el = $('head-' + k)?.querySelector('[data-live]'); if (!el) return;
   const hl = headline(model(k)), v = S.pct ? hl.pct.toFixed(7) : hl.v.toLocaleString('en-US', { minimumFractionDigits: 8, maximumFractionDigits: 8 });
-  const [i, f] = v.split('.'); el.style.fontSize = v.length > 13 ? '34px' : '44px';
+  const [i, f] = v.split('.'); el.style.fontSize = v.length > 13 ? '40px' : '50px';
   el.innerHTML = `${i}<span class="fr">.${f}${S.pct ? '%' : ''}</span>`;
 }
 function liveLoop() {
@@ -1174,13 +1299,12 @@ function beat(k, on) {
   if (on) SIG.beats++;
   const el = $('head-' + k);
   if (!on) { clearInterval(el._bt); renderHead(k); return; }
-  const paint = () => { el.innerHTML = `<div class="beat">${fmt(yearsLeft() * 365.2425 * 86400)}</div><div class="h-sub">seconds left · each beat is one of them</div>`; };
+  const paint = () => { const t = fmt(yearsLeft() * 365.2425 * 86400); el.innerHTML = `<div class="cap2">Your life</div><div class="bn" style="font-size:${Math.min(104, (el.clientWidth || 340) / (t.length * .58))}px">${t}</div><div class="wd">seconds left</div><div class="h-sub">Each beat you feel is one of them</div>`; };
   paint(); el._bt = setInterval(paint, 250);
 }
 function swapHead() {
   if (DESK && studioOn) studioRefresh();
-  PAGES.slice(0, 3).forEach(k => $('head-' + k).classList.add('swap'));
-  setTimeout(() => { PAGES.slice(0, 3).forEach(k => { renderHead(k); $('head-' + k).classList.remove('swap'); }); syncControls(); liveLoop(); }, 170);
+  PAGES.slice(0, 3).forEach(k => renderHead(k)); syncControls(); liveLoop();
 }
 function renderAll(playIn) {
   ['life', 'decade', 'year'].forEach(k => { grids[k].update(playIn); renderHead(k); });
@@ -1214,7 +1338,7 @@ function renderExtras() {
   $('extra-year').querySelectorAll('[data-ev]').forEach(b => b.onclick = () => { tick(); openSheet('event', b.dataset.ev === 'new' ? null : +b.dataset.ev); });
 
   // people
-  $('head-people').innerHTML = `<div class="h-title">People</div><div class="h-sub">The time you have left together</div>`;
+  $('head-people').innerHTML = `<div class="cap2">People</div><div class="hl2">The time you have<br><span>left together.</span></div>`;
   $('extra-people').innerHTML = `<div style="height:24px"></div>` + (S.people.length ? S.people.map((p, i) => {
     const t = together(p), n = Math.min(t.v, 120), unit = p.per === 365 ? (t.v === 1 ? 'day' : 'days') : (t.v === 1 ? 'visit' : 'visits');
     return `<button class="card person" data-p="${i}" style="display:block;width:100%;text-align:left"><div class="hd"><b>${esc(p.name)}</b><span>${OFTEN.find(o => o[1] === p.per)?.[0] || ''}</span></div>
@@ -1234,7 +1358,11 @@ function renderExtras() {
     <p class="small" style="margin-top:12px;color:var(--faint)">Work counts 48 weeks a year until you retire, and commuting five days a week.</p>`;
   const paintLedger = () => {
     const d = ledgerData();
-    $('head-ledger').innerHTML = `<div class="h-title">Your ${fmt(d.left)} years</div><div class="h-sub">Where the time you have left will go</div>`;
+    const hd = $('head-ledger'), free = d.sl.at(-1)[1];
+    if (!hd.querySelector('[data-num]')) hd.innerHTML = `<div class="cap2">Where your years go</div><div class="bn" data-num></div><div class="wd">years truly yours</div><div class="h-sub" data-sub></div>`;
+    const num = hd.querySelector('[data-num]'), t = free.toFixed(1);
+    num.style.fontSize = Math.min(104, (hd.clientWidth || 340) / (t.length * .58)) + 'px';
+    num.textContent = t; hd.querySelector('[data-sub]').textContent = `of the ${fmt(d.left)} you have left`;
     $('ledgerLeg').innerHTML = d.sl.map((s, i) => `<div class="lr ${i === 5 ? 'y' : ''}"><i style="background:${s[2]}"></i>${s[0]}<b>${s[1].toFixed(1)} yrs</b></div>`).join('');
     const cv = $('ledgerGrid'), cols = ledgerColors(d); if (!cv || !cv.clientWidth) return; const W = cv.clientWidth, cell = W / 9.6, H = Math.ceil(cols.length / 10) * cell - cell * .4, x = sizeCanvas(cv, W, H);
     cols.forEach((c, i) => circle(x, -cell * .2 + (i % 10 + .5) * cell, -cell * .2 + (Math.floor(i / 10) + .5) * cell, cell * .3, c));
@@ -1243,7 +1371,19 @@ function renderExtras() {
   wireLedger($('extra-ledger'), paintLedger);
 
   // did you know
-  $('extra-life').innerHTML = `<div style="height:30px"></div>${factCardHTML('lifeFact', 'Did you know')}`;
+  // under the Life grid: today and your next birthday, then a fact
+  const bb = birth(), tday = day0(new Date()), lv = Math.floor(age(bb)), bday = isBirthday(bb);
+  const nb = birthdayIn(bb, lastBirthday(bb, tday).getFullYear() + 1), toNb = Math.round((nb - tday) / 864e5), tl = LINES[iso(tday)];
+  $('extra-life').innerHTML = `<div class="foot"><div><div class="cap2">Today</div><div class="v">Day ${fmt(dayOfLife())}${tl ? ` <span>· “${esc(tl)}”</span>` : ''}</div></div>
+    <div><div class="cap2">Next birthday</div><div class="v">${bday ? 'Today' : `in ${fmt(toNb)} ${toNb === 1 ? 'day' : 'days'}`} <span>· turning ${bday ? lv : lv + 1}</span></div></div></div>
+    <div style="height:26px"></div>${factCardHTML('lifeFact', S.zoom === 0 ? 'From history' : 'Did you know')}`;
+  // under the Decade grid: what's left of it, then the world in those years
+  const st = Math.floor(lv / 10) * 10, togo = Math.max(0, Math.floor(st + 10 - age(bb))), named = Object.keys(S.names).filter(y => y >= st && y < st + 10).length;
+  $('extra-decade').innerHTML = `<div class="foot"><div><div class="cap2">${st ? 'This decade' : 'Your first decade'}</div><div class="v">${togo} ${togo === 1 ? 'year' : 'years'} to go <span>· ending at ${st + 10}</span></div></div>
+    <div><div class="cap2">Named years</div><div class="v">${named || 'None yet'} <span>· tap a year</span></div></div></div>
+    <div style="height:26px"></div>${factCardHTML('decadeFact', st ? `In your ${st}s` : 'In your first decade')}`;
+  const decadeLead = (() => { for (let y = st; y < st + 10; y++) { const f = yearFacts(y)[0]; if (f && f.startsWith('In ')) return f; } return null; })();
+  wireFactCard('decadeFact', () => yearFacts(st + Math.floor(Math.random() * 10)), decadeLead);
   wireFactCard('lifeFact', () => S.zoom === 0 ? lifeFacts(Math.floor(Math.random() * LIFETIMES)) : youFacts());
 }
 
@@ -1393,9 +1533,9 @@ const TOUR = [
   { at: 'grid-life', t: 'One dot, one year', atd: 'stg-life', bd: () => (() => { const l = Math.floor(age(birth())); return `You've lived <b>${l} ${l === 1 ? 'dot' : 'dots'}</b>. The one you're in fills a little every day. Point at any dot to see its year. Click a year to name it or seal a letter to it.`; })(), tryd: 'Point at a dot', b: () => { const l = Math.floor(age(birth())); return `You've lived <b>${l} ${l === 1 ? 'dot' : 'dots'}</b>. The one you're in fills a little every day. Tap any dot to see which year it is.`; }, hint: 'tap', try: 'Tap a dot', ok: 'Tap its label any time to name that year or seal a letter to it.', okd: 'Click any year, any time, to name it or seal a letter to it.', done: (a, b) => DESK ? b.hovers > a.hovers : b.taps > a.taps },
   { at: 'grid-life', t: 'Travel through time', atd: 'stg-life', bd: () => 'Now sweep your mouse across the grid. Each year shows its age and date as you pass over it.', tryd: 'Sweep across the dots', b: () => 'Hold a dot, then drag across the grid without letting go. Each year shows its age and date as you pass it.', hint: 'drag', try: 'Hold and drag', ok: 'Your whole life, under one finger.', done: (a, b) => b.scrubs > a.scrubs },
   { at: 'zoombar', t: 'From history to today', atd: 'st-zoom', bd: () => `Press <kbd>+</kbd> and <kbd>−</kbd>, hold <kbd>${MOD}</kbd> and scroll, or click a word here. In weeks you have <b>${fmt(yearsLeft() * 52.1775)}</b> left; in days, <b>${fmt(daysLeftExact())}</b>.`, tryd: 'Press + or click Weeks', b: () => `Pinch the grid, or tap a word here. In weeks you have <b>${fmt(yearsLeft() * 52.1775)}</b> left; in days, <b>${fmt(daysLeftExact())}</b>.`, hint: 'pinch', try: 'Pinch or tap Weeks', ok: 'The number always counts what you see.', done: (a, b) => a.zoom !== b.zoom },
-  { at: 'modeBtn', t: 'Left or lived', atd: 'st-mode', bd: () => "Switch every number between the time ahead of you and the time you've already lived. Click it, or press <kbd>L</kbd>.", tryd: 'Click Left or press L', b: () => "Switch every number between the time ahead of you and the time you've already lived.", hint: 'tap', try: 'Tap Left', ok: 'Tap it again whenever you want the other view.', done: (a, b) => a.lived !== b.lived },
-  { at: 'pctBtn', t: 'As a percentage', atd: 'st-pct', bd: () => `Show it as a share of the whole. You've lived about <b>${Math.floor(Math.min(1, age(birth()) / S.span) * 100)}%</b> of ${S.span} years. Click %, or press <kbd>P</kbd>.`, tryd: 'Press P', b: () => `Show it as a share of the whole. You've lived about <b>${Math.floor(Math.min(1, age(birth()) / S.span) * 100)}%</b> of ${S.span} years.`, hint: 'tap', try: 'Tap %', ok: 'Tap again to go back to the number.', done: (a, b) => a.pct !== b.pct },
-  { at: 'pdots', t: 'Four more pages', atd: 'st-nav', bd: () => 'Overview shows everything at once; this decade, this year, the people you love and where your years go each have a page. Click one in the bar at the top, or press <kbd>→</kbd>.', tryd: 'Click a page or press →', b: () => 'Swipe sideways: this decade, this year with a line a day and countdowns, the people you love, and where your years go.', hint: 'swipe', try: 'Swipe left', ok: 'Swipe back any time. The dots show where you are.', done: (a, b) => a.page !== b.page || a.dpage !== b.dpage },
+  { at: 'll-life', t: 'Left or lived', atd: 'st-mode', bd: () => "Switch every number between the time ahead of you and the time you've already lived. Click it, or press <kbd>L</kbd>.", tryd: 'Click Left or press L', b: () => "Switch every number between the time ahead of you and the time you've already lived.", hint: 'tap', try: 'Tap Lived', ok: 'Tap it again whenever you want the other view.', done: (a, b) => a.lived !== b.lived },
+  { at: 'pct-life', t: 'As a percentage', atd: 'st-pct', bd: () => `Show it as a share of the whole. You've lived about <b>${Math.floor(Math.min(1, age(birth()) / S.span) * 100)}%</b> of ${S.span} years. Click %, or press <kbd>P</kbd>.`, tryd: 'Press P', b: () => `Show it as a share of the whole. You've lived about <b>${Math.floor(Math.min(1, age(birth()) / S.span) * 100)}%</b> of ${S.span} years.`, hint: 'tap', try: 'Tap %', ok: 'Tap again to go back to the number.', done: (a, b) => a.pct !== b.pct },
+  { at: 'pdots', t: 'Four more pages', atd: 'st-nav', bd: () => 'This decade, this year, the people you love and where your time goes each have a page. Click one in the bar at the top, or press <kbd>→</kbd>.', tryd: 'Click a page or press →', b: () => 'Swipe sideways, or tap a word in this bar: this decade, this year with a line a day and countdowns, the people you love, and where your time goes.', hint: 'swipe', try: 'Tap Decade', ok: 'Swipe back any time. The dots show where you are.', done: (a, b) => a.page !== b.page || a.dpage !== b.dpage },
   { at: 'moreBtn', t: 'Everything else', atd: 'st-more', bd: () => 'Your birthday, lifespan, number style and lock screen live in Settings, with a guide to every setting. Click ⋯ at the top or press <kbd>S</kbd> to finish. Press <kbd>?</kbd> any time for every shortcut.', tryd: 'Press S', b: () => 'Your birthday, lifespan, number style and lock screen live here, with a guide to every setting. Tap it to finish.', hint: 'tap', try: 'Tap ⋯', ok: '', done: (a, b) => b.sheet === 'settings' },
 ];
 let tourAt = -1, tourBase = null, tourRAF = 0, tourHold = 0, openKind = null;
@@ -1654,7 +1794,7 @@ $('keysBtn').onclick = () => { tick(); openSheet('keys'); };
 
 const KEYS = [
   [[MOD, 'K'], 'Search or jump to anything'],
-  [['←', '→'], 'Previous or next page'], [['1', '–', '5'], 'Go to a page'], [['0'], 'Overview'],
+  [['←', '→'], 'Previous or next page'], [['1', '–', '5'], 'Go to a page'],
   [['+', '−'], 'Zoom in or out of your life'], [[MOD, 'scroll'], 'Zoom with the mouse or trackpad'],
   [['U'], 'Count another way: days, weeks, summers…'], [['Space'], 'Hold to feel the seconds'],
   [['L'], 'Left or lived'], [['P'], 'Percentage'],
@@ -1729,7 +1869,6 @@ const PAL = () => {
   const z = (i, n) => cmd('Zoom', n, () => { goPageNow(0); setZoom(i); }, [], 'zoom scale level ' + n);
   const unit = (i, n) => cmd('Count in', n, () => { goPageNow(0); if (S.zoom !== 1) setZoom(1); S.unit = i; S.pct = false; save(); swapHead(); }, [], 'count measure unit ' + n);
   return [
-    cmd('Go to', 'Overview', () => studioGo(0), ['0'], 'dashboard everything tiles summary'),
     cmd('Go to', 'Life', () => goPageNow(0), ['1'], 'home grid years'), cmd('Go to', 'This decade', () => goPageNow(1), ['2']), cmd('Go to', 'This year', () => goPageNow(2), ['3'], 'months line countdown'),
     cmd('Go to', 'People', () => goPageNow(3), ['4'], 'family friends parents visits'), cmd('Go to', 'Where your years go', () => goPageNow(4), ['5'], 'ledger sleep work phone'),
     cmd('Create', "Write today's line", () => openSheet('line', iso(day0(new Date()))), [], 'journal diary note today'),
@@ -1806,15 +1945,16 @@ document.addEventListener('keydown', e => {
 // ================================================= Studio: the desktop app
 // One page at a time, laid out like a spread: the number on the left, your dots on the right.
 // Overview puts everything on one screen as tiles. Phones never see any of this.
-const SNAMES = ['Overview', 'Life', 'This decade', 'This year', 'People', 'Where it goes'];
+const SNAMES = ['Overview', 'Life', 'Decade', 'Year', 'People', 'Time'];
 const SKIND = [null, 'life', 'decade', 'year', null, null];
 const sgrids = {};
 let studioOn = false, numShown = 0, numKey = '', numAnim = 0, stBeat = 0, stLive = 0;
 const easeOut = t => 1 - Math.pow(1 - t, 4);
 function studioMount() {
   if (studioOn) return; studioOn = true;
-  if (S.dpage == null) S.dpage = 1;
-  $('st-nav').innerHTML = '<i class="st-ind" id="st-ind"></i>' + SNAMES.map((n, i) => `<button data-p="${i}">${n}</button>`).join('');
+  // the same five pages as the Linux and Android apps
+  if (!S.dpage) S.dpage = 1;
+  $('st-nav').innerHTML = '<i class="st-ind" id="st-ind"></i>' + SNAMES.map((n, i) => i ? `<button data-p="${i}">${n}</button>` : '').join('');
   $('st-nav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { tick(); studioGo(+b.dataset.p); } });
   $('st-find').onclick = () => palOpen();
   $('st-more').onclick = () => { tick(); openSheet('settings'); };
@@ -1828,7 +1968,7 @@ function moveInd() {
   $('st-nav').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
 }
 function studioGo(i, instant) {
-  i = Math.max(0, Math.min(SNAMES.length - 1, i));
+  i = Math.max(1, Math.min(SNAMES.length - 1, i));
   const same = i === S.dpage && $('st-page').childElementCount;
   S.dpage = i; save(); moveInd();
   if (same && !instant) return;
@@ -2054,7 +2194,6 @@ document.addEventListener('keydown', e => {
   const k = e.key;
   if (k === 'ArrowRight' || k === ']') { e.preventDefault(); DESK && studioOn ? studioGo(S.dpage + 1) : goPage(S.page + 1); }
   else if (k === 'ArrowLeft' || k === '[') { e.preventDefault(); DESK && studioOn ? studioGo(S.dpage - 1) : goPage(S.page - 1); }
-  else if ((k === '0' || k === 'o' || k === 'O') && DESK && studioOn) studioGo(0);
   else if (/^[1-5]$/.test(k)) goPage(+k - 1);
   else if ((k === '+' || k === '=') && (DESK ? S.dpage === 1 : S.page === 0)) { if (S.zoom < 4) setZoom(S.zoom + 1); }
   else if ((k === '-' || k === '_') && (DESK ? S.dpage === 1 : S.page === 0)) { if (S.zoom > 0) setZoom(S.zoom - 1); }
