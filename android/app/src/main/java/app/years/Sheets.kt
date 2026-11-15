@@ -110,7 +110,7 @@ fun Field(value: String, onChange: (String) -> Unit, placeholder: String, max: I
 // ------------------------------------------------------------------ settings
 
 @Composable
-fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, openLifespan: () -> Unit, openGuide: () -> Unit) {
+fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, openLifespan: () -> Unit, openGuide: () -> Unit, openAbout: () -> Unit) {
     val ctx = LocalContext.current
     val s = st.s
     var editBirth by remember { mutableStateOf(false) }
@@ -205,6 +205,9 @@ fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, 
             Divider()
             SettingRow("Share your grid", onClick = { shareGrid(ctx, s) }) { Chevron() }
         }
+
+        Caps("About")
+        Group { SettingRow("About yrs.", "A one-person, open source project", onClick = openAbout) { Chevron() } }
 
         Text(
             "yrs. has no internet permission. Everything stays on this phone.",

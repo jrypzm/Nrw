@@ -142,6 +142,7 @@ sealed interface Sheet {
     data object Review : Sheet
     data object Lifespan : Sheet
     data object Guide : Sheet
+    data object About : Sheet
 }
 
 @Composable
@@ -180,27 +181,42 @@ fun Home(st: AppState, open: String?, tourAt: Int? = null, consumed: () -> Unit)
     }
 
     var sheet by remember { mutableStateOf<Sheet?>(null) }
+    var toast by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(toast) { if (toast != null) { delay(2200); toast = null } }
 
     // The first-run tour: each step lights up one real control and moves on once you've tried it.
     val targets = remember { TourTargets() }
-    var tourStep by remember { mutableIntStateOf(tourAt ?: if (st.s.tourDone) -1 else 0) }
-    var tourBase by remember { mutableStateOf(st.s) }
+    var tourStep by remember { mutableIntStateOf(tourAt ?: -1) }
+    fun tourSnap() = TourSnap(st.s, TourSignal.beats, TourSignal.taps, TourSignal.scrubs, sheet)
+    var tourBase by remember { mutableStateOf(tourSnap()) }
+    var tourOk by remember { mutableStateOf(false) }
     fun tourGo(n: Int) {
-        if (n !in TOUR.indices) { tourStep = -1; st.update(refresh = false) { it.copy(tourDone = true) }; return }
-        if (n == 0) {
+        tourOk = false
+        if (n !in TOUR.indices) {
+            val finished = n >= TOUR.size
+            tourStep = -1; st.update(refresh = false) { it.copy(tourDone = true) }
+            if (finished) scope.launch { delay(700); toast = "You're all set. The guide is in Settings." }
+            return
+        }
+        if (n == 0 && tourStep < 0) {
             scope.launch { pager.animateScrollToPage(0) }
             st.update(refresh = false) { it.copy(zoom = Life.ZOOM_YEARS, pct = false) }
         }
-        tourBase = st.s
+        tourBase = tourSnap()
         tourStep = n
     }
-    LaunchedEffect(Unit) { if (tourAt == null && tourStep == 0) { delay(700); tourGo(0) } }
-    LaunchedEffect(tourStep, st.s, sheet) {
+    LaunchedEffect(Unit) { if (tourAt == null && !st.s.tourDone) { delay(700); tourGo(0) } }
+    // you did it: the card says so, then moves on
+    LaunchedEffect(tourStep, st.s, sheet, TourSignal.beats, TourSignal.taps, TourSignal.scrubs) {
         val step = TOUR.getOrNull(tourStep) ?: return@LaunchedEffect
-        if (step.done(tourBase, st.s, sheet)) { delay(if (tourStep == TOUR.size - 1) 0 else 850); view.confirm(); tourGo(tourStep + 1) }
+        if (tourOk || step.done?.invoke(tourBase, tourSnap()) != true) return@LaunchedEffect
+        view.confirm()
+        if (tourStep == TOUR.size - 1) { tourGo(TOUR.size); return@LaunchedEffect }
+        tourOk = true
+        val n = tourStep
+        delay(if (step.ok.length > 30) 1700 else 1200)
+        if (tourStep == n) tourGo(n + 1)
     }
-    var toast by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(toast) { if (toast != null) { delay(2200); toast = null } }
 
     // Moments that find you: a letter you sealed years ago, or the year you just finished.
     fun checkMoments() {
@@ -308,14 +324,15 @@ fun Home(st: AppState, open: String?, tourAt: Int? = null, consumed: () -> Unit)
         }
 
         if (tourStep in TOUR.indices && sheet == null) {
-            TourOverlay(targets, tourStep, onNext = { view.tap(); tourGo(tourStep + 1) }, onSkip = { tourGo(-1) })
+            TourOverlay(st, targets, tourStep, tourOk, onNext = { view.tap(); tourGo(tourStep + 1) }, onBack = { view.tap(); tourGo((tourStep - 1).coerceAtLeast(0)) }, onSkip = { tourGo(-1) })
         }
     }
 
     val close = { sheet = null }
     when (val sh = sheet) {
-        Sheet.Settings -> SettingsSheet(st, close, { toast = it }, { sheet = Sheet.Lifespan }, { sheet = Sheet.Guide })
+        Sheet.Settings -> SettingsSheet(st, close, { toast = it }, { sheet = Sheet.Lifespan }, { sheet = Sheet.Guide }, { sheet = Sheet.About })
         Sheet.Guide -> GuideSheet(close) { sheet = null; tourGo(0) }
+        Sheet.About -> AboutSheet(close)
         is Sheet.Milestone -> MilestoneSheet(st, sh.year, close)
         is Sheet.PersonEdit -> PersonSheet(st, sh.index, close)
         is Sheet.EventEdit -> EventSheet(st, sh.index, close)
@@ -374,6 +391,7 @@ fun Header(st: AppState, m: GridModel) {
                         delay(450)
                         held = true
                         beating = true
+                        TourSignal.beats++
                         while (true) { Heart.beat(ctx); delay(1000) }
                     }
                     tryAwaitRelease()

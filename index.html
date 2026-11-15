@@ -190,6 +190,18 @@ nav .links a:not(.btn) { transition: color .2s; } nav .links a:not(.btn):hover {
 .small { font-size: 14px; color: var(--faint); } .small b { color: var(--mute); font-weight: 500; }
 @media (max-width: 899px) { .whys { grid-template-columns: 1fr; gap: 28px; } }
 
+
+/* ---------- about ---------- */
+.aboutgrid { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: clamp(40px, 6vw, 96px); align-items: start; }
+.aboutgrid p { color: var(--mute); font-size: 17px; line-height: 1.6; max-width: 34em; }
+.aboutgrid p + p { margin-top: 18px; }
+.aboutgrid p.big { color: var(--fg); font-family: var(--display); font-size: clamp(22px, 2vw, 28px); line-height: 1.35; letter-spacing: -0.02em; font-weight: 500; }
+.aboutlist { list-style: none; border-top: 1px solid var(--line); }
+.aboutlist li { padding: 20px 0; border-bottom: 1px solid var(--line); }
+.aboutlist b { display: block; font-weight: 500; font-size: 17px; margin-bottom: 4px; }
+.aboutlist span { color: var(--mute); font-size: 16px; line-height: 1.5; }
+@media (max-width: 899px) { .aboutgrid { grid-template-columns: 1fr; } }
+
 /* ---------- footer: the wordmark, bleeding off the page like the icon ---------- */
 footer { position: relative; z-index: 3; background: var(--bg); overflow: hidden; }
 footer .row { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 40px 0 0; font-size: 13px; color: var(--faint); border-top: 1px solid var(--line); }
@@ -240,7 +252,7 @@ footer .row a:hover { color: var(--fg); }
 
 <nav id="nav"><div class="wrap">
   <a class="logo" href="#top" aria-label="yrs. home">yrs<i id="navDot"></i></a>
-  <div class="links"><a href="#app">The app</a><a href="#lock">Lock screen</a><a href="#privacy">Privacy</a><a href="#support">Support</a><a class="btn" href="#get">Get yrs.</a></div>
+  <div class="links"><a href="#app">The app</a><a href="#lock">Lock screen</a><a href="#about">About</a><a href="#privacy">Privacy</a><a href="#support">Support</a><a class="btn" href="#get">Get yrs.</a></div>
 </div></nav>
 
 <div id="stage" aria-hidden="true"><canvas id="gl"></canvas></div>
@@ -327,13 +339,33 @@ footer .row a:hover { color: var(--fg); }
   </div>
 </section>
 
+<section class="sec tight" id="about">
+  <div class="wrap">
+    <div class="kicker">About</div>
+    <h2 class="h2 reveal"><span class="ln"><span>Made by one person.</span></span><span class="ln"><span class="m">Open to everyone.</span></span></h2>
+    <div class="aboutgrid">
+      <div class="soft">
+        <p class="big">yrs. is a small app that shows your life as dots: one for every year you've lived, one for every year ahead, and one for the year you're in, slowly filling.</p>
+        <p>It isn't a company or a startup. It's an independent project, made by one person in spare time, because I wanted a calm, honest reminder that time is finite, and I couldn't find one I liked. So I built it, and now it's yours too.</p>
+      </div>
+      <ul class="aboutlist soft">
+        <li><b>Free to use</b><span>No price, no subscription, no ads. Install it and use all of it.</span></li>
+        <li><b>Open source, MIT</b><span>Read every line. Build it yourself, change anything, or take the code and make it your own, your way. Keep the license note, that's all.</span></li>
+        <li><b>Private</b><span>No account, no tracking. The Android app can't even reach the internet. Your birthday stays on your phone.</span></li>
+        <li><b>Made in the open</b><span>Ideas, bugs and pull requests are welcome on GitHub. It gets better when people tell me what they'd change.</span></li>
+      </ul>
+    </div>
+    <div class="soft" style="margin-top:44px;display:flex;gap:12px;flex-wrap:wrap"><a class="btn big" href="https://github.com/jrypzm/yrs" target="_blank" rel="noopener">View the source</a><a class="btn big ghost" href="https://github.com/jrypzm/yrs/blob/HEAD/LICENSE" target="_blank" rel="noopener">MIT License</a></div>
+  </div>
+</section>
+
 <section class="sec" id="privacy">
   <div class="wrap">
     <p class="statement reveal" id="stmt"><span class="ln"><span>No account. No cloud.</span></span><span class="ln"><span class="m">No tracking. No ads.</span></span><span class="ln"><span class="m">Nothing leaves your phone.</span></span></p>
     <div class="facts soft">
       <div><b>It can't phone home</b><p>The Android app doesn't even ask for internet access. It has nowhere to send your birthday.</p></div>
       <div><b>Yours alone</b><p>Your birthday, names, letters and lines live only on your device. Delete the app and they're gone.</p></div>
-      <div><b>Free, for good</b><p>No subscription, no trial, no upsell. Just the dots.</p></div>
+      <div><b>Open source</b><p>MIT licensed. Anyone can read the code and check every promise on this page.</p></div>
     </div>
   </div>
 </section>
@@ -381,7 +413,7 @@ footer .row a:hover { color: var(--fg); }
 </section>
 
 <footer>
-  <div class="wrap"><div class="row"><span>yrs. · Your life, in dots.</span><span><a href="https://github.com/jrypzm/yrs">Source</a> &nbsp;·&nbsp; <a href="https://github.com/jrypzm/yrs/releases">Releases</a></span></div></div>
+  <div class="wrap"><div class="row"><span>yrs. · Your life, in dots.</span><span>A one-person project · MIT License · <a href="https://github.com/jrypzm/yrs">Source</a> &nbsp;·&nbsp; <a href="https://github.com/jrypzm/yrs/releases">Releases</a></span></div></div>
   <svg class="bleed" id="bleed" viewBox="18 26 72 64" aria-hidden="true"></svg>
 </footer>
 

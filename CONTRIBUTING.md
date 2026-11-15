@@ -13,9 +13,13 @@ Every issue is read.
 
 ## Pull requests
 
-yrs. is not open source; its code is public to read but [all rights are reserved](LICENSE). Please open an issue and agree the change before writing code. Unrequested pull requests may be closed.
+yrs. is open source under the [MIT license](LICENSE), and pull requests are welcome. For anything bigger than a small fix, open an issue first so we can agree on it before you spend the time.
 
-By submitting a contribution, you agree that it may be used in yrs. under the project's license, and that you have the right to submit it.
+By submitting a contribution, you agree that it's released under the same MIT license.
+
+## Make it your own
+
+You're also free to take the code and build something of your own from it: a different style, a different idea, your own app. That's what MIT means. Keeping the license notice is all it asks.
 
 ## What fits yrs.
 

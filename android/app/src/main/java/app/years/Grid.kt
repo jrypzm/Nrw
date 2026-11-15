@@ -137,7 +137,7 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
         // The gesture outlives zoom changes, so it always reads the latest grid through these.
         val idxNow by rememberUpdatedState<(Offset) -> Int?> { o -> idxAt(o) }
         val setNow by rememberUpdatedState<(Int?) -> Unit> { i -> set(i) }
-        val tapNow by rememberUpdatedState<(Int?) -> Unit> { i -> if (i != null) { tip = i; sticky = true; view.tick() } else { tip = null } }
+        val tapNow by rememberUpdatedState<(Int?) -> Unit> { i -> if (i != null) { tip = i; sticky = true; view.tick(); TourSignal.taps++ } else { tip = null } }
         val stickyNow by rememberUpdatedState<(Boolean) -> Unit> { b -> if (!b || tip != null) sticky = b }
         val kindNow by rememberUpdatedState(m.kind)
 
@@ -173,6 +173,7 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
                                 setNow(idxNow(ch.position))
                             }
                             stickyNow(true)
+                            TourSignal.scrubs++
                         }
                         1 -> tapNow(idxNow(down.position))
                         3 -> if (kindNow == ViewKind.LIFE) {

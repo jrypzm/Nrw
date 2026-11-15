@@ -80,6 +80,9 @@ class ScreensTest {
     @Test fun tour6_lived() = home(me.copy(page = 0, tourDone = false), 6)
     @Test fun tour8_pages() = home(me.copy(page = 0, tourDone = false), 8)
     @Test fun tour9_settings() = home(me.copy(page = 0, tourDone = false), 9)
+    @Test fun about() = paparazzi.snapshot {
+        Frame { Column(Modifier.padding(horizontal = 24.dp).background(C.Surface)) { AboutContent {} } }
+    }
     @Test fun guide() = paparazzi.snapshot {
         Frame { Column(Modifier.padding(horizontal = 24.dp).background(C.Surface)) { GuideContent({}, {}) } }
     }

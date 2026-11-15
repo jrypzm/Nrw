@@ -135,6 +135,8 @@
 
   .head { min-height: 52px; transition: opacity .18s; }
   .head.swap { opacity: 0; }
+  /* touches land on the header itself, never on text that a heartbeat replaces mid-press */
+  .head * { pointer-events: none; }
   .h-title { font-family: var(--display); font-size: 22px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
   .h-sub { margin-top: 3px; font-size: 15px; font-weight: 500; color: var(--mute); letter-spacing: -0.01em; }
   .h-hero { display: flex; align-items: baseline; gap: 10px; margin-top: -6px; }
@@ -217,14 +219,32 @@
   @keyframes fpinch2 { 0% { opacity: 0; transform: translate(12px, -12px); } 15% { opacity: 1; } 75% { opacity: 1; transform: translate(46px, -46px); } 100% { opacity: 0; transform: translate(46px, -46px); } }
   .tour .finger.swipe { animation: fswipe 1.8s cubic-bezier(.45,0,.25,1) infinite; }
   @keyframes fswipe { 0% { opacity: 0; transform: translateX(90px); } 15% { opacity: 1; } 75% { opacity: 1; transform: translateX(-90px); } 100% { opacity: 0; transform: translateX(-90px); } }
-  .tour .tcard { position: absolute; left: calc(20px + var(--sl)); right: calc(20px + var(--sr)); padding: 20px; border-radius: 22px; background: var(--surface2); pointer-events: auto; transition: top .55s var(--spring), opacity .3s; }
-  .tour .tcard h3 { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
-  .tour .tcard p { margin-top: 6px; font-size: 15px; line-height: 1.42; color: var(--mute); }
-  .tour .tcard .tb { display: flex; align-items: center; margin-top: 16px; }
-  .tour .tcard .n { font-size: 13px; color: var(--faint); letter-spacing: .02em; margin-right: auto; }
-  .tour .tcard .skip { padding: 8px 14px; font-size: 15px; font-weight: 500; color: var(--mute); }
+  .tour .tcard { position: absolute; left: calc(16px + var(--sl)); right: calc(16px + var(--sr)); padding: 18px 20px 16px; border-radius: 24px; background: rgba(44,44,46,.96); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); box-shadow: 0 24px 60px rgba(0,0,0,.55); pointer-events: auto; transition: top .55s var(--spring); }
+  .tour .tbar { display: flex; gap: 4px; }
+  .tour .tbar i { flex: 1; height: 3px; border-radius: 2px; background: #48484a; overflow: hidden; position: relative; }
+  .tour .tbar i::after { content: ""; position: absolute; inset: 0; background: #fff; transform-origin: left; transform: scaleX(0); transition: transform .5s var(--ease); }
+  .tour .tbar i.on::after { transform: scaleX(1); }
+  .tour .thd { display: flex; align-items: center; margin-top: 12px; }
+  .tour .tcard .n { font-size: 12px; font-weight: 500; color: var(--mute); letter-spacing: .04em; text-transform: uppercase; margin-right: auto; }
+  .tour .tcard .skip { padding: 4px 0 4px 12px; font-size: 14px; font-weight: 500; color: var(--mute); }
+  .tour .tcard h3 { margin-top: 8px; font-family: var(--display); font-size: 21px; font-weight: 600; letter-spacing: -0.02em; }
+  .tour .tcard p { margin-top: 6px; font-size: 15px; line-height: 1.45; color: #aeaeb2; }
+  .tour .tcard p b { color: #fff; font-weight: 600; }
+  .tour .tok { display: flex; align-items: center; gap: 10px; max-height: 0; overflow: hidden; opacity: 0; transition: max-height .4s var(--ease), opacity .3s, margin .35s var(--ease); font-weight: 600; font-size: 16px; line-height: 1.3; }
+  .tour .tok i { flex: 0 0 auto; }
+  .tour .tok i { width: 22px; height: 22px; border-radius: 50%; background: #fff; position: relative; transform: scale(.4); transition: transform .45s var(--spring); }
+  .tour .tok i::after { content: ""; position: absolute; left: 7.5px; top: 4.5px; width: 5px; height: 10px; border: solid #000; border-width: 0 2.2px 2.2px 0; transform: rotate(45deg); }
+  .tour .tcard.ok .tok { max-height: 70px; opacity: 1; margin-top: 12px; }
+  .tour .tcard.ok .tok i { transform: none; }
+  .tour .tb { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+  .tour .tcard .back { height: 36px; padding: 0 14px; border-radius: 18px; background: #3a3a3c; font-size: 15px; font-weight: 500; }
+  .tour .tcard .back[hidden] { display: none; }
+  .tour .tcard .try { margin-left: auto; font-size: 13px; color: var(--mute); display: flex; align-items: center; gap: 6px; }
+  .tour .tcard .try::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: breathe 1.6s ease-in-out infinite; }
+  .tour .tcard .try:empty { display: none; }
   .tour .tcard .next { height: 36px; padding: 0 18px; border-radius: 18px; background: var(--fg); color: #000; font-size: 15px; font-weight: 600; }
-  .tour .tcard .next:active { background: #d1d1d6; }
+  .tour .tcard .try:empty + .next { margin-left: auto; }
+  .tour .tcard .next:active, .tour .tcard .back:active { opacity: .7; }
   .tour .tcard .swap { animation: swap .45s var(--ease); }
   @keyframes swap { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   .guide .gi { padding: 13px 16px; position: relative; }
@@ -257,7 +277,7 @@
 </main>
 
 <div class="layer" id="layer"><div class="scrim"></div><section class="sheet" id="sheet" role="dialog"><div class="grab"><i></i></div><div class="body" id="sheetBody"></div></section></div>
-<div class="tour" id="tour"><div class="hole none" id="tHole"></div><i class="finger" id="tF1"></i><i class="finger" id="tF2"></i><div class="tcard" id="tCard"><div id="tText"></div><div class="tb"><span class="n" id="tN"></span><button class="skip" id="tSkip">Skip</button><button class="next" id="tNext">Next</button></div></div></div>
+<div class="tour" id="tour"><div class="hole none" id="tHole"></div><i class="finger" id="tF1"></i><i class="finger" id="tF2"></i><div class="tcard" id="tCard"><div class="tbar" id="tBar"></div><div class="thd"><span class="n" id="tN"></span><button class="skip" id="tSkip">Skip tour</button></div><div id="tText"></div><div class="tok" id="tOk"><i></i><span></span></div><div class="tb"><button class="back" id="tBack">Back</button><span class="try" id="tTry"></span><button class="next" id="tNext">Next</button></div></div></div>
 <div class="toast" id="toast"></div>
 <label id="hapt" hidden><input type="checkbox" switch></label>
 
@@ -511,13 +531,13 @@ class Grid {
     }, { passive: false });
     box.addEventListener('touchend', e => {
       clearTimeout(hold);
-      if (mode === 'scrub') { if (this.tipI != null) this.showTip(this.tipI, true); }
-      else if (!mode && e.changedTouches.length === 1) { const [px, py] = local(e.changedTouches[0]); const i = this.idxAt(px, py); if (i != null) { this.showTip(i, true); tick(); } else this.hideTip(); }
+      if (mode === 'scrub') { if (this.tipI != null) { this.showTip(this.tipI, true); SIG.scrubs++; } }
+      else if (!mode && e.changedTouches.length === 1) { const [px, py] = local(e.changedTouches[0]); const i = this.idxAt(px, py); if (i != null) { SIG.taps++; this.showTip(i, true); tick(); } else this.hideTip(); }
       if (e.touches.length === 0) mode = null;
     });
     box.addEventListener('touchcancel', () => { clearTimeout(hold); mode = null; });
     // mouse, for desktops
-    box.addEventListener('mousedown', e => { if (e.target.closest('.tip')) return; const [px, py] = local(e); const i = this.idxAt(px, py); if (i != null) this.showTip(i, true); });
+    box.addEventListener('mousedown', e => { if (e.target.closest('.tip')) return; const [px, py] = local(e); const i = this.idxAt(px, py); if (i != null) { SIG.taps++; this.showTip(i, true); } });
     this.tip.addEventListener('click', () => { const yi = this.m.year ? this.m.year(this.tipI) : null; if (this.sticky && yi != null) { tick(); this.hideTip(); openSheet('milestone', yi); } });
   }
 }
@@ -727,11 +747,12 @@ function buildHome() {
   }, { passive: true });
   // header taps and the heartbeat hold
   PAGES.slice(0, 3).forEach(k => {
-    const h = $('head-' + k); let holdT, beatT, held = false, start = null;
-    h.addEventListener('touchstart', e => { held = false; start = e.touches[0]; holdT = setTimeout(() => { held = true; beat(k, true); beatT = setInterval(() => thump(), 1000); thump(); }, 450); }, { passive: true });
+    const h = $('head-' + k); let holdT, beatT, held = false, start = null, pressing = false;
+    h.addEventListener('touchstart', e => { held = false; pressing = true; start = e.touches[0]; holdT = setTimeout(() => { held = true; beat(k, true); beatT = setInterval(() => thump(), 1000); thump(); }, 450); }, { passive: true });
     h.addEventListener('touchmove', e => { if (start && Math.hypot(e.touches[0].clientX - start.clientX, e.touches[0].clientY - start.clientY) > 10) clearTimeout(holdT); }, { passive: true });
-    const end = () => { clearTimeout(holdT); clearInterval(beatT); if (held) { beat(k, false); } };
-    h.addEventListener('touchend', end); h.addEventListener('touchcancel', end);
+    // the heartbeat replaces what was under your finger, so the release is heard on the whole page
+    const end = () => { if (!pressing) return; pressing = false; clearTimeout(holdT); clearInterval(beatT); if (held) { beat(k, false); } };
+    document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
     h.addEventListener('click', () => {
       if (held) { held = false; return; }
       const m = grids[k].m;
@@ -791,6 +812,7 @@ function liveLoop() {
   liveRAF = requestAnimationFrame(step);
 }
 function beat(k, on) {
+  if (on) SIG.beats++;
   const el = $('head-' + k);
   if (!on) { clearInterval(el._bt); renderHead(k); return; }
   const paint = () => { el.innerHTML = `<div class="beat">${fmt(yearsLeft() * 365.2425 * 86400)}</div><div class="h-sub">seconds left · each beat is one of them</div>`; };
@@ -906,13 +928,14 @@ const SHEETS = {
       <div class="caps">Lock screen</div><div class="walls" id="sWalls"></div><div style="height:14px"></div>
       <div class="group"><button class="row" id="sSave"><span class="t">Save as lock screen<small>Then in Photos: Share → Use as Wallpaper</small></span><span class="chev">›</span></button><button class="row" id="sShare"><span class="t">Share your grid</span><span class="chev">›</span></button></div>
       <div class="caps">On your iPhone</div><div class="group"><div class="row"><span class="t">${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'yrs. is on your Home Screen' : 'Add to Home Screen'}<small>${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'Opens full screen and works offline.' : 'In Safari: Share → Add to Home Screen. It opens full screen and works offline.'}</small></span></div></div>
-      <div class="caps">Support</div><div class="group"><a class="row" href="https://github.com/jrypzm/yrs" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Star yrs. on GitHub<small>Free, no ads, no tracking. A star says thanks and helps others find it.</small></span><span class="chev">›</span></a></div>
+      <div class="caps">About</div><div class="group"><button class="row" id="sAbout"><span class="t">About yrs.<small>A one-person, open source project</small></span><span class="chev">›</span></button><a class="row" href="https://github.com/jrypzm/yrs" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Star yrs. on GitHub<small>Free, no ads, no tracking. A star says thanks and helps others find it.</small></span><span class="chev">›</span></a></div>
       <p class="small" style="margin:20px 4px 0">Everything stays on this phone. Nothing is ever sent anywhere.</p>
       <div style="height:20px"></div><button class="primary" id="sDone">Done</button>`;
     $('sBday').onclick = () => { tick(); const w = $('sBdayW'); w.hidden = !w.hidden; if (!w.hidden && !w.firstChild) w.append(dateWheels(birth(), d => { S.birth = iso(d); $('sBdayV').textContent = `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; refresh(); })); };
     body.querySelectorAll('[data-s]').forEach(x => x.onclick = () => { tick(); S.span = Math.min(120, Math.max(40, S.span + +x.dataset.s)); $('sSpan').textContent = S.span; refresh(); });
     $('sEst').onclick = () => { tick(); openSheet('lifespan'); };
     $('sGuide').onclick = () => { tick(); openSheet('guide'); };
+    $('sAbout').onclick = () => { tick(); openSheet('about'); };
     $('sStyle').append(seg([['classic', 'Classic'], ['hero', 'Large'], ['live', 'Live']], S.style, v => { S.style = v; save(); swapHead(); }));
     $('rSun').append(sw(S.sun, v => { S.sun = v; refresh(); paintWalls(); }));
     $('rRip').append(sw(S.ripple, v => { S.ripple = v; save(); }));
@@ -996,36 +1019,47 @@ const SHEETS = {
 
 
 // ================================================= the tour
-// Each step lights up one real control. The dim layer never takes touches, so you learn by doing:
-// a step moves on by itself once you've tried it, and Next always works.
+// Each step lights up one real control and uses your own numbers. The dim layer never takes touches,
+// so you learn by doing: when you get a gesture right, the card says so and moves on. Next and Back always work.
+const SIG = { beats: 0, taps: 0, scrubs: 0 };
+const nowLine = () => { const m = model('life'), h = headline(m); return `${fmt(h.v)} ${h.noun} ${h.word}`; };
 const TOUR = [
-  [null, 'A quick tour', 'Under a minute to learn every gesture. Try each one as we go, or tap Next. You can replay this any time from Settings.', ''],
-  ['head-life', 'This is your number', 'Tap it to count another way: years, days, weeks, summers, weekends or full moons.', 'tap', (a, b) => a.unit !== b.unit],
-  ['head-life', 'Feel the seconds', 'Now hold the number. Every beat is one second of your life going by.', 'hold'],
-  ['grid-life', 'One dot, one year', "White dots are behind you, dark ones are ahead. The one you're in fills a little every day. Tap any year, then tap its label to name it or seal a letter to it.", 'tap'],
-  ['grid-life', 'Travel through time', 'Hold a dot, then drag across the grid without letting go. Each year shows its age and date as you pass.', 'drag'],
-  ['zoombar', 'Zoom from history to today', 'Pinch the grid, or tap here: all of history, years, months, weeks, days. The number always counts what you see.', 'pinch', (a, b) => a.zoom !== b.zoom],
-  ['modeBtn', 'Left or lived', "Switch between the time still ahead of you and the time you've already lived.", 'tap', (a, b) => a.lived !== b.lived],
-  ['pctBtn', 'As a percentage', 'Show any page as a share of the whole. Tap again to go back.', 'tap', (a, b) => a.pct !== b.pct],
-  ['pdots', 'Four more pages', 'Swipe sideways: this decade, this year with a line a day and countdowns, the people you love, and where your years go.', 'swipe', (a, b) => a.page !== b.page],
-  ['moreBtn', 'Everything else', 'Your birthday, lifespan, number style and lock screen live here, with a guide to every setting. Tap to finish.', 'tap', (a, b, sheet) => sheet === 'settings'],
+  { t: 'Welcome to yrs.', b: () => "A quick tour, under a minute. Try each gesture as we go: <b>the tour moves on when you do</b>. You can replay it any time from Settings.", ok: '' },
+  { at: 'head-life', t: 'This is your number', b: () => `Right now it says <b>${nowLine()}</b>. Tap it to count another way: days, weeks, summers, weekends or full moons.`, hint: 'tap', try: 'Tap the number', ok: 'That is the same time, counted another way.', done: (a, b) => a.unit !== b.unit },
+  { at: 'head-life', t: 'Feel the seconds', b: () => `Press and hold the number. Every beat is one second, out of about <b>${fmt(yearsLeft() * 365.2425 * 86400)}</b> you have left.`, hint: 'hold', try: 'Hold the number', ok: 'Felt that? Let go whenever you like.', done: (a, b) => b.beats > a.beats },
+  { at: 'grid-life', t: 'One dot, one year', b: () => { const l = Math.floor(age(birth())); return `You've lived <b>${l} ${l === 1 ? 'dot' : 'dots'}</b>. The one you're in fills a little every day. Tap any dot to see which year it is.`; }, hint: 'tap', try: 'Tap a dot', ok: 'Tap its label any time to name that year or seal a letter to it.', done: (a, b) => b.taps > a.taps },
+  { at: 'grid-life', t: 'Travel through time', b: () => 'Hold a dot, then drag across the grid without letting go. Each year shows its age and date as you pass it.', hint: 'drag', try: 'Hold and drag', ok: 'Your whole life, under one finger.', done: (a, b) => b.scrubs > a.scrubs },
+  { at: 'zoombar', t: 'From history to today', b: () => `Pinch the grid, or tap a word here. In weeks you have <b>${fmt(yearsLeft() * 52.1775)}</b> left; in days, <b>${fmt(daysLeftExact())}</b>.`, hint: 'pinch', try: 'Pinch or tap Weeks', ok: 'The number always counts what you see.', done: (a, b) => a.zoom !== b.zoom },
+  { at: 'modeBtn', t: 'Left or lived', b: () => "Switch every number between the time ahead of you and the time you've already lived.", hint: 'tap', try: 'Tap Left', ok: 'Tap it again whenever you want the other view.', done: (a, b) => a.lived !== b.lived },
+  { at: 'pctBtn', t: 'As a percentage', b: () => `Show it as a share of the whole. You've lived about <b>${Math.floor(Math.min(1, age(birth()) / S.span) * 100)}%</b> of ${S.span} years.`, hint: 'tap', try: 'Tap %', ok: 'Tap again to go back to the number.', done: (a, b) => a.pct !== b.pct },
+  { at: 'pdots', t: 'Four more pages', b: () => 'Swipe sideways: this decade, this year with a line a day and countdowns, the people you love, and where your years go.', hint: 'swipe', try: 'Swipe left', ok: 'Swipe back any time. The dots show where you are.', done: (a, b) => a.page !== b.page },
+  { at: 'moreBtn', t: 'Everything else', b: () => 'Your birthday, lifespan, number style and lock screen live here, with a guide to every setting. Tap it to finish.', hint: 'tap', try: 'Tap ⋯', ok: '', done: (a, b) => b.sheet === 'settings' },
 ];
 let tourAt = -1, tourBase = null, tourRAF = 0, tourHold = 0, openKind = null;
-const snap = () => ({ unit: S.unit, zoom: S.zoom, lived: S.lived, pct: S.pct, page: S.page });
+const snap = () => ({ unit: S.unit, zoom: S.zoom, lived: S.lived, pct: S.pct, page: S.page, beats: SIG.beats, taps: SIG.taps, scrubs: SIG.scrubs, sheet: layer.classList.contains('open') ? openKind : null });
+$('tBar').innerHTML = TOUR.map(() => '<i></i>').join('');
 function tourGo(n) {
-  clearTimeout(tourHold);
+  clearTimeout(tourHold); tourHold = 0;
   if (n < 0 || n >= TOUR.length) {
+    const finished = n >= TOUR.length;
     tourAt = -1; S.tourDone = true; save();
-    $('tour').classList.remove('on'); cancelAnimationFrame(tourRAF); return;
+    $('tour').classList.remove('on'); cancelAnimationFrame(tourRAF);
+    if (finished) setTimeout(() => toast("You're all set. The guide is in Settings."), 700);
+    return;
   }
-  if (n === 0) { $('pager').scrollTo({ left: 0, behavior: 'smooth' }); if (S.zoom !== 1) setZoom(1); if (S.pct) { S.pct = false; save(); swapHead(); } }
+  if (n === 0 && tourAt < 0) { $('pager').scrollTo({ left: 0, behavior: 'smooth' }); if (S.zoom !== 1) setZoom(1); if (S.pct) { S.pct = false; save(); swapHead(); } }
   tourAt = n; tourBase = snap();
-  const [, title, text] = TOUR[n];
-  $('tText').innerHTML = `<div class="swap"><h3></h3><p></p></div>`;
-  $('tText').querySelector('h3').textContent = title; $('tText').querySelector('p').textContent = text;
+  const st = TOUR[n];
+  $('tCard').classList.remove('ok');
+  $('tText').innerHTML = `<div class="swap"><h3></h3><p>${st.b()}</p></div>`;
+  $('tText').querySelector('h3').textContent = st.t;
+  $('tOk').querySelector('span').textContent = st.ok || '';
   $('tN').textContent = `${n + 1} of ${TOUR.length}`;
+  $('tTry').textContent = st.try || '';
   $('tNext').textContent = n === 0 ? 'Start' : n === TOUR.length - 1 ? 'Finish' : 'Next';
+  $('tBack').hidden = n === 0;
   $('tSkip').hidden = n === TOUR.length - 1;
+  $('tBar').querySelectorAll('i').forEach((b, k) => b.classList.toggle('on', k <= n));
   $('tour').classList.add('on');
   cancelAnimationFrame(tourRAF); tourRAF = requestAnimationFrame(tourFrame);
 }
@@ -1034,7 +1068,7 @@ function tourFrame() {
   const step = TOUR[tourAt], hole = $('tHole'), card = $('tCard'), W = innerWidth, H = innerHeight;
   const sheetOpen = layer.classList.contains('open');
   $('tour').classList.toggle('on', !sheetOpen);
-  const el = step[0] && $(step[0]);
+  const el = step.at && $(step.at);
   let r = el && el.getBoundingClientRect();
   if (r && (r.width === 0 || r.right < 0 || r.left > W)) r = null;
   const pad = 10;
@@ -1042,27 +1076,48 @@ function tourFrame() {
     const x = r.left - pad, y = r.top - pad, w = r.width + 2 * pad, h = r.height + 2 * pad;
     Object.assign(hole.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px', borderRadius: Math.min(h / 2, 22) + 'px' });
     hole.classList.remove('none');
-    const ch = card.offsetHeight, below = y + h + 18;
-    card.style.top = (below + ch < H - 40 ? below : Math.max(40, y - 18 - ch)) + 'px';
-    // the ghost fingertip
-    const kind = step[3], hr = kind === 'pinch' ? $('grid-life').getBoundingClientRect() : r;
+    const ch = card.offsetHeight, below = y + h + 16;
+    // below the spotlight, else above it; a spotlight too tall for either (the grid) keeps its top free and the card docks low
+    card.style.top = (below + ch < H - 24 ? below : y - 16 - ch >= 24 ? y - 16 - ch : H - ch - 24 - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sbm')) || 0)) + 'px';
+    // the ghost fingertip, hidden once you've got it
+    const kind = card.classList.contains('ok') ? '' : step.hint, hr = kind === 'pinch' ? $('grid-life').getBoundingClientRect() : r;
     const cx = hr.left + hr.width / 2, cy = kind === 'swipe' ? r.top - 150 : hr.top + hr.height / 2;
     [$('tF1'), $('tF2')].forEach((f, k) => { f.className = 'finger' + (kind && (k === 0 || kind === 'pinch') ? ' ' + (k === 1 ? 'pinch2' : kind) : ''); f.style.left = cx + 'px'; f.style.top = cy + 'px'; });
   } else {
     Object.assign(hole.style, { left: W / 2 + 'px', top: H * .42 + 'px', width: '0px', height: '0px' });
     hole.classList.add('none');
-    card.style.top = Math.max(40, (H - card.offsetHeight) / 2) + 'px';
+    card.style.top = Math.max(24, (H - card.offsetHeight) / 2) + 'px';
     $('tF1').className = $('tF2').className = 'finger';
   }
-  // moves on by itself once you've done it
-  if (step[4] && !tourHold && step[4](tourBase, snap(), sheetOpen ? openKind : null)) {
-    const n = tourAt; tourHold = setTimeout(() => { tourHold = 0; if (tourAt === n) { thump(); tourGo(n + 1); } }, n === TOUR.length - 1 ? 0 : 850);
+  // you did it: say so, then move on
+  if (step.done && !tourHold && step.done(tourBase, snap())) {
+    const n = tourAt, last = n === TOUR.length - 1;
+    thump();
+    if (!last) { card.classList.add('ok'); $('tTry').textContent = ''; }
+    tourHold = setTimeout(() => { tourHold = 0; if (tourAt === n) tourGo(n + 1); }, last ? 0 : step.ok.length > 30 ? 1700 : 1200);
   }
   tourRAF = requestAnimationFrame(tourFrame);
 }
 $('tNext').onclick = () => { tick(); tourGo(tourAt + 1); };
+$('tBack').onclick = () => { tick(); tourGo(Math.max(0, tourAt - 1)); };
 $('tSkip').onclick = () => { tick(); tourGo(-1); };
 
+SHEETS.about = () => {
+  body.innerHTML = `<div style="padding:8px 0 4px"><div class="mark" style="font-size:64px">yrs<span class="p" style="--f:62%"></span></div></div>
+    <p style="font-family:var(--display);font-size:22px;line-height:1.35;letter-spacing:-.02em;font-weight:500;margin-top:18px">A small app that shows your life as dots, so you spend the rest of it on purpose.</p>
+    <div class="caps">Who made it</div><div class="group guide"><div class="gi"><b>One person</b><span>yrs. is an independent project, made by one person in spare time. No company, no investors, no ads. Just an idea I wanted to exist.</span></div></div>
+    <div class="caps">Yours to use</div><div class="group guide">
+      <div class="gi"><b>Free</b><span>No price, no subscription, nothing locked. All of it is yours.</span></div>
+      <div class="gi"><b>Open source, MIT license</b><span>Read every line of the code. Build it yourself, change anything, or take it and make your own version, your way.</span></div>
+      <div class="gi"><b>Private</b><span>No account and no tracking. Everything stays in Safari on this iPhone.</span></div></div>
+    <div class="caps">Links</div><div class="group">
+      <a class="row" href="https://jrypzm.github.io/yrs/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Website<small>Android app, and how it works</small></span><span class="chev">›</span></a>
+      <a class="row" href="https://github.com/jrypzm/yrs" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Source code<small>On GitHub. A star helps others find it</small></span><span class="chev">›</span></a>
+      <a class="row" href="https://github.com/jrypzm/yrs/issues/new/choose" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Ideas and bugs<small>Every one is read</small></span><span class="chev">›</span></a></div>
+    <p class="small" style="margin:20px 4px 0;text-align:center">yrs. for iPhone · MIT License · Make the next one count.</p>
+    <div style="height:20px"></div><button class="primary" id="aDone">Done</button>`;
+  $('aDone').onclick = () => { tick(); closeSheet(); };
+};
 const GUIDE = [
   ['Gestures', [
     ['Swipe sideways', 'Move between your five pages: Life, This decade, This year, People and Where your years go. The dots at the bottom show where you are; tap one to jump.'],
@@ -1112,6 +1167,7 @@ const GUIDE = [
   ['On your iPhone', [
     ['Add to Home Screen', 'In Safari, tap Share → Add to Home Screen. yrs. then opens full screen with its own icon and works offline.'],
     ['Nothing leaves your phone', 'There is no account and no server. Everything is stored only in Safari on this iPhone.'],
+    ['About yrs.', 'Who made it, the MIT license that lets you use and change the code freely, and links to the website and the source.'],
   ]],
 ];
 SHEETS.guide = () => {

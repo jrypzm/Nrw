@@ -32,6 +32,14 @@
 
 <br>
 
+## About
+
+yrs. is a small, independent project made by one person. No company, no investors, no ads: just an idea I wanted to exist, built in spare time.
+
+It's **open source under the MIT license**. Use it, read it, build it yourself, change anything, or take the code and make it your own. Pull requests and ideas are welcome.
+
+<br>
+
 ## Get yrs.
 
 **Android** &nbsp;·&nbsp; Android 10 or newer
@@ -84,7 +92,7 @@ Build the APK with JDK 17 and Gradle 8.11.1: `cd android && gradle assembleRelea
   <a href="https://github.com/jrypzm/yrs"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/btn-star-dark.svg"><source media="(prefers-color-scheme: light)" srcset=".github/assets/btn-star-light.svg"><img alt="Star on GitHub" src=".github/assets/btn-star-dark.svg" height="46"></picture></a>
 </p>
 
-<p align="center"><sub><a href="https://github.com/jrypzm/yrs/issues/new/choose">Ideas & bugs</a> &nbsp;·&nbsp; <a href="SECURITY.md">Security</a> &nbsp;·&nbsp; <a href="LICENSE">License</a> &nbsp;·&nbsp; © 2026 jrypzm. All rights reserved.</sub></p>
+<p align="center"><sub><a href="https://github.com/jrypzm/yrs/issues/new/choose">Ideas & bugs</a> &nbsp;·&nbsp; <a href="CONTRIBUTING.md">Contributing</a> &nbsp;·&nbsp; <a href="SECURITY.md">Security</a> &nbsp;·&nbsp; <a href="LICENSE">MIT License</a></sub></p>
 
 <br>
 
