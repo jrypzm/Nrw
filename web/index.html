@@ -460,6 +460,61 @@
 
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; } }
   @media (min-width: 600px) { .page, #ob, #home .top { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .controls { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .sheet { max-width: 560px; margin: 0 auto; } }
+
+  /* lifespan estimate */
+  .est-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 2px 0 26px; }
+  .est-prog { display: flex; gap: 6px; padding-bottom: 10px; }
+  .est-prog i { width: 6px; height: 6px; border-radius: 50%; background: var(--surface3); transition: background .35s, transform .45s var(--spring); }
+  .est-prog i.on { background: #fff; } .est-prog i.cur { transform: scale(1.6); }
+  .est-live { text-align: right; }
+  .est-live b { display: block; font-family: var(--display); font-weight: 200; font-size: 46px; line-height: 1; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+  .est-live small { display: block; margin-top: 4px; font-size: 12px; color: var(--mute); }
+  .est-live .d { display: inline-block; margin-right: 6px; padding: 1px 6px; border-radius: 6px; background: #fff; color: #000; font-weight: 600; opacity: 0; transform: translateY(4px); transition: opacity .3s, transform .4s var(--spring); }
+  .est-live .d.show { opacity: 1; transform: none; }
+  .est-step { animation: estIn .55s var(--ease) both; } .est-step.back { animation-name: estBack; }
+  @keyframes estIn { from { opacity: 0; transform: translateX(28px); } } @keyframes estBack { from { opacity: 0; transform: translateX(-28px); } }
+  .est-q { font-family: var(--display); font-size: 31px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.08; }
+  .est-opts { display: grid; gap: 8px; margin-top: 22px; }
+  .est-opt { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; padding: 13px 16px; border-radius: 16px; background: var(--surface2); text-align: left; font-size: 17px; transition: background .25s, color .25s, transform .35s var(--spring); }
+  .est-opt > span { flex: 1; } .est-opt small { display: block; margin-top: 2px; font-size: 13px; color: var(--mute); transition: color .25s; }
+  .est-opt .n { display: none; }
+  .est-opt .r { width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto; box-shadow: inset 0 0 0 1.5px var(--faint); transition: box-shadow .3s var(--spring); }
+  .est-opt.sel { background: #fff; color: #000; } .est-opt.sel small { color: #6e6e73; } .est-opt.sel .r { box-shadow: inset 0 0 0 7px #000; }
+  .est-opt:active { transform: scale(.98); }
+  .est-why { margin-top: 18px; padding: 15px 16px; border-radius: 16px; background: var(--surface); font-size: 14px; line-height: 1.5; color: var(--mute); }
+  .est-why b { color: var(--fg); font-weight: 600; } .est-why cite { display: block; margin-top: 8px; font-style: normal; font-size: 12px; color: var(--faint); }
+  .est-nav { display: flex; } .est-nav .quiet { flex: 1; }
+  .est-bmi { margin-top: 18px; display: grid; gap: 8px; } .est-bmi-f { display: grid; gap: 8px; } .est-bmi-f .field { padding: 13px 14px; }
+  .est-bmi-r { font-size: 14px; color: var(--mute); padding: 2px 4px; } .est-bmi-r b { color: var(--fg); font-weight: 600; }
+  .est-g { display: block; width: 78%; margin: 26px auto 0; }
+  .est-key { display: flex; justify-content: center; gap: 16px; margin-top: 14px; font-size: 12px; color: var(--mute); } .est-key i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+  .est-range { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .est-range div { padding: 14px; border-radius: 16px; background: var(--surface2); } .est-range div:nth-child(2) { background: #fff; color: #000; } .est-range div:nth-child(2) small { color: #6e6e73; }
+  .est-range b { display: block; font-family: var(--display); font-weight: 300; font-size: 34px; letter-spacing: -0.04em; line-height: 1; } .est-range small { display: block; margin-top: 8px; font-size: 12px; line-height: 1.3; color: var(--mute); }
+  .est-chance > div { display: flex; align-items: center; gap: 14px; padding: 8px 2px; font-size: 16px; } .est-chance > div > span { width: 32px; color: var(--mute); } .est-chance b { width: 62px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .est-chance .bar { flex: 1; height: 8px; border-radius: 4px; background: var(--surface2); overflow: hidden; } .est-chance .bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: #fff; transition: width 1.1s var(--ease); } .est-chance .bar i.in { width: var(--w); }
+  .est-how { margin-top: 18px; font-size: 13px; line-height: 1.5; color: var(--mute); } .est-how summary { cursor: pointer; padding: 8px 4px; color: var(--fg); font-size: 15px; list-style: none; } .est-how summary::after { content: " ›"; color: var(--faint); } .est-how p { padding: 4px 4px 6px; }
+  .ob-est { display: inline-flex; gap: 6px; margin-top: 18px; height: 40px; padding: 0 18px; border-radius: 20px; background: var(--surface); font-size: 15px; font-weight: 500; align-items: center; } .ob-est span { color: var(--faint); }
+  /* facts */
+  .fact-k { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+  .fact-card { min-height: 180px; margin-top: 6px; padding: 24px 22px; border-radius: 22px; background: var(--surface); font-family: var(--display); font-size: 23px; font-weight: 500; line-height: 1.32; letter-spacing: -0.015em; display: flex; align-items: center; }
+  .fact-card.in, .fact-mini .tx.in { animation: factIn .6s var(--ease) both; }
+  @keyframes factIn { from { opacity: 0; transform: translateY(10px); filter: blur(4px); } }
+  .fact-nav { display: flex; } .fact-nav .quiet { flex: 1; } .fact-nav .quiet:disabled { opacity: .3; }
+  .fact-mini { display: block; width: 100%; padding: 18px; border-radius: 16px; background: var(--surface); text-align: left; transition: background .2s, transform .35s var(--spring); }
+  .fact-mini:active { transform: scale(.985); }
+  .fact-mini .cap { display: block; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .fact-mini .tx { display: block; margin-top: 8px; font-size: 17px; line-height: 1.42; color: var(--fg); }
+  .fact-mini .more { display: block; margin-top: 10px; font-size: 13px; color: var(--mute); }
+  /* where your years go */
+  .lsl { margin-top: 8px; } .lsl label { display: flex; justify-content: space-between; gap: 12px; margin-top: 14px; font-size: 14px; color: var(--mute); } .lsl output { color: var(--fg); font-variant-numeric: tabular-nums; }
+  .lsl .range { margin: 10px 0 2px; }
+  html.desk .est-opt .n { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: 12px; border-radius: 6px; font-size: 12px; color: var(--mute); box-shadow: inset 0 0 0 1px var(--sep); vertical-align: 1px; }
+  html.desk .est-opt.sel .n { color: #6e6e73; box-shadow: inset 0 0 0 1px #d1d1d6; }
+  @media (hover: hover) { .est-opt:not(.sel):hover, .fact-mini:hover, .ob-est:hover { background: var(--surface3); } }
+  .st-left .fact-mini { margin-top: 26px; max-width: 34em; background: #0b0b0c; box-shadow: inset 0 0 0 1px #19191b; }
+  .st-slider .lsl label { margin-top: 12px; }
+  .ov-fact { padding: 0; } .ov-fact .fact-mini { background: transparent; padding: 24px 26px; } .ov-fact .fact-mini .tx { font-family: var(--display); font-size: 24px; font-weight: 500; letter-spacing: -0.015em; }
 </style>
 </head>
 <body>
@@ -523,7 +578,7 @@ function thump() { try { if (navigator.vibrate) navigator.vibrate(14); else { ha
 
 // ================================================= storage
 const KEY = 'yrs.v2', LKEY = 'yrs.lines';
-const DEF = { birth: null, span: 80, lived: false, pct: false, style: 'classic', sun: false, ripple: true, names: {}, wall: 'daylight', unit: 0, page: 0, zoom: 1, people: [], events: [], letters: [], reviewedAge: -1, habits: [], phoneH: 3, tourDone: false };
+const DEF = { birth: null, span: 80, lived: false, pct: false, style: 'classic', sun: false, ripple: true, names: {}, wall: 'daylight', unit: 0, page: 0, zoom: 1, people: [], events: [], letters: [], reviewedAge: -1, habits: [], phoneH: 3, tourDone: false, est: null, lSleep: 8, lWork: 40, lRetire: 65, lCommute: 45, lChores: 2.5 };
 const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 let S = Object.assign({}, DEF, read(KEY, {}));
 // carry over a birthday from the first web version
@@ -583,7 +638,7 @@ function model(kind, now = new Date()) {
   }
   const sub = `Age ${lived} · ${S.span} year life`;
   switch (S.zoom) {
-    case 0: return { kind, total: LIFETIMES, done: LIFETIMES - 1 + Math.min(1, a / S.span), cols: 50, unit: 'lifetime', sub: 'Yours is the last one, filling now', label: i => i === LIFETIMES - 1 ? 'Your life' : `About ${fmt((LIFETIMES - 1 - i) * 80)} years ago`, year: null };
+    case 0: return { kind, total: LIFETIMES, done: LIFETIMES - 1 + Math.min(1, a / S.span), cols: 50, unit: 'lifetime', sub: 'Yours is the last one, filling now', label: i => (i === LIFETIMES - 1 ? 'Your life' : `About ${fmt((LIFETIMES - 1 - i) * 80)} years ago`), year: null };
     case 2: return { kind, total: S.span * 12, done: Math.min(S.span * 12, a * 12), cols: 36, unit: 'month', sub, label: i => { const d = addMonths(b, i); return `${MON[d.getMonth()]} ${d.getFullYear()} · age ${Math.floor(i / 12)}`; }, year: null };
     case 3: return { kind, total: Math.round(S.span * 52.1775), done: Math.min(S.span * 52.1775, a * 52.1775), cols: 52, unit: 'week', sub, label: i => { const d = new Date(+b + i * 7 * 864e5); return `Week of ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; }, year: null };
     case 4: { const end = new Date(by + S.span, b.getMonth(), b.getDate()); const total = Math.round((end - b) / 864e5);
@@ -751,12 +806,12 @@ class Grid {
     if (yi != null && !name && S.letters.some(l => !l.opened && l.age === yi)) name = 'Sealed letter';
     if (m.unit === 'day') name = LINES[iso(m.dayDate(i))] || null;
     const label = m.label(i) + (isNow ? ' · now' : '');
-    const hint = (sticky || DESK) && yi != null && !S.names[yi] ? `${DESK ? 'Click' : 'Tap'} to ${i <= done ? 'name' : 'plan'} this year` : '';
+    const hint = (sticky || DESK) && yi != null && !S.names[yi] ? `${DESK ? 'Click' : 'Tap'} to ${i <= done ? 'name' : 'plan'} this year` : (sticky || DESK) && m.unit === 'lifetime' ? `${DESK ? 'Click' : 'Tap'} for its story` : '';
     this.tip.innerHTML = name ? `<b></b><span>${label}</span>` : `${label}`;
     if (name) this.tip.querySelector('b').textContent = name;
     if (hint) this.tip.insertAdjacentHTML('beforeend', `<span>${hint}</span>`);
     const [cx, cy] = this.center(i), half = this.cell * this.ratio * .7;
-    this.tip.classList.add('show'); this.tip.classList.toggle('sticky', sticky && yi != null);
+    this.tip.classList.add('show'); this.tip.classList.toggle('sticky', sticky && (yi != null || m.unit === 'lifetime'));
     const w = this.tip.offsetWidth, h = this.tip.offsetHeight;
     const left = Math.min(Math.max(cx, w / 2 + 2), this.W - w / 2 - 2);
     let top = cy - half - h - 8; if (top < -this.box.offsetTop + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--st')) || 0) + 60 && top < 0) top = cy + half + 8;
@@ -790,6 +845,7 @@ class Grid {
     }, { passive: false });
     box.addEventListener('touchend', e => {
       clearTimeout(hold);
+      if (e.target.closest('.tip') && !mode) return; // a tap on the label opens it (see the click below)
       if (mode === 'scrub') { if (this.tipI != null) { this.showTip(this.tipI, true); SIG.scrubs++; } }
       else if (!mode && e.changedTouches.length === 1) { const [px, py] = local(e.changedTouches[0]); const i = this.idxAt(px, py); if (i != null) { SIG.taps++; this.showTip(i, true); tick(); } else this.hideTip(); }
       if (e.touches.length === 0) mode = null;
@@ -804,7 +860,7 @@ class Grid {
       if (i == null) { if (this.tipI != null) this.hideTip(); return; }
       if (i !== this.tipI) { this.showTip(i, false); SIG.hovers++; seen.add(i); if (seen.size >= 5) { SIG.scrubs++; seen = new Set(); } }
     });
-    box.addEventListener('mouseleave', () => { seen = new Set(); if (this.field) { this.mx = this.my = -1e4; this.reqDraw(); } if (this.tipI != null) this.hideTip(); });
+    box.addEventListener('mouseleave', () => { if (fromTouch()) return; seen = new Set(); if (this.field) { this.mx = this.my = -1e4; this.reqDraw(); } if (this.tipI != null) this.hideTip(); });
     let zAcc = 0, zT = 0;
     box.addEventListener('wheel', e => {
       if (!(e.ctrlKey || e.metaKey) || this.kind !== 'life') return;
@@ -819,9 +875,9 @@ class Grid {
       if (fromTouch() || e.button !== 0 || e.target.closest('.tip')) return;
       const [px, py] = local(e), i = this.idxAt(px, py); if (i == null) return;
       SIG.taps++; const yi = this.m.year ? this.m.year(i) : null;
-      if (yi != null) { tick(); this.hideTip(); openSheet('milestone', yi); } else this.showTip(i, true);
+      if (yi != null) { tick(); this.hideTip(); openSheet('milestone', yi); } else if (this.m.unit === 'lifetime') { tick(); this.hideTip(); openSheet('fact', i); } else this.showTip(i, true);
     });
-    this.tip.addEventListener('click', () => { const yi = this.m.year ? this.m.year(this.tipI) : null; if (this.sticky && yi != null) { tick(); this.hideTip(); openSheet('milestone', yi); } });
+    this.tip.addEventListener('click', () => { const yi = this.m.year ? this.m.year(this.tipI) : null; if (this.sticky && yi != null) { tick(); this.hideTip(); openSheet('milestone', yi); } else if (this.sticky && this.m.unit === 'lifetime') { tick(); const i = this.tipI; this.hideTip(); openSheet('fact', i); } });
   }
 }
 
@@ -960,7 +1016,8 @@ function obRender(dir = 1) {
       <div style="display:flex;align-items:center;margin-top:18px"><div style="flex:1;display:flex;align-items:baseline;gap:8px"><span class="bignum" id="obSpan"></span><span class="sub" style="margin:0;font-size:17px">years</span></div>
       <div class="plusminus"><button data-d="-1">−</button><button data-d="1">+</button></div></div>
       <div class="chips">${[70, 75, 80, 85, 90].map(v => `<button data-v="${v}">${v}</button>`).join('')}</div>
-      <div style="width:82%;margin:28px auto 0"><canvas id="obGrid" style="display:block;width:100%"></canvas></div><p class="sub" id="obLeft" style="margin-top:16px"></p>`;
+      <button class="ob-est" id="obEst">Estimate it from your life <span>›</span></button>
+      <div style="width:82%;margin:24px auto 0"><canvas id="obGrid" style="display:block;width:100%"></canvas></div><p class="sub" id="obLeft" style="margin-top:16px"></p>`;
     const paint = () => {
       el.querySelector('#obSpan').textContent = OB.span;
       el.querySelectorAll('.chips button').forEach(b => b.classList.toggle('sel', +b.dataset.v === OB.span));
@@ -971,6 +1028,7 @@ function obRender(dir = 1) {
     };
     el.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { tick(); OB.span = Math.min(120, Math.max(40, OB.span + +b.dataset.d)); paint(); });
     el.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { tick(); OB.span = +b.dataset.v; paint(); });
+    el.querySelector('#obEst').onclick = () => { tick(); openSheet('lifespan', { b: OB.date, onUse: y => { OB.span = Math.max(40, Math.min(120, y)); paint(); } }); };
     requestAnimationFrame(paint);
   } else {
     el.innerHTML = `<h1>This is<br>your life.</h1><p class="sub">Each dot is one year.</p><canvas id="obReveal" style="display:block;width:100%;margin-top:28px"></canvas>
@@ -1171,21 +1229,22 @@ function renderExtras() {
   }));
 
   // ledger
-  const left = yearsLeft(), a = age(birth()), sleep = left / 3, work = Math.max(0, Math.min(left, 65 - a)) * 1920 / 8766, upkeep = left / 8;
-  const phone = Math.min(left * S.phoneH / 24, Math.max(0, left - sleep - work - upkeep)), free = Math.max(0, left - sleep - work - phone - upkeep);
-  const sl = [['Asleep', sleep, '#2c2c2e'], ['Working', work, '#48484a'], ['On your phone', phone, '#8e8e93'], ['Eating, chores, commuting', upkeep, '#3a3a3c'], ['Truly yours', free, '#ffffff']];
-  $('head-ledger').innerHTML = `<div class="h-title">Your ${fmt(left)} years</div><div class="h-sub">Where the time you have left will go</div>`;
-  $('extra-ledger').innerHTML = `<canvas id="ledgerGrid" style="display:block;width:100%;margin-top:28px"></canvas><div class="legend" style="margin-top:22px">${sl.map((s, i) => `<div class="lr ${i === 4 ? 'y' : ''}"><i style="background:${s[2]}"></i>${s[0]}<b>${s[1].toFixed(1)} yrs</b></div>`).join('')}</div>
-    <div class="card" style="margin-top:20px"><div class="k">Your phone time</div><div class="small" style="margin-top:4px">Your phone's screen time settings show your daily average. Set it here.</div>
-    <input class="range" id="phoneR" type="range" min="0" max="12" step="0.25" value="${S.phoneH}"><div class="small" id="phoneV">${S.phoneH} hours a day</div></div>
-    <p class="small" style="margin-top:12px;color:var(--faint)">Sleep 8 h a day, work 40 h a week until 65, 3 h a day eating, chores and getting around.</p>`;
-  const total = Math.max(1, Math.round(left)), raw = sl.map(s => s[1] / Math.max(.01, left) * total), ints = raw.map(Math.floor);
-  let rest = total - ints.reduce((p, c) => p + c, 0); raw.map((v, i) => [v - Math.floor(v), i]).sort((p, q) => q[0] - p[0]).forEach(([, i]) => { if (rest > 0) { ints[i]++; rest--; } });
-  const colors = ints.flatMap((n, i) => Array(n).fill(sl[i][2]));
-  requestAnimationFrame(() => { const cv = $('ledgerGrid'); if (!cv) return; const W = cv.clientWidth, cell = W / 9.6, H = Math.ceil(colors.length / 10) * cell - cell * .4, x = sizeCanvas(cv, W, H);
-    colors.forEach((c, i) => circle(x, -cell * .2 + (i % 10 + .5) * cell, -cell * .2 + (Math.floor(i / 10) + .5) * cell, cell * .3, c)); });
-  const r = $('phoneR'); let rT;
-  r.oninput = () => { S.phoneH = +r.value; $('phoneV').textContent = `${S.phoneH} hours a day`; if (Math.round(S.phoneH * 4) % 4 === 0) tick(); clearTimeout(rT); rT = setTimeout(() => { save(); const y = $('pager').querySelector('[data-i="4"]').scrollTop; renderExtras(); $('pager').querySelector('[data-i="4"]').scrollTop = y; }, 250); };
+  $('extra-ledger').innerHTML = `<canvas id="ledgerGrid" style="display:block;width:100%;margin-top:28px"></canvas><div class="legend" id="ledgerLeg" style="margin-top:22px"></div>
+    <div class="card" style="margin-top:20px"><div class="k">Your days</div><div class="small" style="margin-top:4px">Move these to match your life. Your phone's screen time settings show your daily average.</div>${ledgerSlidersHTML()}</div>
+    <p class="small" style="margin-top:12px;color:var(--faint)">Work counts 48 weeks a year until you retire, and commuting five days a week.</p>`;
+  const paintLedger = () => {
+    const d = ledgerData();
+    $('head-ledger').innerHTML = `<div class="h-title">Your ${fmt(d.left)} years</div><div class="h-sub">Where the time you have left will go</div>`;
+    $('ledgerLeg').innerHTML = d.sl.map((s, i) => `<div class="lr ${i === 5 ? 'y' : ''}"><i style="background:${s[2]}"></i>${s[0]}<b>${s[1].toFixed(1)} yrs</b></div>`).join('');
+    const cv = $('ledgerGrid'), cols = ledgerColors(d); if (!cv || !cv.clientWidth) return; const W = cv.clientWidth, cell = W / 9.6, H = Math.ceil(cols.length / 10) * cell - cell * .4, x = sizeCanvas(cv, W, H);
+    cols.forEach((c, i) => circle(x, -cell * .2 + (i % 10 + .5) * cell, -cell * .2 + (Math.floor(i / 10) + .5) * cell, cell * .3, c));
+  };
+  paintLedger(); requestAnimationFrame(paintLedger);
+  wireLedger($('extra-ledger'), paintLedger);
+
+  // did you know
+  $('extra-life').innerHTML = `<div style="height:30px"></div>${factCardHTML('lifeFact', 'Did you know')}`;
+  wireFactCard('lifeFact', () => S.zoom === 0 ? lifeFacts(Math.floor(Math.random() * LIFETIMES)) : youFacts());
 }
 
 // ================================================= moments
@@ -1232,7 +1291,7 @@ const SHEETS = {
     body.innerHTML = H2('Settings') + `<div style="height:10px"></div><div class="group"><button class="row" id="sGuide"><span class="t">How to use yrs.<small>Every gesture and setting, and the tour</small></span><span class="chev">›</span></button></div><div class="caps">You</div><div class="group">
       <button class="row" id="sBday"><span class="t">Birthday</span><span class="v" id="sBdayV">${b.getDate()} ${MON[b.getMonth()]} ${b.getFullYear()}</span></button><div id="sBdayW" hidden style="padding:8px"></div>
       <div class="row"><span class="t">Lifespan</span><div class="stepper"><button data-s="-1">−</button><output id="sSpan">${S.span}</output><button data-s="1">+</button></div></div>
-      <button class="row" id="sEst"><span class="t">Estimate my lifespan<small>Five honest questions</small></span><span class="chev">›</span></button></div>
+      <button class="row" id="sEst"><span class="t">Estimate my lifespan<small>${S.est ? 'Answered · tap to change' : 'Ten questions, built on real studies'}</small></span><span class="chev">›</span></button></div>
       <div class="caps">Number</div><div id="sStyle"></div>
       <div class="caps">Feel</div><div class="group"><div class="row" id="rSun"><span class="t">Daylight<small>Dots glow by day and dim at night</small></span></div><div class="row" id="rRip"><span class="t">Ripple<small>A wave runs through your years each time you come back</small></span></div></div>
       <div class="caps">Lock screen</div><div class="walls" id="sWalls"></div><div style="height:14px"></div>
@@ -1264,7 +1323,7 @@ const SHEETS = {
   milestone(year) {
     const lived = Math.floor(age(birth())), past = year <= lived, sealed = S.letters.find(l => l.age === year && !l.opened);
     body.innerHTML = H2(`Age ${year} · ${birth().getFullYear() + year}`, past ? 'What happened this year?' : 'What do you want this year to hold?') +
-      `<input class="field" id="mName" maxlength="40" placeholder="${past ? 'Moved to a new city' : 'See the northern lights'}" value="${esc(S.names[year] || '')}" enterkeyhint="done">
+      factCardHTML('mFact', past ? 'That year' : 'That year, ahead') + `<div style="height:18px"></div><input class="field" id="mName" maxlength="40" placeholder="${past ? 'Moved to a new city' : 'See the northern lights'}" value="${esc(S.names[year] || '')}" enterkeyhint="done">
       <p class="small" style="margin:10px 4px 0">Named years get a thin ring.</p>
       ${past ? '' : `<div class="caps">A letter to yourself at ${year}</div>${sealed ? '<p class="small" style="margin:0 4px 10px">A letter is sealed for this year. Writing a new one replaces it.</p>' : ''}<textarea class="field" id="mLetter" rows="5" maxlength="2000" placeholder="Dear me at ${year}…"></textarea><p class="small" style="margin:10px 4px 0">It stays sealed until your birthday that year. Not even you can read it before then.</p>`}
       <div style="height:20px"></div><button class="primary" id="mSave">Save</button>${S.names[year] ? '<button class="quiet" id="mDel">Remove name</button>' : ''}`;
@@ -1273,6 +1332,7 @@ const SHEETS = {
       const l = $('mLetter')?.value.trim(); if (!past && l) { S.letters = S.letters.filter(x => x.age !== year || x.opened); S.letters.push({ age: year, text: l, written: iso(new Date()), opened: false }); }
       thump(); refresh(); closeSheet(); toast(l && !past ? 'Letter sealed' : n ? 'Year named' : 'Saved');
     };
+    wireFactCard('mFact', () => yearFacts(year), EVENTS[birth().getFullYear() + year] && yearFacts(year)[0]);
     $('mSave').onclick = saveIt; $('mName').onkeydown = e => { if (e.key === 'Enter') saveIt(); };
     if ($('mDel')) $('mDel').onclick = () => { $('mName').value = ''; saveIt(); };
   },
@@ -1317,16 +1377,7 @@ const SHEETS = {
     onClose = () => { S.reviewedAge = lived; save(); };
     $('rGo').onclick = () => { thump(); closeSheet(); };
   },
-  lifespan() {
-    const h = new Set(S.habits);
-    const est = () => Math.max(40, Math.min(120, 80 + HABITS.filter(x => h.has(x[0])).reduce((p, x) => p + x[2], 0)));
-    body.innerHTML = H2('Estimate my lifespan', 'Starting from 80, adjusted by habits with the clearest evidence.') + `<div class="group" id="hab"></div>
-      <div style="display:flex;align-items:baseline;gap:8px;margin-top:26px"><span class="bignum" style="font-size:72px" id="est"></span><span class="sub" style="margin:0;font-size:17px;color:var(--mute)">years</span></div>
-      <p class="small" style="margin-top:6px">A rough population average to reflect on, not medical advice.</p><div style="height:22px"></div><button class="primary" id="useEst"></button>`;
-    HABITS.forEach(([k, l, d]) => { const r = document.createElement('div'); r.className = 'row'; r.innerHTML = `<span class="t">${l}<small>${d > 0 ? '+' : ''}${d} years</small></span>`; r.append(sw(h.has(k), on => { on ? h.add(k) : h.delete(k); paint(); })); $('hab').append(r); });
-    const paint = () => { $('est').textContent = est(); $('useEst').textContent = `Use ${est()} years`; }; paint();
-    $('useEst').onclick = () => { S.span = est(); S.habits = [...h]; thump(); refresh(); closeSheet(); toast(`Lifespan set to ${S.span}`); };
-  },
+
 };
 
 
@@ -1474,7 +1525,9 @@ const GUIDE = [
   ['Settings · You', [
     ['Birthday', 'Tap to change it on the wheels. Everything recalculates at once.'],
     ['Lifespan', 'How many years your grid holds. 80 is a fair average; use − and + to change it from 40 to 120.'],
-    ['Estimate my lifespan', 'Five questions about habits with the clearest evidence, starting from 80. A rough estimate to reflect on, not medical advice.'],
+    ['Estimate my lifespan', 'Where you live, your sex and eight habits with the strongest evidence, from UN life tables and large studies. See the range, your chances of reaching 80, 90 and 100, and what moved it. A population average to reflect on, not medical advice.'],
+    ['Did you know', 'Open any dot in History for a story about that lifetime: a different one each time. Every year of your life has the world that year, and the Life page has facts about you.'],
+    ['Where your years go', 'Set your sleep, work, retirement, commute, chores and phone time, and watch the years that are truly yours change.'],
   ]],
   ['Settings · Number', [
     ['Classic', 'A clear headline, like 48 years left.'],
@@ -1629,7 +1682,7 @@ function inspNow() {
 }
 function inspDot(k, i) {
   const g = grids[k], m = g.m, b = birth(), by = b.getFullYear(), done = Math.floor(m.done), lived = Math.floor(age(b));
-  if (m.unit === 'lifetime') return `<div><div class="ic">History</div><h3>${i === LIFETIMES - 1 ? 'Your life' : 'A life before yours'}</h3><p>${esc(m.label(i))}. Each dot is one lifetime of about 80 years, end to end since the first cities.</p></div>`;
+  if (m.unit === 'lifetime') return `<div><div class="ic">History</div><h3>${i === LIFETIMES - 1 ? 'Your life' : 'A life before yours'}</h3><p>${esc(m.label(i))}. Each dot is one lifetime of about 80 years, end to end back to the first of our species.</p><p class="qt">${esc(nextFact(lifeFacts(i)))}</p><div class="hint">Click it for more</div></div>`;
   const yi = m.year ? m.year(i) : null;
   const state = i < done ? 'Lived' : i === done && m.done < m.total ? 'Now' : 'Ahead';
   const away = i - done, unit = m.unit;
@@ -1817,7 +1870,7 @@ function spreadHTML(k) {
   const units = k === 'life' && m.unit === 'year' && !S.pct ? A(4, `<div class="st-units" id="st-units">${MEASURES.map((u, i) => `<button data-u="${i}" class="${i === S.unit % MEASURES.length ? 'on' : ''}">${u[1][0].toUpperCase() + u[1].slice(1)}</button>`).join('')}</div>`) : '';
   const lb = lastBirthday(b, new Date()), nb = birthdayIn(b, lb.getFullYear() + 1), toNext = Math.round((nb - day0(new Date())) / 864e5), line = LINES[iso(day0(new Date()))];
   let extra = '';
-  if (k === 'life') extra = A(6, `<div class="st-foot"><div><div class="st-cap">Today</div>Day ${fmt(dayOfLife())}${line ? ` · <span>“${esc(line)}”</span>` : ''}</div><div><div class="st-cap">Next birthday</div>${toNext === 0 ? 'Today' : `in ${fmt(toNext)} ${toNext === 1 ? 'day' : 'days'}`} · <span>turning ${lived + 1}</span></div></div>`);
+  if (k === 'life') extra = A(6, `<div class="st-foot"><div><div class="st-cap">Today</div>Day ${fmt(dayOfLife())}${line ? ` · <span>“${esc(line)}”</span>` : ''}</div><div><div class="st-cap">Next birthday</div>${toNext === 0 ? 'Today' : `in ${fmt(toNext)} ${toNext === 1 ? 'day' : 'days'}`} · <span>turning ${lived + 1}</span></div></div>`) + A(7, factCardHTML('st-fact', S.zoom === 0 ? 'From history' : 'Did you know'));
   if (k === 'decade') { const st = Math.floor(lived / 10) * 10; extra = A(6, `<div class="st-foot"><div><div class="st-cap">Your ${st ? st + 's' : 'first decade'}</div>${10 - (lived - st)} ${10 - (lived - st) === 1 ? 'year' : 'years'} to go, ending at ${st + 10}</div><div><div class="st-cap">Named years</div>${Object.keys(S.names).filter(y => y >= st && y < st + 10).length || 'None yet'} <span>· click a year to name it</span></div></div>`); }
   if (k === 'year') {
     const t = day0(new Date()), up = S.events.map((e, i) => ({ ...e, i })).filter(e => parse(e.date) >= t).sort((p, q) => p.date < q.date ? -1 : 1).slice(0, 4);
@@ -1870,7 +1923,8 @@ function wire(k, enter) {
   $('st-page').querySelectorAll('[data-person]').forEach(b => b.onclick = () => { tick(); openSheet('person', b.dataset.person === 'new' ? null : +b.dataset.person); });
   $('st-page').querySelectorAll('[data-ev]').forEach(b => b.onclick = () => { tick(); openSheet('event', b.dataset.ev === 'new' ? null : +b.dataset.ev); });
   const today = $('st-today'); if (today) today.onclick = () => { tick(); openSheet('line', iso(day0(new Date()))); };
-  const r = $('st-phone'); if (r) { let rT; r.oninput = () => { S.phoneH = +r.value; $('st-phoneV').textContent = `${S.phoneH} hours a day`; clearTimeout(rT); rT = setTimeout(() => { save(); renderExtras(); studioRender(false); }, 220); }; }
+  if ($('st-led')) wireLedger($('st-led'), () => { const d = ledgerData(); $('st-free').textContent = d.free.toFixed(1); $('st-leg').innerHTML = d.sl.map((s, i) => `<div class="${i === 5 ? 'y' : ''}"><i style="background:${s[2]}"></i>${s[0]}<b>${s[1].toFixed(1)} yrs</b></div>`).join(''); const cols = ledgerColors(d); dots($('st-ledger'), cols.length, 10, i => cols[i]); clearTimeout(ledT); ledT = setTimeout(renderExtras, 400); });
+  if ($('ov-fact')) wireFactCard('ov-fact', youFacts);
   drawStudioCanvases();
   if (!k) return;
   const g = sgrids[k]; $('st-gridwrap').append(g.box); fitBox(k); g.update(enter);
@@ -1878,6 +1932,7 @@ function wire(k, enter) {
   wireLeft(k, enter);
   const z = $('st-zoom'); if (z) { z.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { tick(); setZoom(+b.dataset.z); } }); requestAnimationFrame(placeThumb); }
 }
+let ledT = 0;
 function wireLeftOnly() { wireLeft('life', false); }
 /** The left column's controls: the number (click to count another way, hold to feel the seconds), units, Left/Lived, %. */
 function wireLeft(k, enter) {
@@ -1894,6 +1949,7 @@ function wireLeft(k, enter) {
   $('st-pct').onclick = () => $('pctBtn').click();
   const today = $('st-today'); if (today) today.onclick = () => { tick(); openSheet('line', iso(day0(new Date()))); };
   $('st-page').querySelectorAll('.st-left [data-ev]').forEach(b => b.onclick = () => { tick(); openSheet('event', b.dataset.ev === 'new' ? null : +b.dataset.ev); });
+  if ($('st-fact')) wireFactCard('st-fact', () => S.zoom === 0 ? lifeFacts(Math.floor(Math.random() * LIFETIMES)) : youFacts());
 }
 function placeThumb() {
   const z = $('st-zoom'), th = $('st-zthumb'); if (!z || !th) return;
@@ -1922,25 +1978,20 @@ function peopleHTML() {
   </div><div class="st-stage">${S.people.length ? `<div class="st-people">${cards}</div>` : A(2, `<div class="st-sub" style="color:var(--faint)">No one here yet.</div>`)}</div></div>`;
 }
 // ---------- where your years go
-function ledgerData() {
-  const left = yearsLeft(), a = age(birth()), sleep = left / 3, work = Math.max(0, Math.min(left, 65 - a)) * 1920 / 8766, upkeep = left / 8;
-  const phone = Math.min(left * S.phoneH / 24, Math.max(0, left - sleep - work - upkeep)), free = Math.max(0, left - sleep - work - phone - upkeep);
-  return { left, sl: [['Asleep', sleep, '#2c2c2e'], ['Working', work, '#48484a'], ['On your phone', phone, '#8e8e93'], ['Eating, chores, commuting', upkeep, '#3a3a3c'], ['Truly yours', free, '#ffffff']] };
-}
 function ledgerColors(d) {
   const total = Math.max(1, Math.round(d.left)), raw = d.sl.map(s => s[1] / Math.max(.01, d.left) * total), ints = raw.map(Math.floor);
   let rest = total - ints.reduce((p, c) => p + c, 0); raw.map((v, i) => [v - Math.floor(v), i]).sort((p, q) => q[0] - p[0]).forEach(([, i]) => { if (rest > 0) { ints[i]++; rest--; } });
   return ints.flatMap((n, i) => Array(n).fill(d.sl[i][2]));
 }
 function ledgerHTML() {
-  const d = ledgerData(), free = d.sl[4][1];
+  const d = ledgerData(), free = d.free;
   return `<div class="st-split"><div class="st-left">
     ${A(0, `<div class="st-cap">Where your years go</div>`)}
-    ${A(1, `<div class="st-num" style="--nsz:${sizeNum(free.toFixed(1))};cursor:default">${free.toFixed(1)}</div>`)}
+    ${A(1, `<div class="st-num" id="st-free" style="--nsz:${sizeNum(free.toFixed(1))};cursor:default">${free.toFixed(1)}</div>`)}
     ${A(2, `<div class="st-word">years truly yours</div>`)}
     ${A(3, `<div class="st-sub">of the ${fmt(d.left)} you have left</div>`)}
-    ${A(4, `<div class="st-legend">${d.sl.map((s, i) => `<div class="${i === 4 ? 'y' : ''}"><i style="background:${s[2]}"></i>${s[0]}<b>${s[1].toFixed(1)} yrs</b></div>`).join('')}</div>`)}
-    ${A(5, `<div class="st-slider"><label><span>Your phone time</span><span id="st-phoneV">${S.phoneH} hours a day</span></label><input class="range" id="st-phone" type="range" min="0" max="12" step="0.25" value="${S.phoneH}"></div>`)}
+    ${A(4, `<div class="st-legend" id="st-leg">${d.sl.map((s, i) => `<div class="${i === 5 ? 'y' : ''}"><i style="background:${s[2]}"></i>${s[0]}<b>${s[1].toFixed(1)} yrs</b></div>`).join('')}</div>`)}
+    ${A(5, `<div class="st-slider" id="st-led">${ledgerSlidersHTML()}</div>`)}
   </div><div class="st-stage" data-a style="--i:2"><canvas id="st-ledger" style="display:block;width:min(100%,600px)"></canvas></div></div>`;
 }
 
@@ -1961,8 +2012,9 @@ function overviewHTML() {
     ${tile(3, '', 'grid-column:6/9;grid-row:2', 2, `<div class="st-cap">This decade</div><canvas id="ov-decade" style="width:100%"></canvas><p style="margin-top:14px"><b>${dm.context}</b> · ${fmt(10 - (dm.done))} to go</p>`)}
     ${tile(4, up.length ? '' : 'empty', 'grid-column:9/13;grid-row:2', 3, `<div class="st-cap">Ahead</div>${up.length ? `<div class="rows" style="margin-top:12px">${up.map(e => { const d = Math.round((parse(e.date) - t) / 864e5); return `<div><span>${esc(e.name)}</span><b>${d === 0 ? 'Today' : `${fmt(d)} ${d === 1 ? 'day' : 'days'}`}</b></div>`; }).join('')}</div>` : `<h3>Nothing yet</h3><p>Add a trip, a wedding or a birthday on This year.</p>`}`)}
     ${tile(5, S.people.length ? '' : 'empty', 'grid-column:1/5;grid-row:3', 4, `<div class="st-cap">People</div>${S.people.length ? S.people.slice(0, 2).map(p => { const tg = together(p); return `<div style="margin-top:14px;display:flex;align-items:baseline;gap:10px"><span style="font-family:var(--display);font-weight:200;font-size:44px;letter-spacing:-.04em">${fmt(tg.v)}</span><span style="color:var(--mute);font-size:14px">more ${p.per === 365 ? 'days' : 'visits'} with <b style="color:#fff;font-weight:500">${esc(p.name)}</b></span></div>`; }).join('') : `<h3>Add someone you love</h3><p>See how many more times you'll be together.</p>`}`)}
-    ${tile(6, '', 'grid-column:5/9;grid-row:3', 5, `<div class="st-cap">Where your years go</div><div style="display:flex;gap:22px;align-items:center;margin-top:14px"><canvas id="ov-ledger" style="width:150px;flex:0 0 auto"></canvas><div><div class="big" style="margin:0;font-size:clamp(48px,4.4vw,72px)">${led.sl[4][1].toFixed(1)}</div><p>years truly yours</p></div></div>`)}
+    ${tile(6, '', 'grid-column:5/9;grid-row:3', 5, `<div class="st-cap">Where your years go</div><div style="display:flex;gap:22px;align-items:center;margin-top:14px"><canvas id="ov-ledger" style="width:150px;flex:0 0 auto"></canvas><div><div class="big" style="margin:0;font-size:clamp(48px,4.4vw,72px)">${led.free.toFixed(1)}</div><p>years truly yours</p></div></div>`)}
     ${tile(7, '', 'grid-column:9/13;grid-row:3', 1, `<div class="st-cap">Moments</div><div class="rows" style="margin-top:12px"><div><span>Lines written</span><b>${fmt(lines)}</b></div><div><span>Years named</span><b>${fmt(named)}</b></div><div><span>Letters sealed</span><b>${fmt(sealed.length)}</b></div></div><p style="margin-top:10px">${sealed.length ? `The next one opens at <b>${sealed[0].age}</b>, on ${birthdayIn(b, b.getFullYear() + sealed[0].age).getFullYear()}'s birthday.` : 'Click a year on Life to name it or write to it.'}</p>`)}
+    <div class="tile wide ov-fact" data-a style="--i:8;grid-column:1/13;grid-row:4;align-self:start;cursor:default">${factCardHTML('ov-fact', 'Did you know')}</div>
   </div>`;
 }
 function dots(cv, n, cols, colorAt, ratio = .6) {
@@ -2020,6 +2072,419 @@ document.addEventListener('keydown', e => {
 let spaceBeat = 0;
 document.addEventListener('keyup', e => { if (e.key === ' ' && spaceDown) { spaceDown = false; clearInterval(spaceBeat); DESK && studioOn ? studioBeat(false) : beat(PAGES[S.page], false); } });
 addEventListener('blur', () => { if (spaceDown) { spaceDown = false; clearInterval(spaceBeat); DESK && studioOn ? studioBeat(false) : beat(PAGES[S.page], false); } });
+
+
+// ================================================= life expectancy data
+// UN World Population Prospects 2024, life expectancy at birth in 2023 (women, men), via Our World in Data.
+const LE = {"AFG":["Afghanistan",67.5,64.5],"ALB":["Albania",81.4,77.7],"DZA":["Algeria",77.7,74.9],"ASM":["American Samoa",75.8,70.2],"AND":["Andorra",86.1,82.1],"AGO":["Angola",67.1,62.1],"AIA":["Anguilla",82.7,76.0],"ATG":["Antigua and Barbuda",80.3,74.5],"ARG":["Argentina",79.9,74.8],"ARM":["Armenia",79.5,71.4],"ABW":["Aruba",78.8,73.7],"AUS":["Australia",85.7,82.1],"AUT":["Austria",84.3,79.5],"AZE":["Azerbaijan",77.1,71.6],"BHS":["Bahamas",78.2,70.9],"BHR":["Bahrain",82.0,80.7],"BGD":["Bangladesh",76.4,73.0],"BRB":["Barbados",78.6,73.6],"BLR":["Belarus",79.1,69.5],"BEL":["Belgium",84.3,79.9],"BLZ":["Belize",76.5,70.9],"BEN":["Benin",62.2,59.3],"BMU":["Bermuda",85.7,78.9],"BTN":["Bhutan",75.0,71.3],"BOL":["Bolivia",71.1,66.1],"BES":["Bonaire Sint Eustatius and Saba",80.2,75.2],"BIH":["Bosnia and Herzegovina",80.9,74.4],"BWA":["Botswana",71.7,66.7],"BRA":["Brazil",79.0,72.8],"VGB":["British Virgin Islands",80.0,74.5],"BRN":["Brunei",77.6,73.3],"BGR":["Bulgaria",79.2,72.2],"BFA":["Burkina Faso",63.2,58.9],"BDI":["Burundi",65.7,61.6],"KHM":["Cambodia",73.2,68.0],"CMR":["Cameroon",65.9,61.5],"CAN":["Canada",84.8,80.4],"CPV":["Cape Verde",79.2,72.9],"CYM":["Cayman Islands",82.9,78.0],"CAF":["Central African Republic",59.3,55.3],"TCD":["Chad",57.0,53.2],"CHL":["Chile",83.1,79.2],"CHN":["China",80.9,75.2],"COL":["Colombia",80.5,75.0],"COM":["Comoros",68.9,64.8],"COG":["Congo",67.5,64.1],"COK":["Cook Islands",79.0,71.9],"CRI":["Costa Rica",83.4,78.1],"CIV":["Cote d'Ivoire",64.1,60.0],"HRV":["Croatia",81.7,75.4],"CUB":["Cuba",80.5,75.7],"CUW":["Curacao",80.8,72.5],"CYP":["Cyprus",83.7,79.6],"CZE":["Czechia",82.6,77.0],"COD":["Democratic Republic of Congo",64.0,59.8],"DNK":["Denmark",83.9,80.0],"DJI":["Djibouti",68.5,63.5],"DMA":["Dominica",74.5,68.2],"DOM":["Dominican Republic",77.0,70.5],"TLS":["East Timor",69.4,66.1],"ECU":["Ecuador",80.1,74.7],"EGY":["Egypt",73.8,69.5],"SLV":["El Salvador",76.3,67.5],"GNQ":["Equatorial Guinea",65.7,62.0],"ERI":["Eritrea",70.7,66.5],"EST":["Estonia",83.0,74.9],"SWZ":["Eswatini",67.0,61.2],"ETH":["Ethiopia",70.7,64.1],"FLK":["Falkland Islands",81.2,77.2],"FRO":["Faroe Islands",82.5,78.2],"FJI":["Fiji",69.4,65.3],"FIN":["Finland",84.7,79.2],"FRA":["France",86.1,80.4],"GUF":["French Guiana",80.0,74.1],"PYF":["French Polynesia",86.5,81.8],"GAB":["Gabon",71.1,65.9],"GMB":["Gambia",67.5,64.2],"GEO":["Georgia",79.1,69.6],"DEU":["Germany",83.8,79.0],"GHA":["Ghana",67.9,63.1],"GIB":["Gibraltar",86.1,80.9],"GRC":["Greece",84.3,79.3],"GRL":["Greenland",72.4,68.1],"GRD":["Grenada",78.4,72.4],"GLP":["Guadeloupe",85.5,78.1],"GUM":["Guam",81.4,73.4],"GTM":["Guatemala",74.9,70.3],"GGY":["Guernsey",85.6,81.0],"GIN":["Guinea",61.9,59.5],"GNB":["Guinea-Bissau",66.4,61.7],"GUY":["Guyana",73.9,66.5],"HTI":["Haiti",68.3,61.7],"HND":["Honduras",75.5,70.3],"HKG":["Hong Kong",88.1,82.8],"HUN":["Hungary",80.2,73.7],"ISL":["Iceland",84.5,81.0],"IND":["India",73.6,70.5],"IDN":["Indonesia",73.3,69.0],"IRN":["Iran",79.6,75.8],"IRQ":["Iraq",74.1,70.4],"IRL":["Ireland",84.5,80.4],"IMN":["Isle of Man",83.1,78.9],"ISR":["Israel",84.6,80.2],"ITA":["Italy",85.7,81.6],"JAM":["Jamaica",74.0,69.0],"JPN":["Japan",87.7,81.7],"JEY":["Jersey",81.8,77.7],"JOR":["Jordan",80.2,75.7],"KAZ":["Kazakhstan",78.4,70.1],"KEN":["Kenya",65.9,61.5],"KIR":["Kiribati",68.2,64.6],"KWT":["Kuwait",81.8,79.3],"KGZ":["Kyrgyzstan",75.2,68.2],"LAO":["Laos",71.2,66.8],"LVA":["Latvia",80.5,71.6],"LBN":["Lebanon",79.7,75.7],"LSO":["Lesotho",60.0,54.6],"LBR":["Liberia",63.4,60.9],"LBY":["Libya",70.4,68.3],"LIE":["Liechtenstein",85.3,81.8],"LTU":["Lithuania",80.7,71.2],"LUX":["Luxembourg",83.8,80.6],"MAC":["Macao",85.2,80.8],"MDG":["Madagascar",65.4,61.9],"MWI":["Malawi",70.6,64.1],"MYS":["Malaysia",79.4,74.3],"MDV":["Maldives",82.8,79.7],"MLI":["Mali",61.9,59.0],"MLT":["Malta",85.3,81.3],"MHL":["Marshall Islands",69.3,64.9],"MTQ":["Martinique",85.6,79.3],"MRT":["Mauritania",70.5,66.5],"MUS":["Mauritius",78.2,71.9],"MYT":["Mayotte",78.3,74.1],"MEX":["Mexico",77.8,72.2],"FSM":["Micronesia (country)",71.1,63.5],"MDA":["Moldova",75.5,66.6],"MCO":["Monaco",88.5,84.4],"MNG":["Mongolia",76.4,67.2],"MNE":["Montenegro",80.3,73.7],"MSR":["Montserrat",78.8,74.1],"MAR":["Morocco",77.6,73.2],"MOZ":["Mozambique",66.5,60.3],"MMR":["Myanmar",70.2,63.8],"NAM":["Namibia",71.3,63.3],"NRU":["Nauru",64.0,60.3],"NPL":["Nepal",71.8,68.8],"NLD":["Netherlands",83.7,80.5],"NCL":["New Caledonia",81.3,76.3],"NZL":["New Zealand",83.8,80.4],"NIC":["Nicaragua",77.4,72.3],"NER":["Niger",62.1,60.3],"NGA":["Nigeria",54.7,54.2],"NIU":["Niue",72.7,67.4],"PRK":["North Korea",75.7,71.5],"MKD":["North Macedonia",79.6,75.1],"MNP":["Northern Mariana Islands",80.7,77.1],"NOR":["Norway",84.8,81.7],"OMN":["Oman",81.9,78.5],"PAK":["Pakistan",70.2,65.3],"PLW":["Palau",71.8,67.2],"PSE":["Palestine",71.5,59.7],"PAN":["Panama",82.6,76.7],"PNG":["Papua New Guinea",69.1,63.7],"PRY":["Paraguay",77.0,70.9],"PER":["Peru",80.1,75.4],"PHL":["Philippines",72.8,66.9],"POL":["Poland",82.4,74.9],"PRT":["Portugal",85.1,79.4],"PRI":["Puerto Rico",85.2,78.0],"QAT":["Qatar",83.4,81.6],"REU":["Reunion",86.3,80.5],"ROU":["Romania",79.6,72.4],"RUS":["Russia",79.0,67.3],"RWA":["Rwanda",69.9,65.5],"BLM":["Saint Barthelemy",86.8,81.5],"SHN":["Saint Helena",80.6,73.9],"KNA":["Saint Kitts and Nevis",76.0,68.6],"LCA":["Saint Lucia",76.3,69.3],"MAF":["Saint Martin (French part)",83.8,76.8],"SPM":["Saint Pierre and Miquelon",81.5,72.8],"VCT":["Saint Vincent and the Grenadines",74.3,68.7],"WSM":["Samoa",73.7,69.9],"SMR":["San Marino",87.1,84.2],"STP":["Sao Tome and Principe",73.7,66.2],"SAU":["Saudi Arabia",81.2,77.1],"SEN":["Senegal",70.8,66.8],"SRB":["Serbia",80.0,73.5],"SYC":["Seychelles",76.5,69.9],"SLE":["Sierra Leone",63.5,60.1],"SGP":["Singapore",86.2,81.2],"SXM":["Sint Maarten (Dutch part)",79.5,73.7],"SVK":["Slovakia",81.6,75.0],"SVN":["Slovenia",84.3,78.9],"SLB":["Solomon Islands",72.0,69.2],"SOM":["Somalia",61.4,56.4],"ZAF":["South Africa",69.6,62.6],"KOR":["South Korea",87.2,81.2],"SSD":["South Sudan",60.6,54.6],"ESP":["Spain",86.3,81.0],"LKA":["Sri Lanka",80.6,74.2],"SDN":["Sudan",69.6,63.3],"SUR":["Suriname",76.8,70.5],"SWE":["Sweden",85.1,81.4],"CHE":["Switzerland",85.8,82.0],"SYR":["Syria",74.4,69.8],"TWN":["Taiwan",83.6,77.6],"TJK":["Tajikistan",74.0,69.6],"TZA":["Tanzania",69.8,64.2],"THA":["Thailand",80.9,72.2],"TGO":["Togo",62.9,62.5],"TKL":["Tokelau",78.9,75.0],"TON":["Tonga",76.4,69.4],"TTO":["Trinidad and Tobago",76.7,70.4],"TUN":["Tunisia",79.1,73.9],"TUR":["Turkey",79.9,74.5],"TKM":["Turkmenistan",72.8,66.9],"TCA":["Turks and Caicos Islands",80.3,75.8],"TUV":["Tuvalu",70.7,63.8],"UGA":["Uganda",71.1,65.3],"UKR":["Ukraine",80.2,66.9],"ARE":["United Arab Emirates",84.2,82.0],"GBR":["United Kingdom",83.2,79.4],"USA":["United States",81.8,76.9],"VIR":["United States Virgin Islands",81.4,70.5],"URY":["Uruguay",81.9,74.2],"UZB":["Uzbekistan",75.4,69.5],"VUT":["Vanuatu",73.9,69.4],"VAT":["Vatican",85.1,80.8],"VEN":["Venezuela",76.5,68.7],"VNM":["Vietnam",79.3,69.9],"WLF":["Wallis and Futuna",79.6,77.7],"ESH":["Western Sahara",73.5,69.7],"WLD":["World",75.9,70.5],"YEM":["Yemen",71.4,67.2],"ZMB":["Zambia",68.7,63.9],"ZWE":["Zimbabwe",65.0,60.2]};
+
+// ================================================= the lifespan model
+// A Gompertz–Makeham mortality curve: a small constant risk plus a risk that doubles about every 7.7 years of age.
+// It is calibrated so that a typical person of your sex in your country matches the UN life expectancy, then each
+// answer scales the yearly risk of death by a published hazard ratio. Ratios are re-centred on how common each
+// answer is (so a typical answer changes nothing), and because habits cluster in the same people, the biggest
+// effect counts fully and each further one counts less — calibrated so all five healthy habits add ~13 years at
+// 50, as Li et al. (Circulation 2018) found (12.2 for men, 14.0 for women).
+const GB = 0.09, GL = 0.0004, CW = [1, .35, .25, .18, .14, .12, .1, .1];
+const childDeaths = le => Math.min(.3, Math.exp(-2.254 - 0.1256 * (le - 54)));
+const stepS = (a, hr, t, h) => Math.exp(-hr * (GL + a * Math.exp(GB * (t + h / 2))) * h);
+function curve(a, hr, age) { // survival from `age`, in quarter years, to 125
+  const out = [1]; let s = 1; for (let t = age; t < 125 && s > 1e-6; t += .25) { s *= stepS(a, hr, t, .25); out.push(s); } return out;
+}
+const restOf = c => c.reduce((e, s, i) => i ? e + (s + c[i - 1]) / 2 * .25 : e, 0);
+const calCache = {};
+function calibrate(le0) {
+  if (calCache[le0]) return calCache[le0];
+  const q5 = childDeaths(le0); let lo = 1e-7, hi = 1e-2;
+  for (let k = 0; k < 50; k++) { const mid = Math.sqrt(lo * hi), e = q5 * .5 + (1 - q5) * (5 + restOf(curve(mid, 1, 5))); if (e > le0) lo = mid; else hi = mid; }
+  return calCache[le0] = Math.sqrt(lo * hi);
+}
+const EST_Q = [
+  { k: 'smoke', t: 'Do you smoke?', why: 'People who smoke have about three times the yearly risk of death of people who never did. Quitting before 35 avoids nearly all of it.', src: 'Jha et al., New England Journal of Medicine 2013; Thomson et al., 2021',
+    o: [['Never', 'Or only a handful of times', 1, .62], ['I quit before 35', '', 1.05, .06], ['I quit after 35', '', 1.3, .10], ['Yes', 'Cigarettes, most days', 2.9, .22]] },
+  { k: 'move', t: 'How active are you?', why: 'About 150 minutes a week of brisk activity is linked to a third lower risk of death. Benefits start well below that.', src: 'US Physical Activity Guidelines, 2nd ed. 2018; Zhao et al., JAMA Internal Medicine 2020',
+    o: [['Rarely', 'Mostly sitting', 1, .25], ['A little', 'Under 2½ hours a week', .8, .30], ['Regularly', '2½ hours or more a week', .67, .30], ['Very active', 'Including hard exercise', .64, .15]] },
+  { k: 'bmi', t: 'What’s your body mass index?', why: 'Risk is lowest around a BMI of 20 to 25 and rises steadily with obesity, and with being very underweight.', src: 'Global BMI Mortality Collaboration, The Lancet 2016 (10.6 million people)', calc: true,
+    o: [['Under 18.5', 'Underweight', 1.51, .07], ['18.5 – 25', 'Healthy weight', 1, .42], ['25 – 30', 'Overweight', 1.13, .32], ['30 – 35', 'Obesity, class 1', 1.45, .12], ['35 – 40', 'Obesity, class 2', 1.94, .05], ['Over 40', 'Obesity, class 3', 2.76, .02]] },
+  { k: 'drink', t: 'How much alcohol do you drink?', why: 'Above about 7 drinks a week, life expectancy falls: by 4 to 5 years at over 25 drinks a week. One drink here is 14 g of alcohol: a small beer, glass of wine or shot.', src: 'Wood et al., The Lancet 2018 (600,000 drinkers, 83 studies)',
+    o: [['None, or up to 7 a week', '', 1, .75], ['7 – 14 a week', '', 1.04, .12], ['14 – 25 a week', '', 1.14, .08], ['More than 25 a week', '', 1.47, .05]] },
+  { k: 'diet', t: 'What do you mostly eat?', why: 'The healthiest diets (lots of vegetables, fruit, whole grains, nuts and legumes; little processed meat and sugar) go with about a fifth lower risk of death.', src: 'Schwingshackl et al., Journal of the Academy of Nutrition and Dietetics 2018',
+    o: [['Mostly whole foods', 'Vegetables, fruit, grains, legumes, nuts', .78, .25], ['A bit of everything', '', .89, .55], ['Mostly processed or fast food', '', 1, .20]] },
+  { k: 'sleep', t: 'How long do you usually sleep?', why: 'Regularly sleeping under 6 hours, or over 9, is linked to higher risk of death than 7 to 8 hours.', src: 'Cappuccio et al., Sleep 2010 (1.4 million people)',
+    o: [['Under 6 hours', '', 1.12, .2], ['6 – 9 hours', '', 1, .7], ['9 hours or more', '', 1.3, .1]] },
+  { k: 'social', t: 'Do you often feel lonely or cut off?', why: 'Loneliness and social isolation each raise the risk of death by about a quarter, comparable to well-known risks like obesity.', src: 'Holt-Lunstad et al., Perspectives on Psychological Science 2015',
+    o: [['No, I have people around me', '', 1, .8], ['Yes, often', '', 1.29, .2]] },
+  { k: 'diab', t: 'Do you have diabetes?', why: 'Diabetes nearly doubles the yearly risk of death; at 50 that means about 6 years less on average. Good control narrows the gap.', src: 'Emerging Risk Factors Collaboration, New England Journal of Medicine 2011',
+    o: [['No', '', 1, .9], ['Yes', 'Type 1 or type 2', 1.8, .1]] },
+];
+const relHR = (q, i) => q.o[i][2] / q.o.reduce((s, x) => s + x[2] * x[3], 0);
+function combineHR(ls) { const s = [...ls].sort((x, y) => Math.abs(y) - Math.abs(x)); return Math.exp(s.reduce((t, l, i) => t + l * (CW[i] ?? .1), 0)); }
+function baseLE(c, sex) { const r = LE[c] || LE.WLD; return sex === 'f' ? r[1] : sex === 'm' ? r[2] : (r[1] + r[2]) / 2; }
+/** Everything the result screen needs, for someone born on `b` with answers `ans`. */
+function lifeEstimate(ans, b) {
+  const ageNow = Math.max(0, age(b)), le0 = baseLE(ans.country, ans.sex), a = calibrate(Math.round(le0 * 10) / 10);
+  const logs = EST_Q.filter(q => ans[q.k] != null).map(q => [q.k, Math.log(relHR(q, ans[q.k]))]);
+  const run = ls => { const c = curve(a, combineHR(ls), ageNow); return { c, e: ageNow + restOf(c) }; };
+  const all = run(logs.map(x => x[1])), at = p => { const i = all.c.findIndex(s => s <= p); return i < 0 ? 125 : ageNow + i * .25; };
+  const chance = y => y <= ageNow ? 1 : (all.c[Math.round((y - ageNow) * 4)] ?? 0);
+  const contrib = logs.map(([k, l]) => ({ k, years: all.e - run(logs.filter(x => x[0] !== k).map(x => x[1])).e })).filter(x => Math.abs(x.years) >= .1).sort((x, y) => y.years - x.years);
+  return { chance, e: all.e, typical: run([]).e, le0, q25: at(.75), q50: at(.5), q75: at(.25), p80: chance(80), p90: chance(90), p100: chance(100), contrib, ageNow };
+}
+function guessCountry() {
+  try { const r = (navigator.language || '').split('-')[1]; if (r) { const n = new Intl.DisplayNames(['en'], { type: 'region' }).of(r.toUpperCase()); const hit = Object.entries(LE).find(([, v]) => v[0] === n); if (hit) return hit[0]; } } catch {}
+  return 'WLD';
+}
+
+// ================================================= facts
+// Facts about eras: [from, to, text] in calendar years (negative = BCE). A fact belongs to every lifetime that overlaps it.
+const ERA = [
+  [-300000, -250000, 'The oldest known fossils of our species, from Jebel Irhoud in Morocco, are about 300,000 years old: right around this lifetime.'],
+  [-300000, -40000, 'Neanderthals were living across Europe and western Asia. Most people outside Africa today still carry a little Neanderthal DNA.'],
+  [-300000, -30000, 'Denisovans, known from a few bones and a lot of DNA, lived in Asia. Some of their genes survive in people today, especially in Oceania.'],
+  [-300000, -12000, 'Everyone alive was a hunter-gatherer. There were no farms, no villages and no writing anywhere on Earth.'],
+  [-300000, -12000, 'People moved with the seasons, following animals and ripening plants. A band was usually a few dozen people.'],
+  [-300000, -12000, 'Everything a family owned had to be carried. A whole household could fit in a bundle on someone’s back.'],
+  [-300000, -12000, 'Most people would never see more than a few hundred other humans in their whole life.'],
+  [-300000, -10000, 'Fire was already ancient technology: humans and their relatives had used it for hundreds of thousands of years.'],
+  [-300000, -10000, 'Flaked by hand, an obsidian blade can be sharper than a modern steel scalpel.'],
+  [-300000, -10000, 'Estimates of how many humans were alive vary widely: perhaps a few hundred thousand to a few million on the whole planet.'],
+  [-300000, -11700, 'This was the Pleistocene, the epoch of the ice ages. The climate swung between long cold spells and shorter warm ones.'],
+  [-300000, -3200, 'Nobody alive would have known what year it was. There were no calendars, no written names and no money.'],
+  [-300000, 1800, 'Most nights were lit only by fire, the Moon and the stars. The Milky Way was a bright band across every clear sky.'],
+  [-300000, 500, 'Polaris wasn’t the North Star: Earth’s axis wobbles in a cycle of about 26,000 years, so the pole of the sky moves.'],
+  [-300000, -50000, 'Stars drift over tens of thousands of years, so the constellations looked noticeably different from the ones you know.'],
+  [-300000, -10000, 'Many children died young, which pulled average life expectancy down. Adults who made it through childhood often lived into their 50s or 60s.'],
+  [-130000, -115000, 'Earth was in a warm spell, at times a little warmer than today, and hippos wallowed in rivers in what is now Britain.'],
+  [-115000, -11700, 'The last ice age was under way. Ice sheets kilometres thick slowly grew over North America and northern Europe.'],
+  [-77000, -72000, 'Around 74,000 years ago, the Toba supervolcano in Sumatra erupted: the largest volcanic eruption of the last two million years.'],
+  [-80000, -70000, 'Engraved pieces of ochre from Blombos Cave in South Africa, about 75,000 years old, are among the earliest known abstract designs.'],
+  [-70000, -50000, 'Small groups of modern humans were spreading out of Africa. Almost everyone outside Africa descends from them.'],
+  [-65000, -45000, 'People reached Australia by around 50,000 to 65,000 years ago, crossing open sea: some of the earliest evidence of seafaring.'],
+  [-47000, -43000, 'Some of the oldest known cave paintings, in Sulawesi, Indonesia, were made at least 45,000 years ago.'],
+  [-43000, -38000, 'Neanderthals disappeared around 40,000 years ago, after sharing Europe with modern humans for thousands of years.'],
+  [-42000, -35000, 'Flutes carved from bird bone and mammoth ivory, found in Germany, show people were making music about 40,000 years ago.'],
+  [-41000, -35000, 'The Lion Man, carved from mammoth ivory in what is now Germany, is about 40,000 years old: one of the oldest known figurative sculptures.'],
+  [-37000, -33000, 'The lions, horses and rhinos painted in Chauvet Cave in France were made around 36,000 years ago.'],
+  [-50000, -10000, 'Woolly mammoths, woolly rhinos, cave bears and giant deer roamed the cold grasslands of Europe and Asia.'],
+  [-40000, -10000, 'Bone needles with eyes let people sew fitted clothing, a big help in ice-age winters.'],
+  [-30000, -12000, 'Wolves were becoming dogs, the first animals humans ever domesticated, at least 15,000 years ago.'],
+  [-26000, -19000, 'This was the Last Glacial Maximum: the ice sheets were at their largest and the sea was about 120 metres lower than today.'],
+  [-26000, -12000, 'With the sea so low, you could walk from Siberia to Alaska on dry land.'],
+  [-16000, -6500, 'Doggerland, a now-drowned country of hills, rivers and marshes, joined Britain to mainland Europe. People lived there.'],
+  [-20000, -15000, 'In China, people were already making clay cooking pots, around 20,000 years ago: thousands of years before farming.'],
+  [-19000, -15000, 'The paintings in the cave of Lascaux, in France, were made about 17,000 years ago.'],
+  [-16000, -13000, 'People were living in the Americas by at least 15,000 years ago, and possibly much earlier.'],
+  [-13000, -9600, 'The ice age was ending. The world warmed, sea levels rose by tens of metres and forests spread north.'],
+  [-9600, -8000, 'Göbekli Tepe, in today’s Türkiye, was built around 9600 BCE: huge carved stone pillars raised by hunter-gatherers, 6,000 years before Stonehenge.'],
+  [-10000, -8000, 'Farming was beginning in the Fertile Crescent: wheat, barley and lentils, and soon sheep and goats.'],
+  [-9000, -7000, 'Jericho had a stone wall and tower around 8000 BCE, making it one of the oldest known towns.'],
+  [-7500, -5700, 'Çatalhöyük, a town of several thousand people in Anatolia, had no streets: people walked across the roofs and climbed in through the top.'],
+  [-8000, -5000, 'Rice was being domesticated in China, and maize was being bred from a wild grass called teosinte in Mexico.'],
+  [-6600, -6000, 'Rising seas flooded the last land bridge, and Britain became an island.'],
+  [-10000, -3000, 'Early farmers were often shorter and less healthy than the hunter-gatherers before them: more grain, less variety, more disease.'],
+  [-8000, 1800, 'Most people farmed, and most never travelled more than a day’s walk from where they were born.'],
+  [-10000, 1492, 'Potatoes, tomatoes, chocolate and chilli peppers were unknown outside the Americas.'],
+  [-300000, 1400, 'Nobody anywhere had ever drunk coffee: it became a drink in the 15th century, in Yemen.'],
+  [-5000, -3500, 'People were learning to smelt copper from ore: the start of the age of metals.'],
+  [-3600, -3200, 'The wheel appears around 3500 BCE: after pottery, farming and sailing boats.'],
+  [-3350, -3250, 'Ötzi the Iceman lived and died in the Alps around 3300 BCE. His frozen body, found in 1991, has 61 tattoos.'],
+  [-3400, -3000, 'Writing was invented in Mesopotamia around 3200 BCE, at first mostly to keep accounts of grain and goats.'],
+  [-3000, -2000, 'Stonehenge was being built in stages, starting around 3000 BCE.'],
+  [-2600, -2500, 'The Great Pyramid of Giza was built around 2560 BCE. It stayed the tallest human-made structure for about 3,800 years.'],
+  [-4000, -2000, 'Woolly mammoths still lived on Wrangel Island in the Arctic: they outlasted the building of the pyramids.'],
+  [-2150, -2000, 'The first poems about Gilgamesh, among the oldest stories ever written down, come from Mesopotamia around 2100 BCE.'],
+  [-1790, -1740, 'Hammurabi of Babylon had his laws carved into a stone pillar around 1754 BCE.'],
+  [-1700, -1150, 'The Bronze Age was at its height: Minoan palaces on Crete, the Hittite empire, New Kingdom Egypt.'],
+  [-1345, -1320, 'Tutankhamun became pharaoh of Egypt as a boy, around 1332 BCE.'],
+  [-1220, -1130, 'Around 1200 BCE, many Bronze Age civilisations around the Mediterranean collapsed within a few decades.'],
+  [-800, -760, 'The first recorded Olympic Games were held in Greece in 776 BCE.'],
+  [-770, -740, 'According to legend, Rome was founded in 753 BCE.'],
+  [-560, -399, 'The Buddha, Confucius and Socrates all lived within about two centuries of one another.'],
+  [-450, -430, 'Athens was building the Parthenon, between 447 and 432 BCE.'],
+  [-356, -323, 'Alexander the Great conquered an empire from Greece to India, and died in 323 BCE, aged 32.'],
+  [-230, -200, 'China was unified under the Qin dynasty in 221 BCE. Its first emperor was buried with an army of terracotta soldiers.'],
+  [-50, -30, 'Julius Caesar was assassinated in 44 BCE, and Cleopatra, the last ruler of Ptolemaic Egypt, died in 30 BCE.'],
+  [-69, -30, 'Cleopatra lived closer in time to the Moon landing than to the building of the Great Pyramid.'],
+  [100, 130, 'The Pantheon in Rome was completed around 125 CE. Its dome is still the largest unreinforced concrete dome in the world.'],
+  [100, 120, 'In China, papermaking was refined; tradition credits a court official, Cai Lun, around 105 CE.'],
+  [450, 500, 'The Western Roman Empire ended in 476.'],
+  [600, 650, 'Islam began in Arabia in the early 7th century.'],
+  [762, 900, 'Baghdad, founded in 762, grew into one of the largest cities on Earth, home to scholars who translated and extended Greek, Persian and Indian learning.'],
+  [850, 900, 'The Diamond Sutra, printed in China in 868, is the oldest known dated printed book.'],
+  [990, 1030, 'Norse sailors reached North America around 1000 CE and built a camp in Newfoundland.'],
+  [1096, 1325, 'Oxford University was already teaching students before the Aztec capital, Tenochtitlan, was founded in 1325.'],
+  [1200, 1230, 'Genghis Khan’s Mongol Empire was growing into the largest connected land empire in history.'],
+  [1340, 1360, 'The Black Death swept through Europe from 1347 to 1351, killing perhaps a third or more of its people.'],
+  [1430, 1460, 'Gutenberg’s printing press made books cheap in Europe. His Bible was printed around 1455.'],
+  [1480, 1500, 'Columbus reached the Caribbean in 1492.'],
+  [1500, 1520, 'Leonardo da Vinci was painting the Mona Lisa in the early 1500s.'],
+  [1519, 1530, 'Magellan’s expedition finished the first voyage around the world in 1522, with only 18 of about 270 crew.'],
+  [1600, 1620, 'Galileo turned a telescope to the sky in 1609 and 1610 and found moons orbiting Jupiter.'],
+  [1600, 1620, 'Shakespeare died in 1616.'],
+  [1680, 1700, 'Newton published the Principia in 1687, explaining gravity and motion.'],
+  [1750, 1791, 'Mozart was composing; he wrote over 600 works and died in 1791, aged 35.'],
+  [1760, 1840, 'The Industrial Revolution was beginning in Britain, powered by coal and steam.'],
+  [1770, 1800, 'The United States declared independence in 1776, and the French Revolution began in 1789.'],
+  [1790, 1810, 'In 1796, Edward Jenner showed that vaccination could prevent smallpox.'],
+  [1800, 1810, 'The world reached one billion people for the first time, around 1804.'],
+  [1820, 1840, 'The oldest surviving photograph was taken around 1826, with an exposure that took hours.'],
+  [1830, 1870, 'Railways were spreading. For the first time, people could travel faster than a galloping horse.'],
+  [1855, 1870, 'Darwin published On the Origin of Species in 1859.'],
+  [1870, 1890, 'Bell patented the telephone in 1876, and Edison’s long-lasting light bulb followed in 1879.'],
+  [1900, 1910, 'The Wright brothers made the first powered aeroplane flight in 1903. It lasted 12 seconds.'],
+  [1900, 1925, 'Einstein published special relativity in 1905 and general relativity in 1915.'],
+  [1914, 1920, 'The First World War was fought from 1914 to 1918, followed by a flu pandemic that infected about a third of the world.'],
+];
+// Events by calendar year, for the years of your life and the years ahead.
+const EVENTS = {
+  1925: 'The Great Gatsby was published.', 1926: 'Robert Goddard launched the first liquid-fuelled rocket.', 1927: 'Charles Lindbergh flew alone across the Atlantic, and The Jazz Singer brought sound to feature films.', 1928: 'Alexander Fleming discovered penicillin, and Mickey Mouse appeared in Steamboat Willie.', 1929: 'The Wall Street Crash began the Great Depression.', 1930: 'Pluto was discovered, and Uruguay hosted the first FIFA World Cup.', 1931: 'The Empire State Building opened.', 1932: 'James Chadwick discovered the neutron.', 1933: 'Prohibition ended in the United States.', 1935: 'Radar was first demonstrated.', 1936: 'The BBC began the world’s first regular television service.', 1937: 'The Golden Gate Bridge opened.', 1938: 'Nuclear fission was discovered, and Superman first appeared.', 1939: 'The Second World War began, and The Wizard of Oz was released.', 1941: 'Japan attacked Pearl Harbor.', 1942: 'The first controlled nuclear chain reaction ran in Chicago.', 1944: 'D-Day: the Allied landings in Normandy.', 1945: 'The Second World War ended, and the United Nations was founded.', 1946: 'ENIAC, one of the first general-purpose electronic computers, was unveiled.', 1947: 'The transistor was invented, India and Pakistan became independent, and the sound barrier was broken.', 1948: 'The Universal Declaration of Human Rights was adopted, and the World Health Organization was founded.', 1949: 'The People’s Republic of China was founded.', 1950: 'The Korean War began.', 1951: 'UNIVAC I, the first commercial computer in the US, was delivered.', 1953: 'The structure of DNA was described, and Hillary and Tenzing reached the summit of Everest.', 1954: 'Roger Bannister ran the first mile under four minutes.', 1955: 'Jonas Salk’s polio vaccine was declared safe, and Disneyland opened.', 1957: 'Sputnik 1, the first artificial satellite, went into orbit.', 1958: 'NASA was founded.', 1960: 'The first laser was built.', 1961: 'Yuri Gagarin became the first person in space, and the Berlin Wall went up.', 1962: 'The Cuban Missile Crisis brought the world close to nuclear war.', 1963: 'Martin Luther King Jr. gave his "I Have a Dream" speech.', 1964: 'The Beatles played on The Ed Sullivan Show, and Japan opened the first bullet train.', 1967: 'The first human heart transplant was performed.', 1968: 'Apollo 8 orbited the Moon and photographed Earthrise.', 1969: 'Apollo 11 landed on the Moon, and the first message was sent over ARPANET, the internet’s ancestor.', 1970: 'The first Earth Day was held.', 1971: 'The first email was sent, and Intel released the first commercial microprocessor.', 1972: 'Apollo 17, the last crewed Moon landing, took the Blue Marble photo of Earth.', 1973: 'The first call from a handheld mobile phone was made.', 1975: 'Microsoft was founded.', 1976: 'Apple was founded, and Concorde began passenger flights.', 1977: 'Star Wars was released, and Voyager 1 and 2 were launched.', 1978: 'The first baby conceived by IVF was born.', 1979: 'Sony released the Walkman.', 1980: 'Smallpox was declared eradicated.', 1981: 'The IBM PC and MTV launched, and the first Space Shuttle flew.', 1983: 'The internet switched to the TCP/IP protocol it still uses.', 1984: 'The Apple Macintosh went on sale.', 1985: 'Scientists reported the hole in the ozone layer.', 1986: 'The Chernobyl disaster, and Halley’s Comet’s last visit to the inner solar system.', 1987: 'The world population reached 5 billion.', 1989: 'The Berlin Wall fell, and Tim Berners-Lee proposed the World Wide Web.', 1990: 'The Hubble Space Telescope was launched, and Nelson Mandela was freed.', 1991: 'The first website went live, and the Soviet Union dissolved.', 1994: 'Nelson Mandela became president of South Africa, and the Channel Tunnel opened.', 1996: 'Dolly the sheep, the first cloned mammal, was born.', 1998: 'Google was founded, and the first piece of the International Space Station was launched.', 1999: 'The world population reached 6 billion.', 2001: 'Wikipedia launched, and the iPod went on sale.', 2002: 'Euro notes and coins came into use.', 2003: 'The Human Genome Project was completed.', 2004: 'Facebook was founded.', 2005: 'YouTube was founded.', 2006: 'Pluto was reclassified as a dwarf planet.', 2007: 'The first iPhone was introduced.', 2008: 'The global financial crisis hit, and the Large Hadron Collider started up.', 2009: 'Bitcoin was launched.', 2010: 'Instagram and the iPad launched.', 2011: 'The world population reached 7 billion.', 2012: 'The Curiosity rover landed on Mars, and the Higgs boson was discovered.', 2014: 'The Philae lander touched down on a comet.', 2015: 'Gravitational waves were detected for the first time.', 2016: 'AlphaGo beat a world champion at Go.', 2019: 'Astronomers released the first image of a black hole.', 2020: 'The COVID-19 pandemic spread around the world.', 2021: 'The James Webb Space Telescope was launched.', 2022: 'The world population reached 8 billion.', 2024: 'A total solar eclipse crossed North America.',
+  2026: 'A total solar eclipse will cross Greenland, Iceland and Spain on 12 August.', 2027: 'One of the century’s longest total solar eclipses will cross Spain, North Africa and Egypt on 2 August.', 2028: 'Los Angeles will host the Summer Olympics.', 2030: 'The world population is projected to be about 8.5 billion.', 2032: 'Brisbane will host the Summer Olympics.', 2050: 'The world population is projected to be about 9.7 billion.', 2061: 'Halley’s Comet will be back in the inner solar system, for the first time since 1986.', 2084: 'The world population is projected to peak at about 10.3 billion around now.',
+};
+const POP = [[1900, 1.65], [1927, 2], [1950, 2.5], [1960, 3], [1974, 4], [1987, 5], [1999, 6], [2011, 7], [2022, 8], [2030, 8.5], [2050, 9.7], [2084, 10.3], [2100, 10.2]];
+const popIn = y => { if (y <= POP[0][0]) return POP[0][1]; for (let i = 1; i < POP.length; i++) if (y <= POP[i][0]) { const [a, p] = POP[i - 1], [b, q] = POP[i]; return p + (q - p) * (y - a) / (b - a); } return POP.at(-1)[1]; };
+const yearLabel = y => y < 0 ? `${fmt(-y)} BCE` : y < 1000 ? `${y} CE` : String(y);
+const shuffleFrom = (list, last) => { if (list.length < 2) return list[0]; let f; do f = list[Math.floor(Math.random() * list.length)]; while (f === last); return f; };
+
+/** Things a history dot can say: its era, plus facts worked out for its exact distance from you. */
+function lifeFacts(i) {
+  const by = birth().getFullYear(), now = new Date().getFullYear(), y0 = by - (LIFETIMES - 1 - i) * 80, y1 = y0 + 80, ago = now - y0;
+  if (i === LIFETIMES - 1) return youFacts();
+  const out = ERA.filter(([a, b]) => y0 <= b && y1 >= a).map(f => f[2]), gens = Math.round(ago / 25), between = LIFETIMES - 1 - i;
+  out.push(`This life began about ${fmt(ago)} years ago, around ${yearLabel(y0)}.`);
+  out.push(`That’s about ${fmt(gens)} generations back. One of your direct ancestors was alive in this lifetime, or you wouldn’t be here.`);
+  out.push(`${fmt(between)} whole lifetimes, end to end, separate this one from yours.`);
+  out.push(`If each lifetime took one second, you’d travel back to this one in ${between < 60 ? between + ' seconds' : Math.floor(between / 60) + ' minutes ' + (between % 60) + ' seconds'}.`);
+  out.push(`Since then, Earth has circled the Sun about ${fmt(ago)} times, and spun about ${fmt(ago * 365.2425)} times.`);
+  out.push(`The Moon drifts away from Earth by about 3.8 cm a year, so it was about ${fmt(ago * .038)} metres closer then.`);
+  const ly = ago > 100000 ? ', farther than the whole width of the Milky Way' : ago > 26000 ? ', past the centre of our galaxy' : ago > 4000 ? ', farther than most stars you can see with your eyes' : '';
+  out.push(`Light that left Earth when this life began is now ${fmt(ago)} light-years away${ly}.`);
+  if (y1 < -10000) out.push(`This was about ${fmt(-10000 - y0)} years before anyone, anywhere, planted a crop.`);
+  if (y1 < -3200) out.push(`It was about ${fmt(-3200 - y0)} years before the first writing.`);
+  out.push(`By the start of this life, ${(i / LIFETIMES * 100).toFixed(1)}% of the time since our species appeared had already passed.`);
+  if (y0 > -10000) out.push(`About ${fmt(Math.round(ago / 25) - 2)} "greats" sit in front of the word grandparent for your ancestors alive then.`);
+  return out;
+}
+/** Things a year of your life can say: the world that year, and you in it. */
+function yearFacts(yi) {
+  const b = birth(), y = b.getFullYear() + yi, now = new Date().getFullYear(), lived = Math.floor(age(b)), out = [];
+  if (EVENTS[y]) out.push(`In ${y}: ${EVENTS[y]}`);
+  if (EVENTS[y + 1] && y + 1 <= now) out.push(`In ${y + 1}, as you turned ${yi + 1}: ${EVENTS[y + 1]}`);
+  out.push(yi <= lived ? `The world had about ${popIn(y).toFixed(1)} billion people in ${y}.` : `The world is projected to have about ${popIn(y).toFixed(1)} billion people in ${y}.`);
+  if (y <= now) out.push(`That was ${now - y === 0 ? 'this year' : now - y === 1 ? 'last year' : fmt(now - y) + ' years ago'}: about ${fmt((Date.now() - birthdayIn(b, y)) / 864e5)} days back.`);
+  else out.push(`It starts in about ${fmt((birthdayIn(b, y) - Date.now()) / 864e5)} days. You’ll be ${yi} on your birthday that year.`);
+  const from = birthdayIn(b, y), to = birthdayIn(b, y + 1), days = Math.round((to - from) / 864e5);
+  out.push(`This year of your life ${yi <= lived ? 'had' : 'will have'} ${days} days${days === 366 ? ', thanks to a 29 February' : ''}.`);
+  const lines = Object.keys(LINES).filter(d => { const x = parse(d); return x >= from && x < to; }).length;
+  if (lines) out.push(`You wrote ${lines} ${lines === 1 ? 'line' : 'lines'} in this year of your life.`);
+  if (y >= 2061 && y < 2062) out.push('Halley’s Comet returns this year. Look up.');
+  out.push(`It’s year ${yi + 1} of the ${S.span} on your grid${yi < lived ? '' : yi === lived ? ', and it’s happening now' : ''}.`);
+  return out;
+}
+/** Fun facts about you, worked out from your birthday. All approximate, all averages. */
+function youFacts() {
+  const b = birth(), days = (Date.now() - b) / 864e5, yrs = days / 365.2425, by = b.getFullYear(), now = new Date();
+  const olympics = [];
+  for (let y = 1896; y <= now.getFullYear(); y += 4) if (![1916, 1940, 1944].includes(y)) olympics.push(y === 2020 ? 2021 : y);
+  const cups = []; for (let y = 1930; y <= now.getFullYear(); y += 4) if (![1942, 1946].includes(y)) cups.push(y);
+  let leaps = 0; for (let y = by; y <= now.getFullYear(); y++) { const d = new Date(y, 1, 29); if (d.getMonth() === 1 && d > b && d < now) leaps++; }
+  const dayN = n => { const d = new Date(+b + (n - 1) * 864e5); return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; };
+  const next = [10000, 15000, 20000, 25000, 30000].find(n => n > days + 1);
+  return [
+    `Your heart has beaten roughly ${fmt(days * 24 * 60 * 75 / 1e6)} million times (at about 75 beats a minute).`,
+    `You’ve taken roughly ${fmt(days * 24 * 60 * 15 / 1e6)} million breaths.`,
+    `You’ve spent about ${(yrs / 3).toFixed(1)} years asleep.`,
+    `You’ve seen about ${fmt(days / 29.5306)} full moons.`,
+    `You were born on a ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][b.getDay()]}.`,
+    `You’ve lived through ${leaps} leap ${leaps === 1 ? 'day' : 'days'}.`,
+    `${olympics.filter(y => y > by || (y === by && b.getMonth() < 7)).length} Summer Olympics have been held in your lifetime.`,
+    `${cups.filter(y => y > by).length} FIFA World Cups have been played since you were born.`,
+    `Riding on Earth, you’ve travelled about ${fmt(yrs * .94)} billion kilometres around the Sun.`,
+    `With the whole solar system, you’ve moved about ${fmt(yrs * 7.26)} billion kilometres around the centre of the galaxy.`,
+    next ? `Your ${fmt(next)}th day of life is on ${dayN(next)}.` : `You’ve passed your 30,000th day of life.`,
+    `On Mars you’d be ${(days / 686.98).toFixed(1)} years old. On Jupiter, ${(days / 4332.6).toFixed(1)}.`,
+    by < 1986 ? 'Halley’s Comet came by in 1986, during your lifetime. Its next visit is in 2061.' : `Halley’s Comet returns in 2061. You’ll be ${2061 - by}.`,
+    `Your scalp hair grows about 15 cm a year: around ${fmt(yrs * .15)} metres so far, laid end to end.`,
+    `Your fingernails grow about 3.5 mm a month: roughly ${(yrs * 12 * .35 / 100).toFixed(1)} metres per nail in your life so far.`,
+    `People speak about 16,000 words a day on average: something like ${fmt(Math.max(0, days - 730) * 16000 / 1e6)} million words for you so far.`,
+    `You’ll be ${2050 - by} when 2050 begins.`,
+  ];
+}
+let lastFact = '';
+const nextFact = list => (lastFact = shuffleFrom(list, lastFact));
+
+// ================================================= estimate my lifespan
+// One question at a time. The number at the top moves with every answer.
+const SEXES = [['f', 'Woman'], ['m', 'Man'], ['x', 'Rather not say']];
+const sexWord = s => s === 'f' ? 'women' : s === 'm' ? 'men' : 'people';
+SHEETS.lifespan = (opt = {}) => {
+  const b = opt.b || birth(), A = S.est ? { ...S.est } : { country: guessCountry(), sex: null };
+  const N = EST_Q.length + 2; let step = opt.step ?? (S.est ? N - 1 : 0), shown = null, typed = '';
+  body.innerHTML = `<div class="est"><div class="est-top"><div class="est-prog" id="estP">${Array.from({ length: N }, () => '<i></i>').join('')}</div>
+    <div class="est-live"><b id="estN">–</b><small><span class="d" id="estD"></span><span id="estL">years, so far</span></small></div></div><div id="estS"></div></div>`;
+  const live = () => {
+    const r = lifeEstimate(A, b), el = $('estN'); if (!el) return r;
+    if (shown != null && Math.abs(r.e - shown) >= .05) { const d = $('estD'), x = r.e - shown; d.textContent = (x > 0 ? '+' : '−') + Math.abs(x).toFixed(1); d.className = 'd show'; clearTimeout(d._t); d._t = setTimeout(() => d.className = 'd', 1300); }
+    const from = shown ?? r.e, t0 = performance.now(); shown = r.e;
+    const roll = t => { const p = Math.min(1, (t - t0) / 700); if (!$('estN')) return; $('estN').textContent = (from + (r.e - from) * easeOut(p)).toFixed(1); if (p < 1) requestAnimationFrame(roll); };
+    requestAnimationFrame(roll); return r;
+  };
+  const go = (to, back) => { step = Math.max(0, Math.min(N - 1, to)); paint(back); };
+  const paint = back => {
+    $('estP').querySelectorAll('i').forEach((i, k) => { i.classList.toggle('on', k <= step); i.classList.toggle('cur', k === step); });
+    $('estL').textContent = step === N - 1 ? 'years, your estimate' : 'years, so far';
+    const st = document.createElement('div'); st.className = 'est-step' + (back ? ' back' : '');
+    if (step === 0) about(st); else if (step < N - 1) question(st, EST_Q[step - 1]); else result(st);
+    $('estS').replaceChildren(st); body.scrollTop = 0; live();
+  };
+  const nav = (next = 'Continue', skip) => `<div style="height:22px"></div><button class="primary" data-next>${next}</button>${step ? `<div class="est-nav"><button class="quiet" data-back>Back</button>${skip ? '<button class="quiet" data-skip>Skip</button>' : ''}</div>` : ''}`;
+  const wireNav = st => { st.querySelector('[data-next]')?.addEventListener('click', () => { tick(); go(step + 1); }); st.querySelector('[data-back]')?.addEventListener('click', () => { tick(); go(step - 1, true); }); st.querySelector('[data-skip]')?.addEventListener('click', () => { tick(); delete A[EST_Q[step - 1].k]; go(step + 1); }); };
+
+  function about(st) {
+    st.innerHTML = `<div class="est-q">Let’s start with you.</div><p class="lead" style="margin-top:10px">Where you live and your sex set the starting point: the average for people like you, from the UN.</p>
+      <div class="caps">Where you live</div><input class="field" id="estC" placeholder="Search countries" autocomplete="off" enterkeyhint="search"><div class="group" id="estCL" style="margin-top:8px"></div>
+      <div class="caps">Sex</div><div id="estSx"></div><p class="small" id="estBase" style="margin:12px 4px 0"></p>` + nav();
+    const list = () => {
+      const q = typed.trim().toLowerCase(), all = Object.entries(LE).filter(([k]) => k !== 'WLD');
+      const hits = q ? all.filter(([, v]) => v[0].toLowerCase().includes(q)).sort((x, y) => x[1][0].toLowerCase().indexOf(q) - y[1][0].toLowerCase().indexOf(q)).slice(0, 6) : [[A.country, LE[A.country] || LE.WLD]];
+      if (q && 'world average'.includes(q)) hits.push(['WLD', LE.WLD]);
+      st.querySelector('#estCL').innerHTML = hits.length ? hits.map(([k, v]) => `<button class="row" data-c="${k}"><span class="t">${esc(k === 'WLD' ? 'World average' : v[0])}</span>${k === A.country ? '<span>✓</span>' : ''}</button>`).join('') : '<div class="row"><span class="t" style="color:var(--mute)">No country by that name</span></div>';
+      st.querySelectorAll('[data-c]').forEach(x => x.onclick = () => { tick(); A.country = x.dataset.c; typed = ''; st.querySelector('#estC').value = ''; list(); base(); live(); });
+    };
+    const base = () => { const r = LE[A.country] || LE.WLD, nm = A.country === 'WLD' ? 'the world' : r[0]; st.querySelector('#estBase').textContent = `Born today, ${sexWord(A.sex)} in ${nm} live ${baseLE(A.country, A.sex).toFixed(1)} years on average. Women outlive men almost everywhere on Earth.`; };
+    const inp = st.querySelector('#estC'); inp.value = typed; inp.oninput = () => { typed = inp.value; list(); };
+    inp.onkeydown = e => { if (e.key === 'Enter') { const f = st.querySelector('[data-c]'); if (f) f.click(); } };
+    st.querySelector('#estSx').append(seg(SEXES, A.sex || 'x', v => { A.sex = v === 'x' ? null : v; base(); live(); }));
+    list(); base(); wireNav(st);
+  }
+  function question(st, q) {
+    st.innerHTML = `<div class="est-q">${q.t}</div>${q.calc ? `<div class="est-bmi"><div class="seg2" id="bU"></div><div class="est-bmi-f" id="bF"></div><div class="est-bmi-r" id="bR">Or work it out: enter your height and weight.</div></div>` : ''}
+      <div class="est-opts">${q.o.map((o, i) => `<button class="est-opt ${A[q.k] === i ? 'sel' : ''}" data-o="${i}"><span><span class="n">${i + 1}</span>${o[0]}${o[1] ? `<small>${o[1]}</small>` : ''}</span><i class="r"></i></button>`).join('')}</div>
+      <div class="est-why">${q.why}<cite>${q.src}</cite></div>` + nav(A[q.k] != null ? 'Continue' : 'Skip this one', A[q.k] != null);
+    const pick = i => { A[q.k] = i; st.querySelectorAll('.est-opt').forEach((x, k) => x.classList.toggle('sel', k === i)); const nx = st.querySelector('[data-next]'); nx.textContent = 'Continue'; live(); };
+    st.querySelectorAll('[data-o]').forEach(x => x.onclick = () => { tick(); pick(+x.dataset.o); clearTimeout(st._t); st._t = setTimeout(() => { if (st.isConnected) go(step + 1); }, 420); });
+    if (q.calc) {
+      let imp = /^en-(US|LR|MM)/.test(navigator.language || '') ;
+      const paintF = () => {
+        st.querySelector('#bF').innerHTML = imp ? '<input class="field" inputmode="numeric" id="bA" placeholder="ft"><input class="field" inputmode="numeric" id="bB" placeholder="in"><input class="field" inputmode="decimal" id="bC" placeholder="lb">' : '<input class="field" inputmode="numeric" id="bA" placeholder="Height, cm"><input class="field" inputmode="decimal" id="bC" placeholder="Weight, kg">';
+        st.querySelector('#bF').style.gridTemplateColumns = imp ? '1fr 1fr 1.4fr' : '1fr 1fr';
+        st.querySelectorAll('#bF input').forEach(x => x.oninput = calc);
+      };
+      const calc = () => {
+        const v = id => parseFloat(st.querySelector('#' + id)?.value) || 0;
+        const m = imp ? (v('bA') * 12 + v('bB')) * .0254 : v('bA') / 100, kg = imp ? v('bC') * .45359237 : v('bC');
+        if (m < .9 || m > 2.6 || kg < 25 || kg > 350) { st.querySelector('#bR').textContent = 'Or work it out: enter your height and weight.'; return; }
+        const bmi = kg / (m * m), i = bmi < 18.5 ? 0 : bmi < 25 ? 1 : bmi < 30 ? 2 : bmi < 35 ? 3 : bmi < 40 ? 4 : 5;
+        st.querySelector('#bR').innerHTML = `Your BMI is <b>${bmi.toFixed(1)}</b> · ${q.o[i][1]}`; if (A[q.k] !== i) pick(i);
+      };
+      st.querySelector('#bU').append(seg([['m', 'cm · kg'], ['i', 'ft · lb']], imp ? 'i' : 'm', v => { imp = v === 'i'; paintF(); calc(); }));
+      paintF();
+    }
+    wireNav(st);
+  }
+  function result(st) {
+    const r = lifeEstimate(A, b), e = r.e, yrs = Math.round(e), diff = e - r.typical, ans = EST_Q.filter(q => A[q.k] != null).length;
+    const pc = p => p >= .995 ? '99%+' : p < .01 ? '<1%' : Math.round(p * 100) + '%', nm = A.country === 'WLD' || !LE[A.country] ? 'the world' : LE[A.country][0];
+    const name = k => ({ smoke: 'Smoking', move: 'Activity', bmi: 'Body weight', drink: 'Alcohol', diet: 'Diet', sleep: 'Sleep', social: 'People around you', diab: 'Diabetes' })[k];
+    st.innerHTML = `<div class="est-q">You could live to about ${yrs}.</div>
+      <p class="lead" style="margin-top:10px">That’s ${Math.abs(diff) < .3 ? 'right on the average' : `${Math.abs(diff).toFixed(1)} years ${diff > 0 ? 'more' : 'less'} than the average`} for ${sexWord(A.sex)} your age in ${nm}${ans < EST_Q.length ? `, from ${ans} of ${EST_Q.length} answers` : ''}.</p>
+      <canvas id="estG" class="est-g"></canvas>
+      <div class="est-key"><span><i style="background:#fff"></i>Lived</span><span><i style="background:#8e8e93"></i>Brighter means more likely to reach</span></div>
+      <div class="caps">The range</div><div class="est-range"><div><b>${Math.round(r.q25)}</b><small>1 in 4 people like you die before this age</small></div><div><b>${Math.round(r.q50)}</b><small>Half live past this</small></div><div><b>${Math.round(r.q75)}</b><small>1 in 4 live past this</small></div></div>
+      <div class="caps">Your chances of reaching</div><div class="est-chance">${[[80, r.p80], [90, r.p90], [100, r.p100]].map(([a, p]) => `<div><span>${a}</span><div class="bar"><i style="--w:${Math.max(1.5, p * 100)}%"></i></div><b>${pc(p)}</b></div>`).join('')}</div>
+      ${r.contrib.length ? `<div class="caps">What moved it</div><div class="group">${r.contrib.map(c => `<div class="row"><span class="t">${name(c.k)}<small>${EST_Q.find(q => q.k === c.k).o[A[c.k]][0]}</small></span><span class="v" style="color:${c.years > 0 ? 'var(--fg)' : 'var(--mute)'}">${c.years > 0 ? '+' : '−'}${Math.abs(c.years).toFixed(1)} yrs</span></div>`).join('')}</div>` : ''}
+      <div class="est-why" style="margin-top:22px"><b>Did you know?</b> In 1900, a newborn could expect to live about 32 years, worldwide. Today it’s about 73. Most of the gain came from children surviving: clean water, vaccines and antibiotics.</div>
+      <div style="height:22px"></div><button class="primary" id="estUse">Use ${yrs} years</button><div class="est-nav"><button class="quiet" id="estRe">Change answers</button></div>
+      <details class="est-how"><summary>How this works</summary><p>Your starting point is life expectancy at birth for your sex and country (UN World Population Prospects 2024), turned into a mortality curve where the risk of dying roughly doubles every 8 years of age. Each answer scales that yearly risk by a ratio from large studies, re-centred so an average answer changes nothing. Habits cluster in the same people, so the biggest effect counts in full and the rest count less, calibrated so five healthy habits add about 12 to 14 years at 50, as Li et al. found (Circulation 2018). Because you’re ${Math.floor(r.ageNow)} already, the estimate counts only the years from now.</p><p>It uses today’s death rates. Medicine keeps improving, so the real number is likely a little higher. It’s a population average to reflect on, not a prediction about you, and not medical advice.</p></details>`;
+    requestAnimationFrame(() => {
+      const cv = st.querySelector('#estG'); if (!cv) return; const n = 110, ag = r.ageNow;
+      dots(cv, n, 10, i => i < Math.floor(ag) ? '#fff' : i === Math.floor(ag) ? ['#fff', ag - Math.floor(ag)] : `rgba(255,255,255,${(.07 + .55 * Math.pow(r.chance(i + 1), 1.5)).toFixed(3)})`, .58);
+      st.querySelectorAll('.est-chance i').forEach((x, k) => setTimeout(() => x.classList.add('in'), 120 + k * 90));
+    });
+    st.querySelector('#estUse').onclick = () => {
+      S.est = { ...A }; thump();
+      if (opt.onUse) { save(); opt.onUse(yrs); closeSheet(); return; }
+      S.span = Math.max(40, Math.min(120, yrs)); refresh(); closeSheet(); toast(`Lifespan set to ${S.span}`);
+    };
+    st.querySelector('#estRe').onclick = () => { tick(); go(1, true); };
+  }
+  estKeys = e => {
+    if (e.key === 'Enter' && !/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || '')) { e.preventDefault(); body.querySelector('[data-next]')?.click() ?? body.querySelector('#estUse')?.click(); }
+    else if (/^[1-9]$/.test(e.key) && step > 0 && step < N - 1 && document.activeElement?.tagName !== 'INPUT') body.querySelector(`[data-o="${+e.key - 1}"]`)?.click();
+    else if (e.key === 'Backspace' && step > 0 && document.activeElement?.tagName !== 'INPUT') { e.preventDefault(); go(step - 1, true); }
+  };
+  onClose = () => { S.est = { ...A }; save(); };
+  paint();
+};
+let estKeys = null;
+
+// ================================================= facts
+// Every history dot has its own things to say, and says a different one each time you open it.
+function eraName(y0) {
+  return y0 < -115000 ? 'The Middle Stone Age' : y0 < -26000 ? 'The last ice age' : y0 < -19000 ? 'The coldest part of the ice age' : y0 < -11700 ? 'The ice age ends'
+    : y0 < -3200 ? 'The first farmers' : y0 < -1200 ? 'The Bronze Age' : y0 < 500 ? 'The ancient world' : y0 < 1450 ? 'The Middle Ages' : y0 < 1800 ? 'The early modern world' : 'The modern world';
+}
+SHEETS.fact = i => {
+  const last = LIFETIMES - 1; i = Math.max(0, Math.min(last, i));
+  const by = birth().getFullYear(), y0 = by - (last - i) * 80, mine = i === last;
+  const facts = lifeFacts(i), seen = new Set();
+  body.innerHTML = `<div class="fact-k">${mine ? 'Your life' : eraName(y0)}</div>${H2(mine ? `You, since ${by}` : `About ${fmt(new Date().getFullYear() - y0)} years ago`, mine ? 'Things that are true about the life you’re living' : `${yearLabel(y0)} to ${yearLabel(y0 + 80)} · life ${fmt(i + 1)} of ${fmt(LIFETIMES)}`)}
+    <div class="fact-card" id="fT"></div><p class="small" id="fN" style="margin:12px 4px 0"></p>
+    <div style="height:18px"></div><button class="primary" id="fMore">Tell me another</button>
+    <div class="fact-nav"><button class="quiet" id="fOld" ${i === 0 ? 'disabled' : ''}>‹ Older life</button><button class="quiet" id="fNew" ${mine ? 'disabled' : ''}>Newer life ›</button></div>`;
+  const show = () => {
+    const pool = facts.filter(f => !seen.has(f)); if (!pool.length) seen.clear();
+    const f = nextFact(pool.length ? pool : facts); seen.add(f);
+    const el = $('fT'); el.classList.remove('in'); void el.offsetWidth; el.textContent = f; el.classList.add('in');
+    $('fN').textContent = `${seen.size} of ${facts.length} things this ${mine ? 'part of the grid' : 'life'} can tell you${seen.size === facts.length ? '. You’ve heard them all; they’ll come round again.' : ''}`;
+  };
+  $('fMore').onclick = () => { tick(); show(); };
+  $('fOld').onclick = () => { tick(); SHEETS.fact(i - 1); };
+  $('fNew').onclick = () => { tick(); SHEETS.fact(i + 1); };
+  factKeys = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('fMore')?.click(); } else if (e.key === 'ArrowLeft' && i > 0) SHEETS.fact(i - 1); else if (e.key === 'ArrowRight' && !mine) SHEETS.fact(i + 1); };
+  show();
+};
+let factKeys = null;
+document.addEventListener('keydown', e => {
+  if (!layer.classList.contains('open') || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (openKind === 'lifespan' && estKeys) estKeys(e);
+  else if (openKind === 'fact' && factKeys && document.activeElement?.tagName !== 'INPUT') factKeys(e);
+});
+// a card that shows one fact and swaps it on tap
+const factCardHTML = (id, cap) => `<button class="fact-mini" id="${id}"><span class="cap">${cap}</span><span class="tx"></span><span class="more">Tap for another</span></button>`;
+function wireFactCard(id, list, lead) {
+  const el = $(id); if (!el) return;
+  const tx = el.querySelector('.tx'), show = () => { tx.classList.remove('in'); void tx.offsetWidth; tx.textContent = lead ? (lastFact = lead) : nextFact(list()); lead = null; tx.classList.add('in'); };
+  el.querySelector('.more').textContent = DESK ? 'Click for another' : 'Tap for another';
+  el.onclick = () => { tick(); show(); }; show();
+}
+
+// ================================================= where your years go, adjustable
+const LEDGER = [
+  ['lSleep', 'Sleep', 4, 11, .25, v => `${v} h a night`],
+  ['lWork', 'Work', 0, 80, 1, v => v ? `${v} h a week` : 'Not working'],
+  ['lRetire', 'Retire at', 40, 85, 1, v => `age ${v}`],
+  ['lCommute', 'Commute', 0, 180, 5, v => v ? `${v} min a day` : 'None'],
+  ['lChores', 'Eating, chores, getting ready', 0, 8, .25, v => `${v} h a day`],
+  ['phoneH', 'Phone', 0, 12, .25, v => `${v} h a day`],
+];
+function ledgerData() {
+  const left = yearsLeft(), a = age(birth()), wy = Math.max(0, Math.min(left, S.lRetire - a)), wk = 48 / 52.1775; // about 4 weeks off a year
+  const sl = [['Asleep', left * S.lSleep / 24, '#2c2c2e'], ['Working', wy * S.lWork / 168 * wk, '#48484a'], ['Commuting', wy * S.lCommute / 60 * 5 / 168 * wk, '#5a5a5e'],
+    ['Eating and chores', left * S.lChores / 24, '#3a3a3c'], ['On your phone', left * S.phoneH / 24, '#8e8e93']];
+  const used = sl.reduce((p, s) => p + s[1], 0); if (used > left) sl.forEach(s => s[1] *= left / used);
+  sl.push(['Truly yours', Math.max(0, left - Math.min(left, used)), '#ffffff']);
+  return { left, sl, free: sl[5][1] };
+}
+const ledgerSlidersHTML = () => `<div class="lsl">${LEDGER.map(([k, l, lo, hi, st, f]) => `<label><span>${l}</span><output data-lo="${k}">${f(S[k])}</output></label><input class="range" type="range" data-lk="${k}" min="${lo}" max="${hi}" step="${st}" value="${S[k]}">`).join('')}<button class="quiet" data-lreset style="height:40px;margin-top:6px">Reset to typical</button></div>`;
+/** Moves the sliders and repaints in place, so a drag is never interrupted. */
+function wireLedger(root, repaint) {
+  let sT;
+  root.querySelectorAll('[data-lk]').forEach(r => r.oninput = () => {
+    const k = r.dataset.lk, def = LEDGER.find(x => x[0] === k); S[k] = +r.value; root.querySelector(`[data-lo="${k}"]`).textContent = def[5](S[k]);
+    if (S[k] % (def[4] * 4 || 1) === 0) tick(); repaint(); clearTimeout(sT); sT = setTimeout(save, 300);
+  });
+  const rs = root.querySelector('[data-lreset]'); if (rs) rs.onclick = () => { tick(); LEDGER.forEach(([k]) => S[k] = DEF[k]); save(); root.querySelectorAll('[data-lk]').forEach(r => { r.value = S[r.dataset.lk]; root.querySelector(`[data-lo="${r.dataset.lk}"]`).textContent = LEDGER.find(x => x[0] === r.dataset.lk)[5](S[r.dataset.lk]); }); repaint(); };
+}
 
 // ================================================= lifecycle
 document.addEventListener('gesturestart', e => e.preventDefault());
