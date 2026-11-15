@@ -45,7 +45,7 @@ pub fn install_launcher() {
     if changed {
         let _ = std::fs::write(&path, entry);
         // ask Plasma to notice the new entry and icon
-        let _ = Command::new("kbuildsycoca6").arg("--noincremental").stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).spawn();
+        spawn_detached(Command::new("kbuildsycoca6").arg("--noincremental").stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()));
     }
 }
 
@@ -92,9 +92,9 @@ pub fn apply_wallpaper(s: &Settings, desktop: bool, lock: bool, size: (u32, u32)
         }
         let _ = Command::new("kwriteconfig6").args(["--file", "kscreenlockerrc", "--group", "Greeter", "--key", "WallpaperPlugin", "org.kde.image"]).output();
     }
-    let mut st = store::load();
+    let mut st = store::load_state();
     st.wall_key = wall_key(s);
-    store::save(&st);
+    store::save_state(&st);
     Ok(())
 }
 
@@ -132,7 +132,44 @@ impl ksni::Tray for Tray {
 fn open_window(arg: Option<&str>) {
     let mut c = Command::new(exe());
     if let Some(a) = arg { c.arg(a); }
-    let _ = c.spawn();
+    spawn_detached(&mut c);
+}
+
+/// Starts a program and waits for it on a spare thread, so it never lingers as a zombie.
+pub fn spawn_detached(c: &mut Command) {
+    if let Ok(mut child) = c.stdin(std::process::Stdio::null()).spawn() { std::thread::spawn(move || { let _ = child.wait(); }); }
+}
+
+/// The process recorded in a pid file, if it is alive and really is yrs. (the helper, or a window).
+pub fn live_pid(file: &str, helper: bool) -> Option<u32> {
+    let pid: u32 = std::fs::read_to_string(store::dir().join(file)).ok()?.trim().parse().ok()?;
+    let cmd = std::fs::read(format!("/proc/{pid}/cmdline")).ok()?;
+    let cmd = String::from_utf8_lossy(&cmd).replace('\0', " ");
+    let is_helper = cmd.contains("--background");
+    (cmd.contains("yrs") && is_helper == helper).then_some(pid)
+}
+
+/// One window at a time. If yrs. is already open, ask that window to come forward and return true.
+pub fn hand_over_to_running_window(line: bool) -> bool {
+    match live_pid("window.pid", false) {
+        Some(pid) if pid != std::process::id() => {
+            let _ = std::fs::write(store::dir().join("raise"), if line { "line" } else { "" });
+            true
+        }
+        _ => {
+            let _ = std::fs::create_dir_all(store::dir());
+            let _ = std::fs::write(store::dir().join("window.pid"), std::process::id().to_string());
+            false
+        }
+    }
+}
+
+/// Takes a waiting "come forward" request, if there is one. Some("line") also asks for today's line.
+pub fn take_raise() -> Option<String> {
+    let f = store::dir().join("raise");
+    let v = std::fs::read_to_string(&f).ok()?;
+    let _ = std::fs::remove_file(f);
+    Some(v)
 }
 
 fn tray_icon() -> Vec<ksni::Icon> {
@@ -157,9 +194,7 @@ fn tip(s: &Settings) -> (String, String) {
 pub fn background() {
     // one background at a time
     let lock = store::dir().join("background.pid");
-    if let Ok(pid) = std::fs::read_to_string(&lock) {
-        if PathBuf::from(format!("/proc/{}", pid.trim())).exists() && pid.trim() != std::process::id().to_string() { return; }
-    }
+    if let Some(pid) = live_pid("background.pid", true) { if pid != std::process::id() { return; } }
     let _ = std::fs::create_dir_all(store::dir());
     let _ = std::fs::write(&lock, std::process::id().to_string());
 
@@ -167,24 +202,28 @@ pub fn background() {
     let (t, d) = tip(&s);
     use ksni::blocking::TrayMethods;
     let handle = if s.tray { Tray { tip: t, sub: d, icon: tray_icon() }.spawn().ok() } else { None };
-    let mut last_note = String::new();
+    let mut last_apply: Option<std::time::Instant> = None;
     loop {
         let s = store::load();
+        let st = store::load_state();
         if let Some(h) = &handle { let (t, d) = tip(&s); h.update(|tr| { tr.tip = t; tr.sub = d; }); }
-        if s.birth().is_some() && (s.auto_wall || s.auto_lock) && s.wall_key != wall_key(&s) {
+        // redraw only when what's on it changed, and never more than once every ten minutes whatever happens
+        let rested = last_apply.map(|t| t.elapsed().as_secs() >= 600).unwrap_or(true);
+        if s.birth().is_some() && (s.auto_wall || s.auto_lock) && st.wall_key != wall_key(&s) && rested {
+            last_apply = Some(std::time::Instant::now());
             let _ = apply_wallpaper(&s, s.auto_wall, s.auto_lock, s.screen);
         }
         // Monday at 9, once
         let n = life::now();
         use chrono::{Datelike, Timelike};
         let key = n.format("%Y-%m-%d").to_string();
-        if s.monday && n.weekday() == chrono::Weekday::Mon && n.hour() >= 9 && last_note != key && s.last_note != key {
+        if s.monday && n.weekday() == chrono::Weekday::Mon && n.hour() >= 9 && st.last_note != key {
             if let Some(b) = s.birth() {
                 let week = (life::today() - b).num_days() / 7 + 1;
                 notify("A new week", &format!("You're in week {} of your life. {} weeks left. Make this one count.", life::group(week), life::whole(life::days_left_exact(&s) / 7.0)));
-                let mut st = store::load(); st.last_note = key.clone(); store::save(&st);
             }
-            last_note = key;
+            // remembered even without a birthday, so it is tried once a week, not once a minute
+            let mut st = store::load_state(); st.last_note = key; store::save_state(&st);
         }
         if !s.tray && !s.auto_wall && !s.auto_lock && !s.monday { let _ = std::fs::remove_file(&lock); return; }
         std::thread::sleep(std::time::Duration::from_secs(60));
@@ -194,14 +233,11 @@ pub fn background() {
 /// Starts the background helper if anything needs it and it isn't running.
 pub fn ensure_background(s: &Settings) {
     if !(s.tray || s.auto_wall || s.auto_lock || s.monday) { return; }
-    let lock = store::dir().join("background.pid");
-    let running = std::fs::read_to_string(&lock).map(|p| PathBuf::from(format!("/proc/{}", p.trim())).exists()).unwrap_or(false);
-    if !running { let _ = Command::new(exe()).arg("--background").spawn(); }
+    if live_pid("background.pid", true).is_none() { spawn_detached(Command::new(exe()).arg("--background")); }
 }
 
 pub fn stop_background() {
-    if let Ok(pid) = std::fs::read_to_string(store::dir().join("background.pid")) {
-        let _ = Command::new("kill").arg(pid.trim()).output();
-        let _ = std::fs::remove_file(store::dir().join("background.pid"));
-    }
+    // only ever a process that really is the yrs. helper: a stale number may belong to something else by now
+    if let Some(pid) = live_pid("background.pid", true) { let _ = Command::new("kill").arg(pid.to_string()).output(); }
+    let _ = std::fs::remove_file(store::dir().join("background.pid"));
 }

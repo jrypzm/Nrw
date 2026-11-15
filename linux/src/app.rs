@@ -72,6 +72,14 @@ impl App {
         cc.egui_ctx.set_style(st);
         let s = store::load();
         let still = std::env::var_os("YRS_STILL").is_some();
+        if !still {
+            // a second launch leaves a note; this thread spots it and wakes the window
+            let ctx = cc.egui_ctx.clone();
+            std::thread::spawn(move || loop {
+                std::thread::sleep(std::time::Duration::from_millis(400));
+                if store::dir().join("raise").exists() { ctx.request_repaint(); }
+            });
+        }
         let mut app = App {
             saved: s.clone(), lines: store::load_lines(), s, dirty_at: None, ov: None, ov_at: 0.0, page_at: -10.0, page_from: 0,
             ob: Default::default(), facts: HashMap::new(), tex: HashMap::new(), toast: None, still, started: 0.0, intro: !still && !line, cur_dot: None,
@@ -149,6 +157,17 @@ impl eframe::App for App {
             // the page waits for the opening, then rises in
             if self.intro && self.s.birth.is_some() { self.page_at = self.started + INTRO_PAGE; } else { self.intro = false; }
         }
+        if !self.still {
+            if let Some(what) = system::take_raise() {
+                ctx.send_viewport_cmd(egui::ViewportCommand::Minimized(false));
+                ctx.send_viewport_cmd(egui::ViewportCommand::Focus);
+                ctx.send_viewport_cmd(egui::ViewportCommand::RequestUserAttention(egui::UserAttentionType::Informational));
+                if what == "line" && self.s.birth.is_some() && self.ov.is_none() {
+                    let t = life::today();
+                    self.open(Ov::Line { date: t, text: self.lines.get(&t.to_string()).cloned().unwrap_or_default() }, now);
+                }
+            }
+        }
         crate::chrome::edges(ctx);
         crate::chrome::background(ctx);
         // remember the screen size for wallpapers
@@ -188,7 +207,10 @@ impl eframe::App for App {
         else { ctx.request_repaint_after(std::time::Duration::from_secs(20)); }
     }
 
-    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) { store::save(&self.s); store::save_lines(&self.lines); }
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        store::save(&self.s); store::save_lines(&self.lines);
+        if !self.still { let _ = std::fs::remove_file(store::dir().join("window.pid")); }
+    }
 }
 
 impl App {

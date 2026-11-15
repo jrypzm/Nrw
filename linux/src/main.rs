@@ -27,6 +27,9 @@ fn main() -> eframe::Result {
     }
     let line = args.iter().any(|a| a == "--line");
 
+    // one window at a time: a second launch brings the first one forward instead
+    if std::env::var_os("YRS_STILL").is_none() && system::hand_over_to_running_window(line) { return Ok(()); }
+
     let s = store::load();
     if std::env::var_os("YRS_STILL").is_none() {
         // the launcher entry gives the window its icon in the taskbar, from the very first launch;

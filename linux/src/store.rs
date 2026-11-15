@@ -50,12 +50,22 @@ pub struct Settings {
     pub autostart: bool,
     pub monday: bool,
     pub tour_done: bool,
-    /// What the wallpaper last showed, so it's only redrawn when something changes.
-    pub wall_key: String,
     /// The screen in pixels, for drawing the wallpaper at the right size.
     pub screen: (u32, u32),
+}
+
+/// What the background helper remembers. Kept apart from your settings, so the window and the helper
+/// never overwrite each other's file.
+#[derive(Serialize, Deserialize, Clone, Default)]
+#[serde(default)]
+pub struct State {
+    /// What the wallpaper last showed, so it's only redrawn when something changes.
+    pub wall_key: String,
+    /// The Monday the weekly note was last shown.
     pub last_note: String,
 }
+pub fn load_state() -> State { read("state.json") }
+pub fn save_state(s: &State) { write("state.json", s) }
 
 impl Default for Settings {
     fn default() -> Self {
@@ -64,7 +74,7 @@ impl Default for Settings {
             names: BTreeMap::new(), people: vec![], events: vec![], letters: vec![], reviewed_age: -1, est: None,
             sleep: 8.0, work: 40.0, retire: 65.0, commute: 45.0, chores: 2.5, phone: 4.0,
             wall: 1, auto_wall: false, auto_lock: false, tray: true, autostart: false, monday: false, tour_done: false,
-            wall_key: String::new(), screen: (2560, 1440), last_note: String::new(),
+            screen: (2560, 1440),
         }
     }
 }
