@@ -48,6 +48,12 @@ It's **open source under the MIT license**. Use it, read it, build it yourself, 
 2. Open it from your notifications. If asked, allow installs from your browser.
 3. yrs. isn't on the Play Store yet, so Play Protect may ask. Tap **Install anyway**. Updates keep your data.
 
+**Linux** &nbsp;·&nbsp; Fedora, Ubuntu, Arch and other current desktops, Wayland or X11
+
+1. Download **[yrs-x86_64.AppImage](https://github.com/jrypzm/yrs/releases/download/linux/yrs-x86_64.AppImage)**. One file, about 5 MB.
+2. Make it executable: right-click it, Properties, Permissions, **Is executable**. Or `chmod +x yrs-x86_64.AppImage`.
+3. Open it. yrs. adds itself to your app launcher with its icon, so you can pin it to the taskbar. On KDE Plasma it can also set your wallpaper and lock screen, sit in the tray and start at login.
+
 **Try it in your browser** &nbsp;·&nbsp; free, nothing to install
 
 1. Open **[jrypzm.github.io/yrs/web](https://jrypzm.github.io/yrs/web/)** on any phone, tablet or computer.
@@ -63,6 +69,7 @@ The browser version is the same design and the same maths. Browsers can't add wi
 | | |
 |---|---|
 | **Android** | Kotlin, Jetpack Compose, Glance widgets, WorkManager, a live wallpaper service. No internet permission. |
+| **Linux** | Rust and egui, drawn by hand: one 5 MB AppImage that starts instantly and idles at zero CPU. Tray, notifications and Plasma wallpaper through standard desktop services |
 | **Web** | One self-contained HTML file: vanilla JavaScript and canvas, installable, with an offline service worker |
 | **Website** | WebGL. Every day of a life is one point, morphing from years to weeks to days to all of history |
 | **Builds** | GitHub Actions builds and signs every APK, publishes the release, and renders screenshot tests |
@@ -71,6 +78,7 @@ Age is calendar-exact, down to Feb 29 birthdays. A year holds 52.1775 weeks and 
 
 ```
 android/     Native Android app
+linux/       Linux desktop app (Rust)
 web/         Browser version, icons, launch screens, service worker
 index.html   Website
 .github/     CI, issue forms, README art
