@@ -351,6 +351,53 @@
     .tour .tcard .next:hover { background: #e8e8ed; } .tour .tcard .back:hover { background: #48484a; } .tour .tcard .skip:hover { color: var(--fg); }
   }
 
+
+  /* ---------- desktop: inspector beside the grid ---------- */
+  .insp { display: none; }
+  @media (min-width: 1240px) {
+    html.desk .page { position: relative; padding-left: max(56px, calc(50% - 488px)); padding-right: max(56px, calc(50% - 488px)); }
+    html.desk .page > .head, html.desk .page > .zoombar, html.desk .page > [id^="extra-"] { max-width: 640px; }
+    html.desk .insp { display: block; position: absolute; width: 280px; }
+  }
+  .insp .ic { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+  .insp h3 { margin-top: 10px; font-family: var(--display); font-size: 28px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.1; }
+  .insp .chip { display: inline-block; margin-top: 10px; padding: 3px 9px; border-radius: 8px; background: var(--surface2); font-size: 12px; font-weight: 600; color: var(--mute); }
+  .insp .chip.now { background: var(--fg); color: #000; }
+  .insp p { margin-top: 8px; font-size: 14px; line-height: 1.45; color: var(--mute); }
+  .insp p b { color: var(--fg); font-weight: 500; }
+  .insp .ibar { margin-top: 16px; height: 4px; border-radius: 2px; background: var(--surface2); overflow: hidden; }
+  .insp .ibar i { display: block; height: 100%; background: var(--fg); border-radius: 2px; transition: width .6s var(--ease); }
+  .insp dl { margin-top: 18px; border-top: 1px solid #1c1c1e; }
+  .insp dl div { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid #1c1c1e; font-size: 14px; }
+  .insp dt { color: var(--mute); } .insp dd { color: var(--fg); text-align: right; font-variant-numeric: tabular-nums; }
+  .insp .qt { margin-top: 16px; padding: 14px 16px; border-radius: 14px; background: var(--surface); font-size: 14px; line-height: 1.45; color: var(--fg); }
+  .insp .hint { margin-top: 16px; font-size: 13px; color: var(--faint); display: flex; align-items: center; gap: 8px; }
+  .insp > div { animation: inspIn .35s var(--ease); }
+  @keyframes inspIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  /* ---------- desktop: command palette ---------- */
+  .sfind { width: calc(100% - 4px); margin: 0 2px 18px; height: 38px; white-space: nowrap; overflow: hidden; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 10px; background: #111113; box-shadow: inset 0 0 0 1px #1f1f21; color: var(--faint); font-size: 14px; transition: color .2s, box-shadow .2s; }
+  .sfind:hover { color: var(--mute); box-shadow: inset 0 0 0 1px #2c2c2e; }
+  .sfind svg { width: 15px; height: 15px; flex: 0 0 auto; } .sfind kbd { margin-left: auto; white-space: nowrap; flex: 0 0 auto; }
+  .pal { position: fixed; inset: 0; z-index: 35; display: flex; justify-content: center; align-items: flex-start; padding-top: 14vh; background: rgba(0,0,0,.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: palFade .2s var(--ease); }
+  .pal[hidden] { display: none; }
+  @keyframes palFade { from { opacity: 0; } to { opacity: 1; } }
+  .pbox { width: min(620px, calc(100% - 48px)); max-height: 66vh; display: flex; flex-direction: column; border-radius: 18px; background: rgba(28,28,30,.97); box-shadow: 0 40px 120px rgba(0,0,0,.7), 0 0 0 1px #2c2c2e; overflow: hidden; animation: palIn .35s var(--spring); }
+  @keyframes palIn { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: none; } }
+  .pin { display: flex; align-items: center; gap: 12px; padding: 0 18px; height: 58px; border-bottom: 1px solid #2c2c2e; }
+  .pin svg { width: 18px; height: 18px; color: var(--mute); flex: 0 0 auto; }
+  .pin input { flex: 1; background: none; border: 0; outline: none; font-size: 18px; color: var(--fg); letter-spacing: -0.01em; }
+  .pin input::placeholder { color: var(--faint); }
+  .plist { overflow-y: auto; padding: 6px 8px 8px; scrollbar-width: thin; scrollbar-color: #3a3a3c transparent; }
+  .plist .pg { padding: 12px 10px 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+  .plist .pi { display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 10px; border-radius: 10px; font-size: 15px; color: #d1d1d6; cursor: pointer; }
+  .plist .pi .d { width: 7px; height: 7px; border-radius: 50%; background: #3a3a3c; flex: 0 0 auto; transition: background .15s; }
+  .plist .pi small { color: var(--faint); font-size: 13px; }
+  .plist .pi .ks { margin-left: auto; display: flex; gap: 4px; }
+  .plist .pi.sel { background: #2c2c2e; color: var(--fg); } .plist .pi.sel .d { background: var(--fg); }
+  .plist .none { padding: 26px 10px; text-align: center; color: var(--faint); font-size: 14px; }
+  .pfoot { display: flex; gap: 16px; padding: 10px 18px; border-top: 1px solid #2c2c2e; font-size: 12px; color: var(--faint); }
+  .pfoot kbd { margin-right: 4px; }
+
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; } }
   @media (min-width: 600px) { .page, #ob, #home .top { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .controls { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .sheet { max-width: 560px; margin: 0 auto; } }
 </style>
@@ -367,7 +414,7 @@
 <!-- the app -->
 <main id="home" class="scr" hidden>
   <div class="top" id="topbar"><span class="brand">yrs.</span><button class="round" id="moreBtn" aria-label="Settings" style="width:32px;height:32px"><span class="dots3"><i></i><i></i><i></i></span></button></div>
-  <aside class="side" id="side"><div class="sbrand"><div class="mark">yrs<span class="p" id="sDot" style="--f:0%"></span></div><p id="sAge"></p></div><div class="snav" id="snav"><div class="cap">Your time</div></div><div class="sfoot" id="sfoot"></div><button class="keys" id="keysBtn">Keyboard shortcuts <kbd>?</kbd></button></aside>
+  <aside class="side" id="side"><div class="sbrand"><div class="mark">yrs<span class="p" id="sDot" style="--f:0%"></span></div><p id="sAge"></p></div><div class="snav" id="snav"><button class="sfind" id="findBtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5"/></svg>Search or jump to…<kbd id="findKbd">⌘K</kbd></button><div class="cap">Your time</div></div><div class="sfoot" id="sfoot"></div><button class="keys" id="keysBtn">Keyboard shortcuts <kbd>?</kbd></button></aside>
   <div class="pager" id="pager"></div>
   <div class="controls" id="ctrls">
     <button class="pill l" id="modeBtn"><span id="modeLabel">Left</span><svg viewBox="0 0 8 12" fill="none" stroke="#8e8e93" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 4 4 1.5 6.5 4M1.5 8 4 10.5 6.5 8"/></svg></button>
@@ -378,6 +425,7 @@
 
 <div class="layer" id="layer"><div class="scrim"></div><section class="sheet" id="sheet" role="dialog"><div class="grab"><i></i></div><div class="body" id="sheetBody"></div></section></div>
 <div class="tour" id="tour"><div class="hole none" id="tHole"></div><i class="finger" id="tF1"></i><i class="finger" id="tF2"></i><div class="tcard" id="tCard"><div class="tbar" id="tBar"></div><div class="thd"><span class="n" id="tN"></span><button class="skip" id="tSkip">Skip tour</button></div><div id="tText"></div><div class="tok" id="tOk"><i></i><span></span></div><div class="tb"><button class="back" id="tBack">Back</button><span class="try" id="tTry"></span><button class="next" id="tNext">Next</button></div></div></div>
+<div class="pal" id="pal" hidden><div class="pbox" role="dialog" aria-label="Search or jump to"><div class="pin"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5"/></svg><input id="palQ" placeholder="Search or jump to…" autocomplete="off" spellcheck="false" role="combobox" aria-controls="palL" aria-expanded="true"><kbd>esc</kbd></div><div class="plist" id="palL" role="listbox"></div><div class="pfoot"><span><kbd>↑</kbd><kbd>↓</kbd>to choose</span><span><kbd>↵</kbd>to run</span><span><kbd>esc</kbd>to close</span></div></div></div>
 <div class="toast" id="toast"></div>
 <label id="hapt" hidden><input type="checkbox" switch></label>
 
@@ -590,6 +638,7 @@ class Grid {
     } else this.now.style.display = 'none';
   }
   showTip(i, sticky) {
+    if (DESK) insp(this.kind, i);
     const m = this.m; this.tipI = i; this.sticky = sticky;
     const done = Math.floor(m.done), yi = m.year ? m.year(i) : null, isNow = i === done && m.done < m.total;
     let name = yi != null ? S.names[yi] : null;
@@ -610,7 +659,7 @@ class Grid {
     this.draw();
     clearTimeout(this.tipT); if (sticky) this.tipT = setTimeout(() => this.hideTip(), 3500);
   }
-  hideTip() { this.tipI = null; this.sticky = false; this.tip.classList.remove('show', 'sticky'); this.draw(); }
+  hideTip() { this.tipI = null; this.sticky = false; this.tip.classList.remove('show', 'sticky'); this.draw(); if (DESK) insp(this.kind, null); }
   bind() {
     const box = this.box; let hold = null, mode = null, sx = 0, sy = 0, base = 0;
     const local = t => { const r = box.getBoundingClientRect(); return [t.clientX - r.left, t.clientY - r.top]; };
@@ -866,7 +915,7 @@ function startHome() {
 }
 function buildHome() {
   const pg = $('pager');
-  pg.innerHTML = PAGES.map((p, i) => `<section class="page" data-i="${i}"><div class="head" id="head-${p}"></div>${i < 3 ? `<div class="gridbox" id="grid-${p}"></div>` : ''}${i === 0 ? '<div class="zoombar" id="zoombar"></div>' : ''}<div id="extra-${p}"></div></section>`).join('');
+  pg.innerHTML = PAGES.map((p, i) => `<section class="page" data-i="${i}"><div class="head" id="head-${p}"></div>${i < 3 ? `<div class="gridbox" id="grid-${p}"></div>` : ''}${i === 0 ? '<div class="zoombar" id="zoombar"></div>' : ''}<div id="extra-${p}"></div>${i < 3 ? `<aside class="insp" id="insp-${p}" aria-live="polite"></aside>` : ''}</section>`).join('');
   ['life', 'decade', 'year'].forEach(k => grids[k] = new Grid($('grid-' + k), k));
   const NAMES = ['Life', 'This decade', 'This year', 'People', 'Where it goes'];
   $('pdots').innerHTML = PAGES.map((_, i) => `<button class="${i > 2 ? 'sm' : ''}" data-i="${i}" aria-label="${NAMES[i]}"><i></i><span>${NAMES[i]}</span><kbd>${i + 1}</kbd></button>`).join('');
@@ -970,6 +1019,8 @@ function renderSide() {
   $('sAge').textContent = `Age ${Math.floor(a)} · ${S.span} year life`;
   const left = Math.max(0, Math.floor(S.span - a));
   if (!DEMO) document.title = `${left} ${left === 1 ? 'year' : 'years'} left · yrs.`;
+  if (DESK) requestAnimationFrame(placeInsp);
+  favicon();
 }
 function rippleNow() {
   if (!S.ripple || reduce || S.zoom !== 1) return;
@@ -1435,6 +1486,7 @@ function goPage(i) { i = Math.max(0, Math.min(PAGES.length - 1, i)); if (i === S
 $('keysBtn').onclick = () => { tick(); openSheet('keys'); };
 
 const KEYS = [
+  [[MOD, 'K'], 'Search or jump to anything'],
   [['←', '→'], 'Previous or next page'], [['1', '–', '5'], 'Go to a page'],
   [['+', '−'], 'Zoom in or out of your life'], [[MOD, 'scroll'], 'Zoom with the mouse or trackpad'],
   [['U'], 'Count another way: days, weeks, summers…'], [['Space'], 'Hold to feel the seconds'],
@@ -1448,10 +1500,145 @@ SHEETS.keys = () => {
   $('kDone').onclick = () => { tick(); closeSheet(); };
 };
 
+
+// ================================================= desktop: the inspector
+// Beside the grid on wide screens: what you're pointing at, or, when you're not, where you are right now.
+const fmtD = d => `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+const plural = (n, one, many) => `${fmt(n)} ${Math.floor(n) === 1 ? one : many}`;
+function inspNow() {
+  const b = birth(), t = day0(new Date()), a = age(b), lived = Math.floor(a), lb = lastBirthday(b, t), nb = birthdayIn(b, lb.getFullYear() + 1);
+  const toNext = Math.round((nb - t) / 864e5), pct = Math.floor((a - lived) * 100), left = Math.max(0, S.span - a), line = LINES[iso(t)];
+  return `<div><div class="ic">Right now</div><h3>Age ${lived}</h3><p><b>${pct}%</b> through this year of your life.</p><div class="ibar"><i style="width:${pct}%"></i></div>
+    <dl><div><dt>Next birthday</dt><dd>${toNext === 0 ? 'Today' : `in ${plural(toNext, 'day', 'days')}`}</dd></div><div><dt>Turning</dt><dd>${lived + 1} on ${nb.getDate()} ${MON[nb.getMonth()]}</dd></div>
+    <div><dt>Day of your life</dt><dd>${fmt(dayOfLife())}</dd></div><div><dt>Years left</dt><dd>${fmt(left)} of ${S.span}</dd></div></dl>
+    ${line ? `<div class="qt">“${esc(line)}”</div>` : ''}<div class="hint">Point at any dot for its story</div></div>`;
+}
+function inspDot(k, i) {
+  const g = grids[k], m = g.m, b = birth(), by = b.getFullYear(), done = Math.floor(m.done), lived = Math.floor(age(b));
+  if (m.unit === 'lifetime') return `<div><div class="ic">History</div><h3>${i === LIFETIMES - 1 ? 'Your life' : 'A life before yours'}</h3><p>${esc(m.label(i))}. Each dot is one lifetime of about 80 years, end to end since the first cities.</p></div>`;
+  const yi = m.year ? m.year(i) : null;
+  const state = i < done ? 'Lived' : i === done && m.done < m.total ? 'Now' : 'Ahead';
+  const away = i - done, unit = m.unit;
+  const rel = state === 'Now' ? `You are here, ${Math.floor((m.done - done) * 100)}% through` : away < 0 ? `${plural(-away, unit, unit + 's')} ago` : `in ${plural(away, unit, unit + 's')}`;
+  let body = '', extra = '';
+  if (yi != null) {
+    const from = birthdayIn(b, by + yi), to = new Date(birthdayIn(b, by + yi + 1) - 864e5);
+    const lines = Object.keys(LINES).filter(d => { const x = parse(d); return x >= from && x <= to; }).length;
+    const letter = S.letters.find(l => l.age === yi && !l.opened);
+    body = `<dl><div><dt>From</dt><dd>${fmtD(from)}</dd></div><div><dt>To</dt><dd>${fmtD(to)}</dd></div>${yi <= lived ? `<div><dt>Lines written</dt><dd>${fmt(lines)}</dd></div>` : ''}${letter ? `<div><dt>Letter</dt><dd>Sealed until ${fmtD(birthdayIn(b, by + yi))}</dd></div>` : ''}</dl>`;
+    extra = S.names[yi] ? `<div class="qt">${esc(S.names[yi])}</div>` : '';
+    extra += `<div class="hint">Click to ${S.names[yi] ? 'rename it' : yi <= lived ? 'name this year' : 'plan this year or write to it'}</div>`;
+  } else if (unit === 'day' && m.dayDate) {
+    const d = m.dayDate(i), line = LINES[iso(d)];
+    body = `<dl><div><dt>Day of your life</dt><dd>${fmt(i + 1)}</dd></div><div><dt>Age</dt><dd>${Math.floor(age(b, d))}</dd></div></dl>`;
+    extra = line ? `<div class="qt">“${esc(line)}”</div>` : '';
+  }
+  return `<div><div class="ic">${{ year: 'A year', month: 'A month', week: 'A week', day: 'A day' }[unit] || ''}</div><h3>${esc(m.label(i).split(' · ')[0])}</h3><span class="chip ${state === 'Now' ? 'now' : ''}">${state}</span><p>${rel}${m.label(i).includes(' · ') ? ` · ${esc(m.label(i).split(' · ').slice(1).join(' · '))}` : ''}.</p>${body}${extra}</div>`;
+}
+function insp(k, i) {
+  const el = $('insp-' + k); if (!el || !DESK) return;
+  const key = i == null ? 'now' : k + i; if (el.dataset.k === key) return; el.dataset.k = key;
+  el.innerHTML = i == null ? inspNow() : inspDot(k, i);
+}
+function placeInsp() {
+  if (!DESK) return;
+  ['life', 'decade', 'year'].forEach(k => { const g = $('grid-' + k), a = $('insp-' + k); if (!g || !a) return; a.style.top = g.offsetTop + 'px'; a.style.left = (g.offsetLeft + g.offsetWidth + 56) + 'px'; delete a.dataset.k; insp(k, null); });
+}
+
+// ================================================= desktop: the living favicon
+// The tab's icon is your dot: it fills as your life does.
+function favicon() {
+  if (!DESK || DEMO) return;
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), f = Math.min(1, age(birth()) / S.span);
+  x.beginPath(); x.arc(32, 32, 28, 0, Math.PI * 2); x.fillStyle = '#3a3a3c'; x.fill(); x.save(); x.clip(); x.fillStyle = '#fff'; x.fillRect(0, 60 - 56 * f, 64, 64); x.restore();
+  let l = document.querySelector('link[rel="icon"]'); if (!l) { l = document.createElement('link'); l.rel = 'icon'; document.head.append(l); }
+  l.type = 'image/png'; l.href = c.toDataURL('image/png');
+}
+
+// ================================================= desktop: search or jump to (⌘K)
+const PAL = () => {
+  const lived = Math.floor(age(birth())), cmd = (g, t, run, ks = [], alias = '', sub = '') => ({ g, t, run, ks, alias, sub });
+  const z = (i, n) => cmd('Zoom', n, () => { goPageNow(0); setZoom(i); }, [], 'zoom scale level ' + n);
+  const unit = (i, n) => cmd('Count in', n, () => { goPageNow(0); if (S.zoom !== 1) setZoom(1); S.unit = i; S.pct = false; save(); swapHead(); }, [], 'count measure unit ' + n);
+  return [
+    cmd('Go to', 'Life', () => goPageNow(0), ['1'], 'home grid years'), cmd('Go to', 'This decade', () => goPageNow(1), ['2']), cmd('Go to', 'This year', () => goPageNow(2), ['3'], 'months line countdown'),
+    cmd('Go to', 'People', () => goPageNow(3), ['4'], 'family friends parents visits'), cmd('Go to', 'Where your years go', () => goPageNow(4), ['5'], 'ledger sleep work phone'),
+    cmd('Create', "Write today's line", () => openSheet('line', iso(day0(new Date()))), [], 'journal diary note today'),
+    cmd('Create', 'Add a countdown', () => openSheet('event', null), [], 'event trip date'),
+    cmd('Create', 'Add someone you love', () => openSheet('person', null), [], 'person people parent friend'),
+    cmd('Create', 'Name this year', () => openSheet('milestone', lived), [], 'milestone title'),
+    cmd('Create', 'Write a letter to your future self', () => openSheet('milestone', lived + 1), [], 'seal letter future'),
+    z(0, 'History'), z(1, 'Years'), z(2, 'Months'), z(3, 'Weeks'), z(4, 'Days'),
+    unit(0, 'Years'), unit(1, 'Days'), unit(2, 'Weeks'), unit(3, 'Summers'), unit(4, 'Weekends'), unit(5, 'Full moons'),
+    cmd('View', S.lived ? 'Show time left' : 'Show time lived', () => $('modeBtn').click(), ['L'], 'left lived toggle'),
+    cmd('View', S.pct ? 'Show numbers' : 'Show as a percentage', () => $('pctBtn').click(), ['P'], 'percent'),
+    ...[['classic', 'Classic'], ['hero', 'Large'], ['live', 'Live']].map(([v, n]) => cmd('Number style', n + (S.style === v ? ' (current)' : ''), () => { S.style = v; save(); swapHead(); }, [], 'style number')),
+    cmd('Feel', `Daylight: turn ${S.sun ? 'off' : 'on'}`, () => { S.sun = !S.sun; refresh(); toast(`Daylight ${S.sun ? 'on' : 'off'}`); }, [], 'sun dim night'),
+    cmd('Feel', `Ripple: turn ${S.ripple ? 'off' : 'on'}`, () => { S.ripple = !S.ripple; save(); toast(`Ripple ${S.ripple ? 'on' : 'off'}`); }, [], 'wave animation'),
+    cmd('Lock screen', 'Save as lock screen', () => saveWallpaper(), [], 'wallpaper image download'),
+    cmd('Lock screen', 'Share your grid', () => shareCard(), [], 'image export'),
+    cmd('You', 'Settings', () => openSheet('settings'), ['S'], 'preferences birthday lifespan'),
+    cmd('You', 'Estimate my lifespan', () => openSheet('lifespan'), [], 'habits estimate'),
+    cmd('Help', 'Keyboard shortcuts', () => openSheet('keys'), ['?']), cmd('Help', 'Guide to every setting', () => openSheet('guide'), ['G'], 'help how'),
+    cmd('Help', 'Replay the tour', () => setTimeout(() => tourGo(0), 200), [], 'tutorial onboarding'),
+    cmd('Help', 'Install as an app', () => openSheet('install'), [], 'home screen dock'), cmd('Help', 'About yrs.', () => openSheet('about'), [], 'open source mit license'),
+  ];
+};
+function goPageNow(i) { $('pager').scrollTo({ left: i * $('pager').clientWidth, behavior: 'smooth' }); }
+let palItems = [], palSel = 0, palFocus = null;
+function palScore(c, q) {
+  if (!q) return 1;
+  const t = c.t.toLowerCase(), hay = `${t} ${c.alias} ${c.g.toLowerCase()}`;
+  if (t.startsWith(q)) return 100; if (t.split(/\s+/).some(w => w.startsWith(q))) return 80; if (hay.includes(q)) return 60;
+  let j = 0; for (const ch of hay) if (ch === q[j]) j++; return j === q.length ? 20 : 0; // letters in order, forgiving
+}
+function palRender() {
+  const q = $('palQ').value.trim().toLowerCase();
+  let list = PAL().map(c => ({ c, s: palScore(c, q) })).filter(x => x.s > 0);
+  // loose letter-by-letter matches only when nothing matches properly
+  if (list.some(x => x.s >= 60)) list = list.filter(x => x.s >= 60);
+  if (q) list.sort((a, b) => b.s - a.s);
+  else { // what fits this page comes first
+    const first = { 2: ["Write today's line", 'Add a countdown'], 3: ['Add someone you love'], 4: ['Settings'] }[S.page] || [];
+    list.forEach(x => { if (first.includes(x.c.t)) x.c = { ...x.c, g: 'Suggested' }; });
+    list.sort((a, b) => (b.c.g === 'Suggested') - (a.c.g === 'Suggested'));
+  }
+  palItems = list.map(x => x.c); palSel = Math.min(palSel, Math.max(0, palItems.length - 1));
+  let html = '', g = null;
+  palItems.forEach((c, i) => {
+    if (!q && c.g !== g) { g = c.g; html += `<div class="pg">${c.g}</div>`; }
+    html += `<div class="pi${i === palSel ? ' sel' : ''}" role="option" data-i="${i}" aria-selected="${i === palSel}"><span class="d"></span><span>${esc(c.t)}</span>${q ? `<small>${c.g}</small>` : ''}<span class="ks">${c.ks.map(k => `<kbd>${k}</kbd>`).join('')}</span></div>`;
+  });
+  $('palL').innerHTML = html || `<div class="none">Nothing matches “${esc(q)}”</div>`;
+  $('palL').querySelector('.sel')?.scrollIntoView({ block: 'nearest' });
+}
+function palOpen() {
+  if (!started || DEMO || !$('pal').hidden) return;
+  if (layer.classList.contains('open')) closeSheet();
+  palFocus = document.activeElement; palSel = 0; $('palQ').value = ''; $('pal').hidden = false; palRender(); $('palQ').focus(); tick();
+}
+function palClose() { if ($('pal').hidden) return; $('pal').hidden = true; try { palFocus?.focus(); } catch {} }
+function palRun(i) { const c = palItems[i]; if (!c) return; palClose(); tick(); setTimeout(c.run, 60); }
+$('palQ').addEventListener('input', () => { palSel = 0; palRender(); });
+$('palQ').addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = palItems.length; if (!n) return; palSel = (palSel + (e.key === 'ArrowDown' ? 1 : -1) + n) % n; palRender(); }
+  else if (e.key === 'Enter') { e.preventDefault(); palRun(palSel); }
+  else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); palClose(); }
+});
+$('palL').addEventListener('mousemove', e => { const it = e.target.closest('.pi'); if (it && +it.dataset.i !== palSel) { palSel = +it.dataset.i; $('palL').querySelectorAll('.pi').forEach((x, k) => { x.classList.toggle('sel', k === palSel); x.setAttribute('aria-selected', k === palSel); }); } });
+$('palL').addEventListener('click', e => { const it = e.target.closest('.pi'); if (it) palRun(+it.dataset.i); });
+$('pal').addEventListener('mousedown', e => { if (e.target === $('pal')) palClose(); });
+$('findBtn').onclick = () => palOpen();
+$('findKbd').textContent = MOD === '⌘' ? '⌘K' : 'Ctrl K';
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); $('pal').hidden ? palOpen() : palClose(); }
+}, true);
+
 let spaceDown = false;
 document.addEventListener('keydown', e => {
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '') || document.activeElement?.isContentEditable;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!$('pal').hidden) return;
   // onboarding
   if (!$('ob').hidden) {
     if (e.key === 'Enter' && !typing) { e.preventDefault(); $('obGo').click(); }
