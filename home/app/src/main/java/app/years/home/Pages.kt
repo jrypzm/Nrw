@@ -280,8 +280,12 @@ class SettingsActivity : Page() {
 
 /** Choosing apps: for home (in order), a moment of the day, to hide, to pause first, or to get through The Hour. */
 class PickActivity : Page() {
+    private var waiting: (() -> Unit)? = null
+    override fun onDestroy() { waiting?.let { Apps.off(it) }; super.onDestroy() }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // opened fresh after Android restarted the app: load the apps, then draw again
+        if (Apps.all.isEmpty()) { Apps.onChange { if (!isDestroyed) recreate() }.let { f -> waiting = f }; Apps.start(this) }
         val mode = intent.getStringExtra("mode") ?: "home"
         val moment = mode.removePrefix("moment:").takeIf { mode.startsWith("moment:") }
         val p = Prefs.get(this)

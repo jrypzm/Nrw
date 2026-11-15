@@ -29,16 +29,17 @@ object Torch {
     private var max = 1
     private var cm: CameraManager? = null
     private val listeners = mutableListOf<() -> Unit>()
-    fun onChange(f: () -> Unit) { listeners += f }
+    fun onChange(f: () -> Unit): () -> Unit { listeners += f; return f }
+    fun off(f: () -> Unit) { listeners -= f }
     private val main = Handler(Looper.getMainLooper())
     private val cb = object : CameraManager.TorchCallback() {
-        override fun onTorchModeChanged(camera: String, enabled: Boolean) { if (camera == id) { on = enabled; listeners.forEach { it() } } }
-        override fun onTorchStrengthLevelChanged(camera: String, newStrengthLevel: Int) { if (camera == id && max > 1) { level = newStrengthLevel / max.toFloat(); listeners.forEach { it() } } }
+        override fun onTorchModeChanged(camera: String, enabled: Boolean) { if (camera == id && enabled != on) { on = enabled; listeners.toList().forEach { it() } } }
+        override fun onTorchStrengthLevelChanged(camera: String, newStrengthLevel: Int) { if (camera == id && max > 1) level = newStrengthLevel / max.toFloat() }
     }
 
     fun init(c: Context) {
         if (cm != null) return
-        val m = c.getSystemService(CameraManager::class.java) ?: return
+        val m = c.applicationContext.getSystemService(CameraManager::class.java) ?: return
         cm = m
         runCatching {
             id = m.cameraIdList.firstOrNull { i -> val ch = m.getCameraCharacteristics(i); ch.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true && ch.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK }
@@ -58,7 +59,7 @@ object Torch {
         val m = cm ?: return false; val i = id ?: return false
         return runCatching {
             if (v && dimmable && Build.VERSION.SDK_INT >= 33) m.turnOnTorchWithStrengthLevel(i, (level * max).toInt().coerceIn(1, max)) else m.setTorchMode(i, v)
-            on = v; listeners.forEach { it() }
+            if (on != v) { on = v; listeners.toList().forEach { it() } }
         }.isSuccess
     }
     fun setLevel(f: Float) {
@@ -74,7 +75,8 @@ object Feel {
     private var rich = false
     fun init(c: Context) {
         if (vib != null) return
-        vib = if (Build.VERSION.SDK_INT >= 31) c.getSystemService(VibratorManager::class.java)?.defaultVibrator else @Suppress("DEPRECATION") c.getSystemService(Vibrator::class.java)
+        val a = c.applicationContext
+        vib = if (Build.VERSION.SDK_INT >= 31) a.getSystemService(VibratorManager::class.java)?.defaultVibrator else @Suppress("DEPRECATION") a.getSystemService(Vibrator::class.java)
         rich = Build.VERSION.SDK_INT >= 31 && vib?.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_LOW_TICK, VibrationEffect.Composition.PRIMITIVE_CLICK) == true
     }
     fun tick(v: View) {
@@ -126,7 +128,7 @@ object Ears {
         override fun onAudioDevicesRemoved(d: Array<out AudioDeviceInfo>?) = check()
     }
     private fun check() { val now = am?.getDevices(AudioManager.GET_DEVICES_OUTPUTS)?.any { it.type in TYPES } == true; if (now != connected) { connected = now; onChange?.invoke() } }
-    fun start(c: Context, f: () -> Unit) { am = c.getSystemService(AudioManager::class.java); onChange = f; runCatching { am?.registerAudioDeviceCallback(cb, Handler(Looper.getMainLooper())) }; check() }
+    fun start(c: Context, f: () -> Unit) { am = c.applicationContext.getSystemService(AudioManager::class.java); onChange = f; runCatching { am?.registerAudioDeviceCallback(cb, Handler(Looper.getMainLooper())) }; check() }
     fun stop() { runCatching { am?.unregisterAudioDeviceCallback(cb) }; onChange = null }
 }
 

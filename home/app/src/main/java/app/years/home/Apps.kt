@@ -56,7 +56,8 @@ object Apps {
     private val main = Handler(Looper.getMainLooper())
     private var started = false
 
-    fun onChange(f: () -> Unit) { listeners += f }
+    fun onChange(f: () -> Unit): () -> Unit { listeners += f; return f }
+    fun off(f: () -> Unit) { listeners -= f }
 
     fun start(c: Context) {
         if (started) { refresh(c); return }
@@ -144,8 +145,12 @@ object Apps {
     fun byKey(key: String): App? = all.firstOrNull { it.key == key } ?: private.firstOrNull { it.key == key }
 
     /** Lock or unlock a profile. Android asks for your fingerprint when unlocking Private Space. */
+    /**
+     * Returns false only when Android refused outright. (Unlocking returns false from Android while it shows its own
+     * fingerprint or PIN prompt; that's not a failure, the profile opens once you've confirmed.)
+     */
     fun setQuiet(c: Context, u: UserHandle, quiet: Boolean): Boolean =
-        runCatching { c.getSystemService(UserManager::class.java).requestQuietModeEnabled(quiet, u) }.getOrDefault(false).also { refresh(c) }
+        runCatching { c.getSystemService(UserManager::class.java).requestQuietModeEnabled(quiet, u) }.isSuccess.also { refresh(c) }
 
     /** New for three days after it's installed, until you open it. */
     fun isNew(a: App, now: Long, opened: Map<String, Long>): Boolean = a.installed > 0 && now - a.installed < 3 * 86_400_000L && (opened[a.key] ?: 0L) == 0L

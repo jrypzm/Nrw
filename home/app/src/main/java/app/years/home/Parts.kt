@@ -157,9 +157,11 @@ class NowRow(c: Context, private val appName: String) : LinearLayout(c) {
         if (n.max > 0) bar.f = n.progress / n.max.toFloat()
     }
     private fun clock(ms: Long): String { val s = ms / 1000; return if (s >= 3600) "%d:%02d:%02d".format(s / 3600, s / 60 % 60, s % 60) else "%d:%02d".format(s / 60, s % 60) }
-    private val ticker = object : Runnable { override fun run() { tick(); if (isAttachedToWindow) postDelayed(this, 1000) } }
+    private val ticker = object : Runnable { override fun run() { tick(); if (isAttachedToWindow && windowVisibility == VISIBLE) postDelayed(this, 1000) } }
     override fun onAttachedToWindow() { super.onAttachedToWindow(); removeCallbacks(ticker); post(ticker) }
     override fun onDetachedFromWindow() { super.onDetachedFromWindow(); removeCallbacks(ticker) }
+    // nothing ticks while home is hidden behind an app
+    override fun onWindowVisibilityChanged(v: Int) { super.onWindowVisibilityChanged(v); removeCallbacks(ticker); if (v == VISIBLE) post(ticker) }
 }
 
 /** "2 h 41 m away from your phone." with a quiet week of bars. Shown once when you come back, then it steps aside. */
@@ -204,7 +206,8 @@ class Slider(c: Context, private val onSet: (Float) -> Unit) : View(c) {
     override fun onTouchEvent(e: MotionEvent): Boolean {
         parent.requestDisallowInterceptTouchEvent(true)
         val nf = (e.x / width).coerceIn(.05f, 1f)
-        if (abs(nf - f) > .04f) tick()
+        // a tick for every tenth, like detents on a dial
+        if ((nf * 10).toInt() != (f * 10).toInt()) tick()
         f = nf; onSet(nf)
         return true
     }

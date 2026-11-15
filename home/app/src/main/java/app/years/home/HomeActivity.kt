@@ -105,7 +105,7 @@ class HomeActivity : Activity() {
         home.addView(nudge, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.START))
         root.addView(home, FrameLayout.LayoutParams(-1, -1))
         Torch.init(this); Feel.init(this)
-        Torch.onChange { runOnUiThread { renderFavs() } }
+        Torch.onChange { renderFavs() }.let { f -> subs += { Torch.off(f) } }
 
         // while the rail is out, home steps back so the apps beside your thumb stand alone
         rail = RailView(this, { on -> home.animate().alpha(if (on) .12f else 1f).setDuration(if (on) 140L else 220L).setInterpolator(K.EASE).start() }) { app, v -> open(app, v) }.apply { left = Prefs.get(context).railLeft }
@@ -134,8 +134,8 @@ class HomeActivity : Activity() {
             ins
         }
 
-        Apps.onChange { onApps() }
-        Live.onChange { renderFavs(); renderSmart(); renderPeople(); if (isDrawerOpen()) adapter.notifyDataSetChanged() }
+        Apps.onChange { onApps() }.let { f -> subs += { Apps.off(f) } }
+        Live.onChange { renderFavs(); renderSmart(); renderPeople(); if (isDrawerOpen()) adapter.notifyDataSetChanged() }.let { f -> subs += { Live.off(f) } }
         Apps.start(this)
         // away time: the screen going off and the next unlock. Registered for as long as home lives.
         registerReceiver(screen, IntentFilter().apply { addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_USER_PRESENT); addAction(Intent.ACTION_SCREEN_ON) }, Context.RECEIVER_NOT_EXPORTED)
@@ -155,7 +155,9 @@ class HomeActivity : Activity() {
         }
     }
 
-    override fun onDestroy() { runCatching { unregisterReceiver(screen) }; super.onDestroy() }
+    /** What this screen listens to, so a recreated screen never leaves the old one listening. */
+    private val subs = ArrayList<() -> Unit>()
+    override fun onDestroy() { runCatching { unregisterReceiver(screen) }; subs.forEach { it() }; subs.clear(); bg.shutdown(); super.onDestroy() }
 
     /** A short white note at the bottom of the screen: "Alarm set for 7:30 am". */
     fun flash(t: String) {
@@ -389,17 +391,25 @@ class HomeActivity : Activity() {
         fun bold(a: String, b: String) = android.text.SpannableStringBuilder().apply { append(a, android.text.style.ForegroundColorSpan(K.FG), 0); append(" · $b") }
         // an alarm in the next 12 hours
         getSystemService(AlarmManager::class.java)?.nextAlarmClock?.triggerTime?.let { t -> if (t - now in 0..12 * 3_600_000L) return bold("Alarm", "${at(t)}, ${inWords(t)}") }
-        // the next event today
-        if (Prefs.get(this).calendar && checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
-            runCatching {
-                val uri = CalendarContract.Instances.CONTENT_URI.buildUpon().also { ContentUris.appendId(it, now); ContentUris.appendId(it, now + 12 * 3_600_000L) }.build()
-                contentResolver.query(uri, arrayOf(CalendarContract.Instances.TITLE, CalendarContract.Instances.BEGIN, CalendarContract.Instances.ALL_DAY), "${CalendarContract.Instances.ALL_DAY}=0", null, "${CalendarContract.Instances.BEGIN} ASC")?.use { c ->
-                    while (c.moveToNext()) { val b = c.getLong(1); if (b >= now) return bold(c.getString(0) ?: "Event", "${at(b)}, ${inWords(b)}") }
-                }
-            }
-        }
+        // the next event, read on a spare thread once a minute
+        nextEvent?.let { (title, b) -> if (b >= now) return bold(title, "${at(b)}, ${inWords(b)}") }
         if (charging && battery in 0..99) return bold("Charging", "$battery%")
         return null
+    }
+
+    @Volatile private var nextEvent: Pair<String, Long>? = null
+    private fun readCalendar() {
+        if (!Prefs.get(this).calendar || checkSelfPermission(Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) { nextEvent = null; return }
+        runCatching { bg.execute {
+            val now = System.currentTimeMillis()
+            val found = runCatching {
+                val uri = CalendarContract.Instances.CONTENT_URI.buildUpon().also { ContentUris.appendId(it, now); ContentUris.appendId(it, now + 12 * 3_600_000L) }.build()
+                contentResolver.query(uri, arrayOf(CalendarContract.Instances.TITLE, CalendarContract.Instances.BEGIN), "${CalendarContract.Instances.ALL_DAY}=0 AND ${CalendarContract.Instances.BEGIN}>=?", arrayOf(now.toString()), "${CalendarContract.Instances.BEGIN} ASC")?.use { c ->
+                    if (c.moveToFirst()) (c.getString(0)?.takeIf { it.isNotBlank() } ?: "Event") to c.getLong(1) else null
+                }
+            }.getOrNull()
+            if (found != nextEvent) { nextEvent = found; runOnUiThread { if (!isDestroyed) renderSmart() } }
+        } }
     }
 
     private val ticks = object : BroadcastReceiver() {
@@ -408,7 +418,7 @@ class HomeActivity : Activity() {
                 val lvl = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); val sc = i.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
                 battery = if (lvl >= 0) lvl * 100 / max(1, sc) else -1
                 charging = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1).let { it == BatteryManager.BATTERY_STATUS_CHARGING || it == BatteryManager.BATTERY_STATUS_FULL }
-            }
+            } else readCalendar()
             renderClock(); renderSmart()
         }
     }
@@ -430,9 +440,12 @@ class HomeActivity : Activity() {
         nudge.visibility = if (isHome()) View.GONE else View.VISIBLE
         // after an update Android sometimes forgets to reconnect the listener; ask it to
         if (!Live.connected && Live.enabled(this)) runCatching { android.service.notification.NotificationListenerService.requestRebind(android.content.ComponentName(this, NotifService::class.java)) }
-        Apps.refresh(this)
+        readCalendar()
+        // installs and removals arrive by themselves; this only catches what Android didn't say (renames, usage)
+        if (System.currentTimeMillis() - lastRefresh > 60_000) { lastRefresh = System.currentTimeMillis(); Apps.refresh(this) }
     }
 
+    private var lastRefresh = 0L
     override fun onPause() { super.onPause(); runCatching { unregisterReceiver(ticks) }; Ears.stop() }
 
     private fun dismissAway() {
@@ -462,6 +475,8 @@ class HomeActivity : Activity() {
     }
 
     private fun expandNotifications() {
+        // the official way, when the lock helper is on; otherwise the older way most phones still allow
+        if (LockService.notifications()) return
         runCatching {
             @SuppressLint("WrongConstant") val sbm = getSystemService("statusbar")
             Class.forName("android.app.StatusBarManager").getMethod("expandNotificationsPanel").invoke(sbm)
@@ -586,7 +601,7 @@ class HomeActivity : Activity() {
     // ================================================================== hold an app
 
     private fun showSheet(app: App) {
-        closeSheet()
+        closeSheet(); hideKeyboard()
         val p = Prefs.get(this)
         val scrim = FrameLayout(this).apply { setBackgroundColor(0xB3000000.toInt()); alpha = 0f; setOnClickListener { closeSheet() } }
         val col = LinearLayout(this).apply {
@@ -661,6 +676,7 @@ class HomeActivity : Activity() {
         col.build()
         val scroll = android.widget.ScrollView(this).apply { isVerticalScrollBarEnabled = false; overScrollMode = View.OVER_SCROLL_NEVER; isFillViewport = false; addView(col) }
         scrim.addView(scroll, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply { topMargin = insetTop + dpi(40f) })
+        scrim.setPadding(0, 0, 0, max(0, imeBottom - insetBottom))
         root.addView(scrim, FrameLayout.LayoutParams(-1, -1)); sheet = scrim
         scroll.translationY = dp(300f)
         scrim.animate().alpha(1f).setDuration(200).start()
@@ -687,14 +703,14 @@ class HomeActivity : Activity() {
                 if (list.size > 1) head.addView(caption("${list.size}"), FrameLayout.LayoutParams(-2, -2, Gravity.END))
                 card.addView(head)
                 card.addView(text(listOf(last.title, last.text).filter { it.isNotEmpty() }.joinToString(". ").ifEmpty { "New notification" }, 16f, Type.body, K.FG).apply { maxLines = 3; ellipsize = TextUtils.TruncateAt.END; setLineSpacing(0f, 1.3f) }, lp(-1, -2).apply { topMargin = dpi(6f) })
-                card.setOnClickListener { it.tap(); closeSheet(); Live.service?.openHour(pkg) }
+                card.setOnClickListener { it.tap(); closeSheet(); Live.service?.openHour(pkg) ?: flash("Notification access is off, so this can't be opened from here") }
                 addView(card, lp(-1, -2).apply { topMargin = dpi(if (firstCard) 20f else 10f) }); firstCard = false
             }
             val chips = FlowRow(this@HomeActivity)
             fun chip(t: String, on: Boolean, f: () -> Unit) = chips.addView(text(t, 13.5f, Type.medium, if (on) K.BG else K.MUTE).apply {
                 background = if (on) rounded(K.FG, dp(16f)) else rounded(0, dp(16f), dpi(1f), K.HAIR2); setPadding(dpi(14f), dpi(8f), dpi(14f), dpi(8f)); setOnClickListener { it.tap(); f() }
             })
-            chip("Clear all", true) { closeSheet(); Live.service?.clearHour(); flash("All clear") }
+            chip("Clear all", true) { closeSheet(); if (Live.service?.clearHour() != null) flash("All clear") else flash("Notification access is off") }
             chip("Times…", false) { closeSheet(); startActivity(Intent(this@HomeActivity, SettingsActivity::class.java)) }
             addView(chips, lp(-1, -2).apply { topMargin = dpi(20f) })
         }
@@ -717,7 +733,7 @@ class HomeActivity : Activity() {
         }
         val scrim = FrameLayout(this).apply { setBackgroundColor(0xCC000000.toInt()); setOnClickListener { closeSheet() } }
         val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dpi(28f), 0, dpi(28f), 0); isClickable = true }
-        col.addView(caption("Rename ${Apps.all.firstOrNull { it.key == app.key }?.let { "" } ?: ""}".trim().ifEmpty { "Rename" }))
+        col.addView(caption("Rename"))
         col.addView(field, lp(-1, -2).apply { topMargin = dpi(12f) })
         col.addView(text("Leave it empty to use the app's own name.", 13f, Type.body, K.DIM), lp(-2, -2).apply { topMargin = dpi(10f) })
         fun done() {
@@ -791,7 +807,7 @@ class HomeActivity : Activity() {
                 } else if (drawer.visibility != View.VISIBLE) {
                     mode = if (dy < 0) 2 else 3; downY = e.y
                     if (mode == 2) { drawer.animate().cancel(); startT = drawer.height.toFloat(); setDrawer(startT) }
-                    gd.onTouchEvent(MotionEvent.obtain(e).apply { action = MotionEvent.ACTION_CANCEL })
+                    MotionEvent.obtain(e).apply { action = MotionEvent.ACTION_CANCEL }.also { gd.onTouchEvent(it); it.recycle() }
                     return true
                 }
             }

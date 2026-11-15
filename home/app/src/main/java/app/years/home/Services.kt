@@ -48,7 +48,8 @@ object Live {
     private val lastPlayed = HashMap<String, Long>()
     private val listeners = mutableListOf<() -> Unit>()
     private val main = Handler(Looper.getMainLooper())
-    fun onChange(f: () -> Unit) { listeners += f }
+    fun onChange(f: () -> Unit): () -> Unit { listeners += f; return f }
+    fun off(f: () -> Unit) { listeners -= f }
     fun changed() { main.post { remember(); listeners.toList().forEach { it() } } }
 
     fun enabled(c: Context): Boolean =
@@ -310,6 +311,7 @@ class LockService : AccessibilityService() {
     companion object {
         @Volatile private var me: LockService? = null
         fun lock(): Boolean = me?.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN) == true
+        fun notifications(): Boolean = me?.performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS) == true
         fun on(): Boolean = me != null
     }
 }
