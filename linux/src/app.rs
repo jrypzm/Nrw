@@ -8,6 +8,9 @@ use chrono::{Datelike, NaiveDate};
 use egui::{Align2, Color32, Context, CornerRadius, Id, Key, Pos2, Rect, Sense, Stroke, StrokeKind, Ui, Vec2};
 use std::collections::{BTreeMap, HashMap};
 
+/// When the page starts rising in after launch, in seconds.
+const INTRO_PAGE: f64 = 1.05;
+
 pub const PAGES: [&str; 5] = ["Life", "Decade", "Year", "People", "Time"];
 
 /// What's open over the page.
@@ -40,6 +43,8 @@ pub struct App {
     /// screenshots: no motion
     pub still: bool,
     started: f64,
+    /// the opening: the name in the middle, gliding up into the corner as the page rises in
+    intro: bool,
 }
 
 impl App {
@@ -65,7 +70,7 @@ impl App {
         let still = std::env::var_os("YRS_STILL").is_some();
         let mut app = App {
             saved: s.clone(), lines: store::load_lines(), s, dirty_at: None, ov: None, ov_at: 0.0, page_at: -10.0, page_from: 0,
-            ob: Default::default(), facts: HashMap::new(), tex: HashMap::new(), toast: None, still, started: 0.0,
+            ob: Default::default(), facts: HashMap::new(), tex: HashMap::new(), toast: None, still, started: 0.0, intro: !still && !line,
         };
         if line && app.s.birth.is_some() { app.open(Ov::Line { date: life::today(), text: app.lines.get(&life::today().to_string()).cloned().unwrap_or_default() }, 0.0); }
         app.moments();
@@ -131,20 +136,31 @@ impl App {
 }
 
 impl eframe::App for App {
+    fn clear_color(&self, _v: &egui::Visuals) -> [f32; 4] { [0.0, 0.0, 0.0, 0.0] }
+
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         let now = ctx.input(|i| i.time);
-        if self.started == 0.0 { self.started = now.max(1e-6); }
+        if self.started == 0.0 {
+            self.started = now.max(1e-6);
+            // the page waits for the opening, then rises in
+            if self.intro && self.s.birth.is_some() { self.page_at = self.started + INTRO_PAGE; } else { self.intro = false; }
+        }
+        crate::chrome::edges(ctx);
+        crate::chrome::background(ctx);
         // remember the screen size for wallpapers
         if let Some(m) = ctx.input(|i| i.viewport().monitor_size) {
             let ppp = ctx.pixels_per_point();
             let px = ((m.x * ppp).round() as u32, (m.y * ppp).round() as u32);
             if px.0 > 300 && px != self.s.screen { self.s.screen = px; }
         }
-        egui::CentralPanel::default().frame(egui::Frame::NONE.fill(BG)).show(ctx, |ui| {
+        egui::CentralPanel::default().frame(egui::Frame::NONE).show(ctx, |ui| {
+            crate::chrome::drag_strip(ui, Rect::from_min_size(ui.max_rect().min, Vec2::new(ui.max_rect().width(), 80.0)));
             let full = ui.max_rect();
             if self.s.birth.is_none() { crate::onboarding::show(self, ui, full, now); } else { self.home(ui, full, now); }
         });
         if self.ov.is_some() { crate::sheets::show(self, ctx, now); }
+        let ck = if self.intro { ease_out(((now - self.started - INTRO_PAGE) / 0.6) as f32) } else { 1.0 };
+        crate::chrome::controls(ctx, ck);
         self.draw_toast(ctx, now);
         if self.ov.is_none() && self.s.birth.is_some() { self.keys(ctx, now); }
         else if ctx.input(|i| i.key_pressed(Key::Escape)) { self.ov = None; }
@@ -203,11 +219,28 @@ impl App {
     // ================================================================== the home screen
 
     fn home(&mut self, ui: &mut Ui, full: Rect, now: f64) {
-        let p = ui.painter().clone();
         // top bar: the name, the pages, settings
         let bar_y = full.top() + 40.0;
-        text(&p, Pos2::new(full.left() + 40.0, bar_y), Align2::LEFT_CENTER, "yrs.", F::DisplayBold, 22.0, FG, -0.05);
-        let bw = (full.width() - 320.0).clamp(380.0, 540.0);
+        let logo_end = Pos2::new(full.left() + 40.0, bar_y);
+        if self.intro {
+            // the name appears large in the middle, holds a breath, then glides up into its corner
+            let t = (now - self.started) as f32;
+            if t > INTRO_PAGE as f32 + 0.8 { self.intro = false; }
+            ui.ctx().request_repaint();
+            let appear = ease_out(t / 0.6);
+            let glide = ease_in_out(((t - 0.75) / 0.75).clamp(0.0, 1.0));
+            let size = 112.0 + (22.0 - 112.0) * glide;
+            let w0 = width_of(ui.ctx(), "yrs.", F::DisplayBold, 112.0, -0.05);
+            let start = Pos2::new(full.center().x - w0 / 2.0, full.center().y - 10.0);
+            let pos = start + (logo_end - start) * glide + Vec2::new(0.0, (1.0 - appear) * 16.0 * (1.0 - glide));
+            let lp = ui.ctx().layer_painter(egui::LayerId::new(egui::Order::Middle, Id::new("intro")));
+            text(&lp, pos, Align2::LEFT_CENTER, "yrs.", F::DisplayBold, size, alpha(FG, appear), -0.05);
+            let ck = ease_out((t - INTRO_PAGE as f32) / 0.6).clamp(0.0, 1.0);
+            ui.multiply_opacity(ck);
+        }
+        let p = ui.painter().clone();
+        if !self.intro { text(&p, logo_end, Align2::LEFT_CENTER, "yrs.", F::DisplayBold, 22.0, FG, -0.05); }
+        let bw = (full.width() - 440.0).clamp(380.0, 540.0);
         let bar = Rect::from_center_size(Pos2::new(full.center().x, bar_y), Vec2::new(bw, 46.0));
         p.rect_filled(bar, CornerRadius::same(23), GLASS);
         p.rect_stroke(bar, CornerRadius::same(23), Stroke::new(1.0, HAIR), StrokeKind::Inside);
@@ -222,7 +255,9 @@ impl App {
             text(&p, cell.center(), Align2::CENTER_CENTER, l, if on { F::Semi } else { F::Medium }, 14.0, if on { FG } else if r.hovered() { gray(0xc7) } else { MUTE }, 0.0);
             if r.clicked() { self.go(i, now); }
         }
-        if round(ui, Pos2::new(full.right() - 46.0, bar_y), 20.0, Id::new("more"), dots3) { self.open(Ov::Settings { birth_open: false }, now); }
+        // settings sits just left of the window controls, with a hairline between
+        p.line_segment([Pos2::new(full.right() - 136.0, bar_y - 12.0), Pos2::new(full.right() - 136.0, bar_y + 12.0)], Stroke::new(1.0, HAIR2));
+        if round(ui, Pos2::new(full.right() - 172.0, bar_y), 20.0, Id::new("more"), dots3) { self.open(Ov::Settings { birth_open: false }, now); }
 
         // the page slides in from the side it came from
         let content = Rect::from_min_max(Pos2::new(full.left() + 64.0, full.top() + 104.0), Pos2::new(full.right() - 64.0, full.bottom() - 36.0));
@@ -379,7 +414,7 @@ impl App {
         let lit = if self.s.sun { gray((110.0 + 145.0 * life::sun_level()) as u8) } else { FG };
         let center = |i: usize| Pos2::new(o.x + (i % g.cols) as f32 * cell + cell / 2.0, o.y + (i / g.cols) as f32 * cell + cell / 2.0);
         let resp = ui.interact(box_, Id::new(("grid", g.kind as u8, g.zoom)), Sense::click());
-        let hover = resp.hover_pos().and_then(|pos| {
+        let hover = resp.hover_pos().filter(|_| !self.intro).and_then(|pos| {
             let c = ((pos.x - o.x) / cell).floor(); let rr = ((pos.y - o.y) / cell).floor();
             if c < 0.0 || rr < 0.0 || c as usize >= g.cols { return None; }
             let i = rr as usize * g.cols + c as usize;

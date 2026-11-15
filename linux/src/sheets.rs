@@ -18,7 +18,7 @@ pub fn show(app: &mut App, ctx: &Context, now: f64) {
     egui::Area::new(Id::new("sheet-layer")).order(egui::Order::Foreground).fixed_pos(sr.min).show(ctx, |ui| {
         ui.set_min_size(sr.size());
         let scrim = ui.interact(sr, Id::new("scrim"), Sense::click());
-        ui.painter().rect_filled(sr, 0.0, Color32::from_black_alpha((170.0 * k) as u8));
+        ui.painter().rect_filled(sr, if crate::chrome::maximized(ctx) { 0 } else { crate::chrome::RADIUS }, Color32::from_black_alpha((170.0 * k) as u8));
         let wide = matches!(app.ov, Some(Ov::Settings { .. }) | Some(Ov::Estimate { .. }));
         let w = (if wide { 600.0 } else { 540.0f32 }).min(sr.width() - 48.0);
         // as tall as what's inside, up to nearly the whole window

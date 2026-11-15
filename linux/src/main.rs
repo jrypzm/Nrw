@@ -5,6 +5,7 @@
 //!   yrs --background  no window: the tray, the daily wallpaper and the Monday note (started at login)
 
 mod app;
+mod chrome;
 mod data;
 mod life;
 mod onboarding;
@@ -42,7 +43,11 @@ fn main() -> eframe::Result {
         .with_title("yrs.")
         .with_app_id("yrs")
         .with_inner_size([1280.0, 820.0])
-        .with_min_inner_size([960.0, 640.0]);
+        .with_min_inner_size([960.0, 640.0])
+        // yrs. draws its own title bar and rounded corners
+        .with_decorations(false)
+        .with_transparent(true)
+        .with_resizable(true);
     if let Some(i) = icon { vp = vp.with_icon(i); }
     if let Some((w, h)) = std::env::var("YRS_SIZE").ok().and_then(|v| v.split_once('x').map(|(a, b)| (a.parse().unwrap_or(1280.0), b.parse().unwrap_or(820.0)))) {
         vp = vp.with_inner_size([w, h]).with_position([0.0, 0.0]);
