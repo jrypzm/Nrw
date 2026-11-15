@@ -54,6 +54,14 @@ It's **open source under the MIT license**. Use it, read it, build it yourself, 
 2. Make it executable: right-click it, Properties, Permissions, **Is executable**. Or `chmod +x yrs-x86_64.AppImage`.
 3. Open it. yrs. adds itself to your app launcher with its icon, so you can pin it to the taskbar. On KDE Plasma it can also set your wallpaper and lock screen, sit in the tray and start at login.
 
+**yrs. home** &nbsp;·&nbsp; a launcher for Android 10 or newer
+
+A black, quiet home screen: the time, your favourite apps as words, and everything else one swipe or one thumb away. About 200 KB, no internet permission.
+
+1. Download **[yrs-home.apk](https://github.com/jrypzm/yrs/releases/download/home/yrs-home.apk)** and install it like yrs.
+2. Open it and tap **Make yrs. home your home screen**.
+3. Swipe up for all apps and search, slide your thumb down the right edge to open any app by letter, hold an app for more, double-tap to lock.
+
 **Try it in your browser** &nbsp;·&nbsp; free, nothing to install
 
 1. Open **[jrypzm.github.io/yrs/web](https://jrypzm.github.io/yrs/web/)** on any phone, tablet or computer.
@@ -79,6 +87,7 @@ Age is calendar-exact, down to Feb 29 birthdays. A year holds 52.1775 weeks and 
 ```
 android/     Native Android app
 linux/       Linux desktop app (Rust)
+home/        yrs. home, the Android launcher
 web/         Browser version, icons, launch screens, service worker
 index.html   Website
 .github/     CI, issue forms, README art
