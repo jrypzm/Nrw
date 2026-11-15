@@ -30,7 +30,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..700&display=swap" rel="stylesheet" media="(not (-webkit-touch-callout: none))">
 <style>
-  /* yrs. for iPhone: one screen, true black, the system font, native scrolling everywhere. */
+  /* yrs. on the web: one screen, true black, the system font, native scrolling everywhere. */
   :root {
     --bg: #000; --fg: #fff; --mute: #8e8e93; --faint: #48484a; --empty: #232323; --partial: #3a3a3c;
     --surface: #1c1c1e; --surface2: #2c2c2e; --surface3: #3a3a3c; --sep: #38383a; --lit: #fff;
@@ -866,7 +866,7 @@ function renderExtras() {
   const sl = [['Asleep', sleep, '#2c2c2e'], ['Working', work, '#48484a'], ['On your phone', phone, '#8e8e93'], ['Eating, chores, commuting', upkeep, '#3a3a3c'], ['Truly yours', free, '#ffffff']];
   $('head-ledger').innerHTML = `<div class="h-title">Your ${fmt(left)} years</div><div class="h-sub">Where the time you have left will go</div>`;
   $('extra-ledger').innerHTML = `<canvas id="ledgerGrid" style="display:block;width:100%;margin-top:28px"></canvas><div class="legend" style="margin-top:22px">${sl.map((s, i) => `<div class="lr ${i === 4 ? 'y' : ''}"><i style="background:${s[2]}"></i>${s[0]}<b>${s[1].toFixed(1)} yrs</b></div>`).join('')}</div>
-    <div class="card" style="margin-top:20px"><div class="k">Your phone time</div><div class="small" style="margin-top:4px">Check Settings → Screen Time on your iPhone, then set your daily average.</div>
+    <div class="card" style="margin-top:20px"><div class="k">Your phone time</div><div class="small" style="margin-top:4px">Your phone's screen time settings show your daily average. Set it here.</div>
     <input class="range" id="phoneR" type="range" min="0" max="12" step="0.25" value="${S.phoneH}"><div class="small" id="phoneV">${S.phoneH} hours a day</div></div>
     <p class="small" style="margin-top:12px;color:var(--faint)">Sleep 8 h a day, work 40 h a week until 65, 3 h a day eating, chores and getting around.</p>`;
   const total = Math.max(1, Math.round(left)), raw = sl.map(s => s[1] / Math.max(.01, left) * total), ints = raw.map(Math.floor);
@@ -927,7 +927,7 @@ const SHEETS = {
       <div class="caps">Feel</div><div class="group"><div class="row" id="rSun"><span class="t">Daylight<small>Dots glow by day and dim at night</small></span></div><div class="row" id="rRip"><span class="t">Ripple<small>A wave runs through your years each time you come back</small></span></div></div>
       <div class="caps">Lock screen</div><div class="walls" id="sWalls"></div><div style="height:14px"></div>
       <div class="group"><button class="row" id="sSave"><span class="t">Save as lock screen<small>Then in Photos: Share → Use as Wallpaper</small></span><span class="chev">›</span></button><button class="row" id="sShare"><span class="t">Share your grid</span><span class="chev">›</span></button></div>
-      <div class="caps">On your iPhone</div><div class="group"><div class="row"><span class="t">${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'yrs. is on your Home Screen' : 'Add to Home Screen'}<small>${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'Opens full screen and works offline.' : 'In Safari: Share → Add to Home Screen. It opens full screen and works offline.'}</small></span></div></div>
+      <div class="caps">Use it like an app</div><div class="group"><div class="row"><span class="t">${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'yrs. is on your Home Screen' : 'Add to Home Screen'}<small>${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'Opens full screen and works offline.' : "From your browser's Share or menu button. It then opens full screen and works offline."}</small></span></div></div>
       <div class="caps">About</div><div class="group"><button class="row" id="sAbout"><span class="t">About yrs.<small>A one-person, open source project</small></span><span class="chev">›</span></button><a class="row" href="https://github.com/jrypzm/yrs" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Star yrs. on GitHub<small>Free, no ads, no tracking. A star says thanks and helps others find it.</small></span><span class="chev">›</span></a></div>
       <p class="small" style="margin:20px 4px 0">Everything stays on this phone. Nothing is ever sent anywhere.</p>
       <div style="height:20px"></div><button class="primary" id="sDone">Done</button>`;
@@ -1109,12 +1109,12 @@ SHEETS.about = () => {
     <div class="caps">Yours to use</div><div class="group guide">
       <div class="gi"><b>Free</b><span>No price, no subscription, nothing locked. All of it is yours.</span></div>
       <div class="gi"><b>Open source, MIT license</b><span>Read every line of the code. Build it yourself, change anything, or take it and make your own version, your way.</span></div>
-      <div class="gi"><b>Private</b><span>No account and no tracking. Everything stays in Safari on this iPhone.</span></div></div>
+      <div class="gi"><b>Private</b><span>No account and no tracking. Everything stays in this browser, on your device.</span></div></div>
     <div class="caps">Links</div><div class="group">
       <a class="row" href="https://jrypzm.github.io/yrs/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Website<small>Android app, and how it works</small></span><span class="chev">›</span></a>
       <a class="row" href="https://github.com/jrypzm/yrs" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Source code<small>On GitHub. A star helps others find it</small></span><span class="chev">›</span></a>
       <a class="row" href="https://github.com/jrypzm/yrs/issues/new/choose" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Ideas and bugs<small>Every one is read</small></span><span class="chev">›</span></a></div>
-    <p class="small" style="margin:20px 4px 0;text-align:center">yrs. for iPhone · MIT License · Make the next one count.</p>
+    <p class="small" style="margin:20px 4px 0;text-align:center">yrs. on the web · MIT License · Make the next one count.</p>
     <div style="height:20px"></div><button class="primary" id="aDone">Done</button>`;
   $('aDone').onclick = () => { tick(); closeSheet(); };
 };
@@ -1137,7 +1137,7 @@ const GUIDE = [
     ['A line a day', 'Tap Today on the This year page and write one sentence. Years later, on this day brings it back. In Days zoom, tap a day to read its line.'],
     ['Countdowns', 'On This year, tap Add a countdown for a trip, a wedding or a birthday. Your next one can also appear as the line on your lock screen.'],
     ['People', "Add someone, the year they were born and how often you see them. yrs. shows how many more visits you'll likely have, as dots. Tap a person to edit or remove them."],
-    ['Where your years go', "Your remaining years, minus sleep, work, eating and chores, and time on your phone. Set your daily phone hours with the slider; find them in Settings → Screen Time on your iPhone. What's left is truly yours."],
+    ['Where your years go', "Your remaining years, minus sleep, work, eating and chores, and time on your phone. Set your daily phone hours with the slider; your phone's screen time settings show them. What's left is truly yours."],
   ]],
   ['Moments', [
     ['Name a year', "Tap a year's label to give it a name: the year you moved, or the one you'll travel. Named years get a ring."],
@@ -1164,9 +1164,9 @@ const GUIDE = [
     ['Save as lock screen', 'Makes the image at your screen size. Choose Save Image, then in Photos tap Share → Use as Wallpaper. Save a new one now and then so it stays true.'],
     ['Share your grid', 'Makes an image of your years to share anywhere you like.'],
   ]],
-  ['On your iPhone', [
-    ['Add to Home Screen', 'In Safari, tap Share → Add to Home Screen. yrs. then opens full screen with its own icon and works offline.'],
-    ['Nothing leaves your phone', 'There is no account and no server. Everything is stored only in Safari on this iPhone.'],
+  ['Use it like an app', [
+    ['Add to Home Screen', "Open your browser's Share or menu button and choose Add to Home Screen. yrs. then opens full screen with its own icon and works offline."],
+    ['Nothing leaves your device', 'There is no account and no server. Everything is stored only in this browser, on your device.'],
     ['About yrs.', 'Who made it, the MIT license that lets you use and change the code freely, and links to the website and the source.'],
   ]],
 ];

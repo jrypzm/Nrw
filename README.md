@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/btn-android-dark.svg"><source media="(prefers-color-scheme: light)" srcset=".github/assets/btn-android-light.svg"><img alt="Download for Android" src=".github/assets/btn-android-dark.svg" height="46"></picture></a>
   &nbsp;
-  <a href="https://jrypzm.github.io/yrs/web/"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/btn-iphone-dark.svg"><source media="(prefers-color-scheme: light)" srcset=".github/assets/btn-iphone-light.svg"><img alt="Open on iPhone" src=".github/assets/btn-iphone-dark.svg" height="46"></picture></a>
+  <a href="https://jrypzm.github.io/yrs/web/"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/btn-web-dark.svg"><source media="(prefers-color-scheme: light)" srcset=".github/assets/btn-web-light.svg"><img alt="Try it in your browser" src=".github/assets/btn-web-dark.svg" height="46"></picture></a>
 </p>
 
 <p align="center"><sub>Free &nbsp;·&nbsp; No account &nbsp;·&nbsp; No ads &nbsp;·&nbsp; Nothing leaves your phone &nbsp;·&nbsp; <a href="https://jrypzm.github.io/yrs/">jrypzm.github.io/yrs</a></sub></p>
@@ -48,18 +48,13 @@ It's **open source under the MIT license**. Use it, read it, build it yourself, 
 2. Open it from your notifications. If asked, allow installs from your browser.
 3. yrs. isn't on the Play Store yet, so Play Protect may ask. Tap **Install anyway**. Updates keep your data.
 
-**iPhone** &nbsp;·&nbsp; Safari
+**Try it in your browser** &nbsp;·&nbsp; free, nothing to install
 
-1. Open **[jrypzm.github.io/yrs/web](https://jrypzm.github.io/yrs/web/)**.
-2. Tap **Share**, then **Add to Home Screen**.
-3. Open yrs. from your Home Screen. Full screen, offline, in the iPhone's own SF Pro.
+1. Open **[jrypzm.github.io/yrs/web](https://jrypzm.github.io/yrs/web/)** on any phone, tablet or computer.
+2. Enter your birthday. That's it.
+3. Like it? Add it to your **Home Screen** from your browser's Share or menu button. It opens full screen and works offline.
 
-<details>
-<summary><b>Why a web app on iPhone?</b></summary>
-<br>
-
-iPhones only install native apps from the App Store, and publishing there costs $99 every year. yrs. is free, so on iPhone it lives on the web: the same design and the same maths, opening full screen from your Home Screen and working offline. Apple doesn't let web apps add widgets or change the wallpaper on their own, so on iPhone you save the lock screen once from Settings.
-</details>
+The browser version is the same design and the same maths. Browsers can't add widgets or change your wallpaper on their own, so there you save the lock screen once from Settings.
 
 <details>
 <summary><b>Under the hood</b></summary>
@@ -68,7 +63,7 @@ iPhones only install native apps from the App Store, and publishing there costs 
 | | |
 |---|---|
 | **Android** | Kotlin, Jetpack Compose, Glance widgets, WorkManager, a live wallpaper service. No internet permission. |
-| **iPhone** | One self-contained HTML file: vanilla JavaScript and canvas, installable, with an offline service worker |
+| **Web** | One self-contained HTML file: vanilla JavaScript and canvas, installable, with an offline service worker |
 | **Website** | WebGL. Every day of a life is one point, morphing from years to weeks to days to all of history |
 | **Builds** | GitHub Actions builds and signs every APK, publishes the release, and renders screenshot tests |
 
@@ -76,7 +71,7 @@ Age is calendar-exact, down to Feb 29 birthdays. A year holds 52.1775 weeks and 
 
 ```
 android/     Native Android app
-web/         iPhone web app, icons, launch screens, service worker
+web/         Browser version, icons, launch screens, service worker
 index.html   Website
 .github/     CI, issue forms, README art
 ```
