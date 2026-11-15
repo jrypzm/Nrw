@@ -47,6 +47,16 @@ data class Settings(
     val guard: Set<String> = emptySet(),
     /** The first-run tour has been finished or skipped. */
     val tourDone: Boolean = false,
+    /** Answers to Estimate my lifespan, see [EstAnswers]. */
+    val est: String? = null,
+    // Where your years go: your own days
+    val sleep: Float = 8f,
+    val work: Float = 40f,
+    val retire: Float = 65f,
+    val commute: Float = 45f,
+    val chores: Float = 2.5f,
+    /** Phone hours a day, used when Android's screen time isn't allowed. */
+    val phone: Float = 3f,
 )
 
 object Prefs {
@@ -85,6 +95,9 @@ object Prefs {
             lasts = arr(p.getString("lasts", null)) { o -> LastTime(o.getString("t"), LocalDate.parse(o.getString("d"))) },
             guard = p.getStringSet("guard", emptySet())?.toSet() ?: emptySet(),
             tourDone = p.getBoolean("tourDone", false),
+            est = p.getString("est", null),
+            sleep = p.getFloat("lSleep", 8f), work = p.getFloat("lWork", 40f), retire = p.getFloat("lRetire", 65f),
+            commute = p.getFloat("lCommute", 45f), chores = p.getFloat("lChores", 2.5f), phone = p.getFloat("lPhone", 3f),
         )
     }
 
@@ -117,6 +130,9 @@ object Prefs {
             .putString("lasts", JSONArray(s.lasts.map { JSONObject().put("t", it.text).put("d", it.added.toString()) }).toString())
             .putStringSet("guard", s.guard)
             .putBoolean("tourDone", s.tourDone)
+            .putString("est", s.est)
+            .putFloat("lSleep", s.sleep).putFloat("lWork", s.work).putFloat("lRetire", s.retire)
+            .putFloat("lCommute", s.commute).putFloat("lChores", s.chores).putFloat("lPhone", s.phone)
             .apply()
     }
 

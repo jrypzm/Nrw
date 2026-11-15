@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,9 +74,13 @@ import kotlin.math.max
  */
 @Composable
 fun Onboarding(st: AppState, startStep: Int = 0, startDate: LocalDate = LocalDate.of(1995, 6, 15), animate: Boolean = true) {
-    var step by remember { mutableIntStateOf(startStep) }
-    var date by remember { mutableStateOf(startDate) }
-    var span by remember { mutableIntStateOf(80) }
+    // kept across rotation and theme changes, so nothing you've chosen is lost
+    var step by rememberSaveable { mutableIntStateOf(startStep) }
+    var dateText by rememberSaveable { mutableStateOf(startDate.toString()) }
+    val date: LocalDate = LocalDate.parse(dateText)
+    var span by rememberSaveable { mutableIntStateOf(80) }
+    var estimating by remember { mutableStateOf(false) }
+    var est by rememberSaveable { mutableStateOf<String?>(null) }
     val view = LocalView.current
     BackHandler(enabled = step > 0) { step-- }
 
@@ -115,7 +120,7 @@ fun Onboarding(st: AppState, startStep: Int = 0, startDate: LocalDate = LocalDat
                     Text("When were\nyou born?", style = T.h1)
                     Text("Only you will ever see this. yrs. has no internet access.", style = T.sub, modifier = Modifier.padding(top = 10.dp))
                     Spacer(Modifier.height(40.dp))
-                    DateWheels(date, { date = it })
+                    DateWheels(date, { dateText = it.toString() })
                     Spacer(Modifier.height(28.dp))
                     val days = max(0L, Life.dayOfLife(date) - 1)
                     Text(
@@ -152,6 +157,13 @@ fun Onboarding(st: AppState, startStep: Int = 0, startDate: LocalDate = LocalDat
                             ) { Text("$v", style = T.label.copy(color = if (on) Color.Black else C.Fg, fontFeatureSettings = "tnum")) }
                         }
                     }
+                    Row(
+                        Modifier.padding(top = 18.dp).height(42.dp).clip(CircleShape).background(C.Surface).pressable({ estimating = true }).padding(horizontal = 18.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("Estimate it from your life", style = T.label.copy(fontSize = 15.sp))
+                        Text("  ›", style = T.label.copy(fontSize = 15.sp, color = C.Dim))
+                    }
                     Spacer(Modifier.height(28.dp))
                     val age = Life.age(date)
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Box(Modifier.fillMaxWidth(0.82f)) { PreviewGrid(span, age.coerceAtMost(span.toDouble())) } }
@@ -173,7 +185,7 @@ fun Onboarding(st: AppState, startStep: Int = 0, startDate: LocalDate = LocalDat
                 {
                     if (step < 3) step++ else {
                         view.confirm()
-                        st.update { it.copy(birth = date, span = span, reviewedAge = Life.age(date).toInt()) }
+                        st.update { it.copy(birth = date, span = span, reviewedAge = Life.age(date).toInt(), est = est ?: it.est) }
                     }
                 },
             )
@@ -183,6 +195,9 @@ fun Onboarding(st: AppState, startStep: Int = 0, startDate: LocalDate = LocalDat
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
         }
+    }
+    if (estimating) EstimateFlow(est, date, onSave = { est = it }, onDismiss = { estimating = false }, startAtResult = false) { y ->
+        span = y.coerceIn(40, 120); estimating = false
     }
 }
 

@@ -113,7 +113,7 @@ private fun livedYears(s: Settings): Int = s.birth?.let { Life.age(it).toInt() }
 
 val TOUR = listOf(
     TourStep(null, "Welcome to yrs.", { "A quick tour, under a minute. Try each gesture as we go: *the tour moves on when you do*. You can replay it any time from Settings." }),
-    TourStep("number", "This is your number", { "Right now it says *${line(it)}*. Tap it to count another way: days, weeks, summers, weekends or full moons." },
+    TourStep("number", "This is your number", { "Right now it says *${line(it)}*. Tap it, or a word under it, to count another way: days, weeks, summers, weekends or full moons." },
         Hint.TAP, "Tap the number", "That's the same time, counted another way.") { a, b -> a.s.unit != b.s.unit },
     TourStep("number", "Feel the seconds", { "Press and hold the number. Every heartbeat you feel is one second, out of about *${Life.whole(Life.yearsLeft(it) * 365.2425 * 86400)}* you have left." },
         Hint.HOLD, "Hold the number", "Felt that? Let go whenever you like.") { a, b -> b.beats > a.beats },
@@ -124,11 +124,11 @@ val TOUR = listOf(
     TourStep("zoom", "From history to today", { "Pinch the grid, or tap a word here. In weeks you have *${Life.whole(Life.yearsLeft(it) * 52.1775)}* left; in days, *${Life.whole(Life.daysLeftExact(it))}*." },
         Hint.PINCH, "Pinch or tap Weeks", "The number always counts what you see.") { a, b -> a.s.zoom != b.s.zoom },
     TourStep("lived", "Left or lived", { "Switch every number between the time ahead of you and the time you've already lived." },
-        Hint.TAP, "Tap Left", "Tap it again whenever you want the other view.") { a, b -> a.s.lived != b.s.lived },
+        Hint.TAP, "Tap Lived", "Tap Left whenever you want the other view.") { a, b -> a.s.lived != b.s.lived },
     TourStep("pct", "As a percentage", { s -> "Show it as a share of the whole. You've lived about *${(livedYears(s) * 100 / s.span.coerceAtLeast(1)).coerceIn(0, 100)}%* of ${s.span} years." },
         Hint.TAP, "Tap %", "Tap again to go back to the number.") { a, b -> a.s.pct != b.s.pct },
-    TourStep("pages", "Four more pages", { "Swipe sideways: this decade, this year with a line a day and countdowns, the people you love, and where your years go." },
-        Hint.SWIPE, "Swipe left", "Swipe back any time. The dots show where you are.") { a, b -> a.s.page != b.s.page },
+    TourStep("pages", "Four more pages", { "Swipe sideways, or tap a word in this bar: this decade, this year with a line a day and countdowns, the people you love, and where your time goes." },
+        Hint.TAP, "Tap Decade", "Swipe or tap back any time.") { a, b -> a.s.page != b.s.page },
     TourStep("settings", "Everything else", { "Your birthday, lifespan, number style, lock screen and widgets live here, with a guide to every setting. Tap it to finish." },
         Hint.TAP, "Tap ⋯") { _, b -> b.sheet == Sheet.Settings },
 )
@@ -300,24 +300,25 @@ private class G(val title: String, val body: String)
 
 private val GUIDE: List<Pair<String, List<G>>> = listOf(
     "Gestures" to listOf(
-        G("Swipe sideways", "Move between your five pages: Life, This decade, This year, People and Where your years go. The dots at the bottom show where you are; tap one to jump."),
-        G("Tap the number", "On the Life page in Years, count in years, days, weeks, summers, weekends or full moons."),
+        G("Swipe sideways", "Move between your five pages: Life, Decade, Year, People and Time. The bar at the bottom shows where you are; tap a word to jump there."),
+        G("Tap the number", "On the Life page in Years, count in years, days, weeks, summers, weekends or full moons. The words under it do the same."),
         G("Hold the number", "Feel a heartbeat for every second of your life that passes, with the seconds you have left."),
-        G("Tap a dot", "Shows that year, month, week or day. Tap the label again to name a year or seal a letter to it."),
+        G("Tap a dot", "Shows that year, month, week or day. Tap the label to name a year, seal a letter to it and see what happened in the world that year. In History, tap the label for that lifetime's story."),
         G("Hold and drag", "Hold any dot, then slide across the grid to travel through your life. Let go to keep the label."),
         G("Pinch", "Pinch the Life grid in or out to zoom between History, Years, Months, Weeks and Days. You can also tap the names under the grid."),
-        G("Left or Lived", "The button at bottom left switches every number between the time ahead of you and the time behind you."),
-        G("%", "The button at bottom right shows any page as a percentage of the whole."),
+        G("Left or Lived", "Under the number: switches every number between the time ahead of you and the time behind you."),
+        G("%", "Next to Left and Lived: shows any page as a percentage of the whole."),
     ),
     "Your pages" to listOf(
         G("Life", "Every year of your life as one dot. White years are lived, dark years are ahead, and the year you're in fills from the bottom as it passes. Named years and sealed letters get a thin ring."),
-        G("History", "Zoom all the way out: about 3,750 lifetimes since the first cities, end to end. Yours is the last dot, still filling."),
+        G("History", "Zoom all the way out: about 3,750 lifetimes of 80 years, end to end, back to the first of our species. Yours is the last dot, still filling. Tap any dot, then its label, for a story about that lifetime: a different one each time."),
+        G("Did you know", "Under the Life grid: facts about you, or about history when you're zoomed out. Tap it for another."),
         G("This decade", "The ten years of the decade you're in, so the next few feel close."),
         G("This year", "Twelve dots from your last birthday to your next. Below: today's line, what you wrote on this day in past years, and your countdowns."),
         G("A line a day", "Tap Today on the This year page and write one sentence. Years later, on this day brings it back. In Days zoom, hold a day to read its line."),
         G("Countdowns", "On This year, tap Add a countdown for a trip, a wedding or a birthday. Your next one can also appear as the line on your lock screen."),
         G("People", "Add someone, the year they were born and how often you see them. yrs. shows how many more visits you'll likely have, as dots. Tap a person to edit or remove them."),
-        G("Where your years go", "Your remaining years, minus sleep, work, eating and chores, and time on your phone. What's left is truly yours."),
+        G("Time", "Where your remaining years go: sleep, work until you retire, commuting, eating and chores, and your phone. Move the sliders to match your life; what's left is truly yours."),
     ),
     "Moments" to listOf(
         G("Name a year", "Tap a year's label to give it a name: the year you moved, or the one you'll travel. Named years get a ring."),
@@ -328,11 +329,11 @@ private val GUIDE: List<Pair<String, List<G>>> = listOf(
     "Settings · You" to listOf(
         G("Birthday", "Tap to change it on the wheels. Everything recalculates at once."),
         G("Lifespan", "How many years your grid holds. 80 is a fair average; use − and + to change it from 40 to 120."),
-        G("Estimate my lifespan", "Five questions about habits with the clearest evidence, starting from 80. A rough estimate to reflect on, not medical advice."),
+        G("Estimate my lifespan", "Where you live, your sex and eight habits with the strongest evidence, from UN life tables and large studies. See your range, your chances of reaching 80, 90 and 100, and what moved it. A population average to reflect on, not medical advice."),
     ),
     "Settings · Number" to listOf(
-        G("Classic", "A clear headline, like 48 years left."),
-        G("Large", "One big, thin number on its own."),
+        G("Classic", "A big, thin number with what it means under it, like 48 years left."),
+        G("Large", "The same, even bigger."),
         G("Live", "Counts down to eight decimal places, so you can watch it move."),
     ),
     "Settings · Feel" to listOf(
@@ -351,7 +352,7 @@ private val GUIDE: List<Pair<String, List<G>>> = listOf(
         G("Add a widget", "Tap any widget to add it straight to your home screen: Life, Years left, Days left, Today, People, This decade and This year of life. Or long-press your home screen and choose Widgets. Tap a widget to open its page."),
     ),
     "Settings · Privacy" to listOf(
-        G("Screen time access", "Lets the Ledger use your real phone time from the last week. It's read on your phone and never leaves it. Without it, the Ledger assumes 3 hours a day."),
+        G("Screen time access", "Lets Time use your real phone time from the last week. It's read on your phone and never leaves it. Without it, you set your phone time with a slider."),
         G("Share your grid", "Makes an image of your years to share anywhere you like."),
         G("Nothing leaves your phone", "yrs. has no internet permission at all. Your birthday, names, letters and lines stay on this device."),
     ),

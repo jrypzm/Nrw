@@ -19,6 +19,11 @@ import java.time.LocalTime
 import java.util.concurrent.TimeUnit
 
 /** Hourly: redraw widgets, and repaint the lock screen when something visible has changed. */
+/** The clock or time zone changed: every number that depends on today needs redrawing. */
+class TimeReceiver : android.content.BroadcastReceiver() {
+    override fun onReceive(c: Context, i: android.content.Intent) { Background.refreshNow(c) }
+}
+
 class RefreshWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
         Background.refresh(applicationContext, inputData.getBoolean("force", false))
@@ -32,9 +37,12 @@ object Background {
         val s = Prefs.load(c)
         if (!s.autoLock || s.birth == null) return
         // Daylight changes every hour; the others only when the day or the settings change.
-        val hourPart = if (s.wall == WallStyle.DAYLIGHT) LocalTime.now().hour.toString() else ""
+        scheduleMidnight(c)
+        val hourPart = if (styleFor(s) == WallStyle.DAYLIGHT) LocalTime.now().hour.toString() else ""
         val key = "${LocalDate.now()}|$hourPart|${s.span}|${s.wall}|${s.sun}|${s.birth}|${s.names.hashCode()}|${s.people.hashCode()}|${s.events.hashCode()}"
         if (!force && Prefs.getString(c, "lockKey") == key) return
+        // the live wallpaper already draws the lock screen; a still image would replace it
+        if (ourLiveWallpaperOnLock(c)) return
         runCatching { setLockScreen(c, s) }.onSuccess { Prefs.putString(c, "lockKey", key) }
     }
 
@@ -61,6 +69,22 @@ object Background {
         WorkManager.getInstance(c).enqueueUniquePeriodicWork(
             "years-refresh", ExistingPeriodicWorkPolicy.UPDATE,
             PeriodicWorkRequestBuilder<RefreshWorker>(1, TimeUnit.HOURS).build(),
+        )
+    }
+
+    private fun ourLiveWallpaperOnLock(c: Context): Boolean = runCatching {
+        val wm = WallpaperManager.getInstance(c)
+        val info = if (Build.VERSION.SDK_INT >= 34) wm.getWallpaperInfo(WallpaperManager.FLAG_LOCK) ?: wm.wallpaperInfo else wm.wallpaperInfo
+        info?.packageName == c.packageName
+    }.getOrDefault(false)
+
+    /** One more refresh just after midnight, so "Day N" and "days left" turn over with the date. */
+    fun scheduleMidnight(c: Context) {
+        val now = java.time.LocalDateTime.now()
+        val next = now.toLocalDate().plusDays(1).atTime(0, 1)
+        WorkManager.getInstance(c).enqueueUniqueWork(
+            "years-midnight", ExistingWorkPolicy.REPLACE,
+            OneTimeWorkRequestBuilder<RefreshWorker>().setInitialDelay(java.time.Duration.between(now, next).toMinutes() + 1, TimeUnit.MINUTES).build(),
         )
     }
 

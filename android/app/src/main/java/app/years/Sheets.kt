@@ -71,6 +71,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -82,7 +87,7 @@ fun SheetHandle() {
 }
 
 @Composable
-fun Caps(t: String) { Text(t.uppercase(), style = T.caps, modifier = Modifier.padding(start = 4.dp, top = 24.dp, bottom = 8.dp)) }
+fun Caps(t: String) { Text(t.uppercase(), style = T.cap, modifier = Modifier.padding(start = 4.dp, top = 28.dp, bottom = 10.dp)) }
 
 @Composable
 fun Chevron() { Text("›", style = T.body.copy(color = C.Faint, fontSize = 22.sp)) }
@@ -90,7 +95,10 @@ fun Chevron() { Text("›", style = T.body.copy(color = C.Faint, fontSize = 22.s
 @Composable
 fun YrsSheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet, containerColor = C.Surface, scrimColor = Color.Black.copy(alpha = .6f), dragHandle = { SheetHandle() }) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss, sheetState = sheet, containerColor = C.Sheet, scrimColor = Color.Black.copy(alpha = .7f),
+        shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp), dragHandle = { SheetHandle() },
+    ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp).imePadding(), content = content)
     }
 }
@@ -114,6 +122,15 @@ fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, 
     val ctx = LocalContext.current
     val s = st.s
     var editBirth by remember { mutableStateOf(false) }
+    // The wheels pass through many dates while they spin. Save only where they come to rest, so widgets and the
+    // lock screen are redrawn once, and a new birthday doesn't make old milestones pop up as if they just happened.
+    var draft by remember { mutableStateOf<LocalDate?>(null) }
+    LaunchedEffect(draft) {
+        val d = draft ?: return@LaunchedEffect
+        delay(700)
+        if (d != st.s.birth) st.update { it.copy(birth = d, reviewedAge = Life.age(d).toInt()) }
+    }
+    val scope = rememberCoroutineScope()
     val notifyPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
         st.update(refresh = false) { it.copy(nudge = ok) }; Nudge.schedule(ctx, ok)
         if (!ok) toast("Notifications are off for yrs.")
@@ -128,15 +145,16 @@ fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, 
         Group {
             val b = s.birth ?: LocalDate.now()
             SettingRow("Birthday", onClick = { editBirth = !editBirth }) {
-                Text("${b.dayOfMonth} ${Life.mon(b)} ${b.year}", style = T.body.copy(color = if (editBirth) C.Fg else C.Mute))
+                val shown = draft ?: b
+                Text("${shown.dayOfMonth} ${Life.mon(shown)} ${shown.year}", style = T.body.copy(color = if (editBirth) C.Fg else C.Mute))
             }
             AnimatedVisibility(editBirth) {
-                Box(Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) { DateWheels(b, { d -> st.update { it.copy(birth = d) } }) }
+                Box(Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) { DateWheels(draft ?: b, { d -> draft = d }) }
             }
             Divider()
             SettingRow("Lifespan") { Stepper(s.span, { v -> st.update { it.copy(span = v) } }, 40..120) }
             Divider()
-            SettingRow("Estimate my lifespan", "Five honest questions", onClick = openLifespan) { Chevron() }
+            SettingRow("Estimate my lifespan", if (s.est != null) "Answered · tap to change" else "Ten questions, built on real studies", onClick = openLifespan) { Chevron() }
         }
 
         Caps("Number")
@@ -180,7 +198,9 @@ fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, 
                 Toggle(s.autoLock) { v -> st.update(forceLock = v) { it.copy(autoLock = v) }; if (v) toast("Lock screen updating") }
             }
             Divider()
-            SettingRow("Save as image", onClick = { if (saveWallpaperImage(ctx, s) != null) toast("Saved to Pictures/yrs") else toast("Couldn't save the image") }) { Chevron() }
+            SettingRow("Save as image", onClick = {
+                scope.launch { val ok = withContext(Dispatchers.IO) { saveWallpaperImage(ctx, s) } != null; toast(if (ok) "Saved to Pictures/yrs" else "Couldn't save the image") }
+            }) { Chevron() }
         }
 
         Caps("Widgets")
@@ -201,9 +221,9 @@ fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, 
 
         Caps("Privacy")
         Group {
-            SettingRow("Screen time access", if (ScreenTime.allowed(ctx)) "Allowed. Used only for your Ledger" else "Off. The Ledger assumes 3 hours a day", onClick = { ScreenTime.openSettings(ctx) }) { Chevron() }
+            SettingRow("Screen time access", if (ScreenTime.allowed(ctx)) "Allowed. Used only on the Time page" else "Off. Time uses the slider instead", onClick = { ScreenTime.openSettings(ctx) }) { Chevron() }
             Divider()
-            SettingRow("Share your grid", onClick = { shareGrid(ctx, s) }) { Chevron() }
+            SettingRow("Share your grid", onClick = { scope.launch { shareGrid(ctx, s) } }) { Chevron() }
         }
 
         Caps("About")
@@ -226,8 +246,8 @@ fun MilestoneSheet(st: AppState, year: Int, onDismiss: () -> Unit) {
     val view = LocalView.current
     val lived = s.birth?.let { Life.age(it).toInt() } ?: 0
     val past = year <= lived
-    var name by remember { mutableStateOf(s.names[year] ?: "") }
-    var letter by remember { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf(s.names[year] ?: "") }
+    var letter by rememberSaveable { mutableStateOf("") }
     val sealed = s.letters.firstOrNull { it.age == year && !it.opened }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { delay(350); runCatching { focus.requestFocus() } }
@@ -246,6 +266,10 @@ fun MilestoneSheet(st: AppState, year: Int, onDismiss: () -> Unit) {
         Text(if (past) "What happened this year?" else "What do you want this year to hold?", style = T.sub, modifier = Modifier.padding(top = 4.dp, bottom = 18.dp))
         Field(name, { name = it }, if (past) "Moved to a new city" else "See the northern lights", 40, focus = focus, onDone = { save() })
         Text("Named years get a thin ring.", style = T.small, modifier = Modifier.padding(top = 10.dp, start = 4.dp))
+        val ctx = LocalContext.current
+        val written = remember { Lines.all(ctx).keys }
+        val facts = remember(year) { Facts.year(s, year, written) }
+        FactCard(if (past) "That year" else "That year, ahead", { facts }, lead = facts.firstOrNull()?.takeIf { it.startsWith("In ") }, modifier = Modifier.padding(top = 22.dp))
         if (!past) {
             Caps("A letter to yourself at $year")
             if (sealed != null) Text("A letter is sealed for this year. Writing a new one replaces it.", style = T.small, modifier = Modifier.padding(start = 4.dp, bottom = 10.dp))
@@ -327,7 +351,7 @@ fun EventSheet(st: AppState, index: Int?, onDismiss: () -> Unit) {
         Text(if (existing == null) "Add a countdown" else existing.name, style = T.h2, modifier = Modifier.padding(top = 6.dp, bottom = 18.dp))
         Field(name, { name = it }, "Trip to Japan", 30)
         Caps("On")
-        DateWheels(date, { date = it }, fromYear = today.year, toYear = today.year + 30, latest = null, earliest = today)
+        DateWheels(date, { date = it }, fromYear = minOf(today.year, date.year), toYear = today.year + 30, latest = null, earliest = minOf(today, existing?.date ?: today))
         Spacer(Modifier.height(20.dp))
         PrimaryButton("Save", { save() })
         if (index != null) QuietButton("Remove", { st.update { it.copy(events = it.events.filterIndexed { i, _ -> i != index }) }; onDismiss() })
@@ -340,7 +364,7 @@ fun EventSheet(st: AppState, index: Int?, onDismiss: () -> Unit) {
 fun LineSheet(st: AppState, date: LocalDate, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     val view = LocalView.current
-    var text by remember { mutableStateOf(Lines.get(ctx, date) ?: "") }
+    var text by rememberSaveable { mutableStateOf(Lines.get(ctx, date) ?: "") }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { delay(350); runCatching { focus.requestFocus() } }
     val birth = st.s.birth ?: date
@@ -390,33 +414,6 @@ fun ReviewSheet(st: AppState, onDismiss: () -> Unit) {
     }
 }
 
-// ------------------------------------------------------------------ lifespan check
-
-@Composable
-fun LifespanSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit) {
-    var habits by remember { mutableStateOf(st.s.habits) }
-    val est = Life.estimate(habits)
-    YrsSheet(onDismiss) {
-        Text("Estimate my lifespan", style = T.h2, modifier = Modifier.padding(top = 6.dp))
-        Text("Starting from 80, adjusted by habits with the clearest evidence.", style = T.sub, modifier = Modifier.padding(top = 4.dp, bottom = 18.dp))
-        Group {
-            Life.HABITS.forEachIndexed { i, (key, label, delta) ->
-                if (i > 0) Divider()
-                SettingRow(label, if (delta > 0) "+$delta years" else "$delta years") {
-                    Toggle(key in habits) { on -> habits = if (on) habits + key else habits - key }
-                }
-            }
-        }
-        Row(Modifier.padding(top = 26.dp), verticalAlignment = Alignment.Bottom) {
-            Text("$est", style = TextStyle(fontFamily = Display, fontWeight = FontWeight.ExtraLight, fontSize = 72.sp, letterSpacing = (-0.05).em, color = C.Fg, fontFeatureSettings = "tnum"), modifier = Modifier.alignByBaseline())
-            Text("years", style = T.sub.copy(fontSize = 17.sp), modifier = Modifier.padding(start = 8.dp).alignByBaseline())
-        }
-        Text("A rough population average to reflect on, not medical advice.", style = T.small, modifier = Modifier.padding(top = 6.dp))
-        Spacer(Modifier.height(22.dp))
-        PrimaryButton("Use $est years", { st.update { it.copy(span = est, habits = habits) }; toast("Lifespan set to $est"); onDismiss() })
-    }
-}
-
 // ------------------------------------------------------------------ system actions
 
 fun setLiveWallpaper(ctx: Context) {
@@ -448,8 +445,8 @@ fun saveWallpaperImage(ctx: Context, s: Settings): Uri? {
     return saveImage(ctx, bmp, "yrs-wallpaper")
 }
 
-fun shareGrid(ctx: Context, s: Settings) {
-    val uri = saveImage(ctx, Render.shareCard(ctx, s), "yrs") ?: return
+suspend fun shareGrid(ctx: Context, s: Settings) {
+    val uri = withContext(Dispatchers.IO) { saveImage(ctx, Render.shareCard(ctx, s), "yrs") } ?: return
     val send = Intent(Intent.ACTION_SEND).setType("image/png").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     runCatching { ctx.startActivity(Intent.createChooser(send, "Share your years")) }
 }

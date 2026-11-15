@@ -77,6 +77,16 @@ object C {
     val Surface2 = Color(0xFF2C2C2E)
     val Surface3 = Color(0xFF3A3A3C)
     val Sep = Color(0xFF38383A)
+    /** Captions and quiet labels. */
+    val Dim = Color(0xFF636366)
+    /** Cards: barely lifted off the black. */
+    val Card = Color(0xFF0C0C0D)
+    /** The hairline around cards and bars. */
+    val Hair = Color(0xFF1E1E20)
+    val Hair2 = Color(0xFF2C2C2E)
+    /** Floating bars and capsules. */
+    val Glass = Color(0xFF121214)
+    val Sheet = Color(0xFF141416)
 }
 
 val Display = FontFamily(
@@ -99,7 +109,17 @@ object T {
     val small = TextStyle(fontFamily = Body, fontWeight = FontWeight.Normal, fontSize = 13.sp, color = C.Mute, lineHeight = 18.sp)
     val caps = TextStyle(fontFamily = Body, fontWeight = FontWeight.Medium, fontSize = 13.sp, color = C.Mute, letterSpacing = 0.02.em)
     val h1 = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 37.sp, letterSpacing = (-0.025).em, color = C.Fg)
-    val h2 = TextStyle(fontFamily = Display, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, letterSpacing = (-0.015).em, color = C.Fg)
+    val h2 = TextStyle(fontFamily = Display, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, letterSpacing = (-0.02).em, color = C.Fg)
+    /** Uppercase captions above sections. */
+    val cap = TextStyle(fontFamily = Body, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, letterSpacing = 0.08.em, color = C.Dim)
+    /** The words under a big number: "years left". */
+    val word = TextStyle(fontFamily = Display, fontWeight = FontWeight.SemiBold, fontSize = 28.sp, lineHeight = 32.sp, letterSpacing = (-0.03).em, color = C.Fg)
+    /** A headline made of words, for pages without a number. */
+    val headline = TextStyle(fontFamily = Display, fontWeight = FontWeight.SemiBold, fontSize = 36.sp, lineHeight = 39.sp, letterSpacing = (-0.035).em, color = C.Fg)
+    /** A question or a result in a sheet. */
+    val question = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 33.sp, letterSpacing = (-0.03).em, color = C.Fg)
+    /** A fact, given room. */
+    val fact = TextStyle(fontFamily = Body, fontWeight = FontWeight.Medium, fontSize = 21.sp, lineHeight = 29.sp, letterSpacing = (-0.02).em, color = C.Fg)
 }
 
 // ------------------------------------------------------------------ haptics

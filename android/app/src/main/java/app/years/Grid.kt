@@ -75,7 +75,7 @@ fun PreviewGrid(total: Int, done: Double) {
 
 /** Years · Months · Weeks · Days. Pinch the grid or tap a word. */
 @Composable
-fun ZoomBar(st: AppState) {
+fun ZoomBarOld(st: AppState) {
     val view = LocalView.current
     Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Life.ZOOMS.forEachIndexed { i, z ->
@@ -88,7 +88,7 @@ fun ZoomBar(st: AppState) {
 }
 
 @Composable
-fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
+fun DotGrid(st: AppState, m: GridModel, ripple: Float, onLife: (Int) -> Unit = {}, onName: (Int) -> Unit) {
     val s = st.s
     val ctx = LocalContext.current
     val view = LocalView.current
@@ -143,10 +143,27 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
 
         Canvas(
             Modifier.fillMaxWidth().height(with(density) { hPx.toDp() }).pointerInput(Unit) {
+                // Pinch to zoom, from the moment two fingers are down. Only the Life grid zooms.
+                suspend fun androidx.compose.ui.input.pointer.AwaitPointerEventScope.pinch() {
+                    if (kindNow != ViewKind.LIFE) return
+                    var base = 0f
+                    while (true) {
+                        val ev = awaitPointerEvent()
+                        val ps = ev.changes.filter { it.pressed }
+                        if (ps.size < 2) break
+                        val dist = (ps[0].position - ps[1].position).getDistance()
+                        if (base == 0f) base = dist
+                        val k = dist / base
+                        val z = st.s.zoom
+                        if (k > 1.3f && z < Life.ZOOMS.lastIndex) { tapNow(null); view.confirm(); st.update(refresh = false) { it.copy(zoom = z + 1) }; base = dist }
+                        else if (k < 0.77f && z > 0) { tapNow(null); view.confirm(); st.update(refresh = false) { it.copy(zoom = z - 1) }; base = dist }
+                        ev.changes.forEach { it.consume() }
+                    }
+                }
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
-                    // 1 tap, 2 moved (let the pager swipe), 3 two fingers (zoom), null held still (scrub)
-                    val outcome = withTimeoutOrNull(170L) {
+                    // 1 tap, 2 moved (let the pager or the page scroll), 3 two fingers (zoom), null held still (scrub)
+                    val outcome = withTimeoutOrNull(230L) {
                         var r = 0
                         while (r == 0) {
                             val ev = awaitPointerEvent()
@@ -164,33 +181,20 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
                         null -> {
                             stickyNow(false)
                             setNow(idxNow(down.position))
+                            var second = false
                             while (true) {
                                 val ev = awaitPointerEvent()
-                                if (ev.changes.count { it.pressed } >= 2) break
+                                if (ev.changes.count { it.pressed } >= 2) { second = true; break }
                                 val ch = ev.changes.firstOrNull { it.id == down.id } ?: break
                                 if (!ch.pressed) break
                                 ch.consume()
                                 setNow(idxNow(ch.position))
                             }
-                            stickyNow(true)
-                            TourSignal.scrubs++
+                            // a second finger arriving late turns the scrub into a pinch
+                            if (second) { tapNow(null); pinch() } else { stickyNow(true); TourSignal.scrubs++ }
                         }
                         1 -> tapNow(idxNow(down.position))
-                        3 -> if (kindNow == ViewKind.LIFE) {
-                            var base = 0f
-                            while (true) {
-                                val ev = awaitPointerEvent()
-                                val ps = ev.changes.filter { it.pressed }
-                                if (ps.size < 2) break
-                                val dist = (ps[0].position - ps[1].position).getDistance()
-                                if (base == 0f) base = dist
-                                val k = dist / base
-                                val z = st.s.zoom
-                                if (k > 1.3f && z < Life.ZOOMS.lastIndex) { tapNow(null); view.confirm(); st.update(refresh = false) { it.copy(zoom = z + 1) }; base = dist }
-                                else if (k < 0.77f && z > 0) { tapNow(null); view.confirm(); st.update(refresh = false) { it.copy(zoom = z - 1) }; base = dist }
-                                ev.changes.forEach { it.consume() }
-                            }
-                        }
+                        3 -> pinch()
                         else -> Unit
                     }
                 }
@@ -255,9 +259,18 @@ fun DotGrid(st: AppState, m: GridModel, ripple: Float, onName: (Int) -> Unit) {
             var name = yi?.let { s.names[it] }
             if (yi != null && name == null && yi in sealed) name = "Sealed letter"
             if (m.unit == "day") name = Lines.get(ctx, birth.plusDays(ti.toLong()))
-            val hint = if (sticky && yi != null && s.names[yi] == null) (if (ti <= doneInt) "Tap to name this year" else "Tap to plan this year") else null
+            val history = m.unit == "lifetime"
+            val hint = when {
+                sticky && yi != null && s.names[yi] == null -> if (ti <= doneInt) "Tap to name this year" else "Tap to plan this year"
+                sticky && history -> "Tap for its story"
+                else -> null
+            }
             Tip(c.x, c.y - half, c.y + half, w, name, m.label(ti) + if (isNow) " · now" else "", hint,
-                if (sticky && yi != null) ({ view.tap(); tip = null; sticky = false; onName(yi) }) else null)
+                when {
+                    sticky && yi != null -> ({ view.tap(); tip = null; sticky = false; onName(yi) })
+                    sticky && history -> ({ view.tap(); tip = null; sticky = false; onLife(ti) })
+                    else -> null
+                })
         }
     }
 }

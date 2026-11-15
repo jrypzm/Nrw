@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -87,6 +88,21 @@ class ScreensTest {
         Frame { Column(Modifier.padding(horizontal = 24.dp).background(C.Surface)) { GuideContent({}, {}) } }
     }
 
+    @Test fun story_history() = paparazzi.snapshot {
+        Frame { Column(Modifier.padding(horizontal = 24.dp).background(C.Sheet)) { FactContent(me, 2000) {} } }
+    }
+    @Test fun story_you() = paparazzi.snapshot {
+        Frame { Column(Modifier.padding(horizontal = 24.dp).background(C.Sheet)) { FactContent(me, Life.LIFETIMES - 1) {} } }
+    }
+    private fun est(step: Int, saved: String? = "DEU;m;smoke=3,move=2,drink=1,diet=0,sleep=1,social=0,diab=0") = paparazzi.snapshot {
+        Frame { Column(Modifier.background(C.Sheet).padding(horizontal = 24.dp).verticalScroll(androidx.compose.foundation.rememberScrollState())) { EstimateBody(EstState(saved, false, step), me.birth!!) {} } }
+    }
+    @Test fun estimate0_you() = est(0)
+    @Test fun estimate1_question() = est(1)
+    @Test fun estimate3_bmi() = est(3)
+    @Test fun estimate9_result() = est(9)
+    @Test fun home4_ledger_set() = home(me.copy(page = 4, sleep = 7f, work = 50f, commute = 90f))
+    @Test fun home0_life_pct() = home(me.copy(page = 0, pct = true, lived = true))
     @Test fun widgets() = paparazzi.snapshot {
         Frame {
             val ctx = LocalContext.current

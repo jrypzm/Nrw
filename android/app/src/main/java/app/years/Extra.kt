@@ -55,9 +55,10 @@ object ScreenTime {
         val launcher = runCatching {
             c.packageManager.resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), PackageManager.MATCH_DEFAULT_ONLY)?.activityInfo?.packageName
         }.getOrNull()
+        val ime = runCatching { AndroidSettings.Secure.getString(c.contentResolver, AndroidSettings.Secure.DEFAULT_INPUT_METHOD)?.substringBefore('/') }.getOrNull()
         val stats = runCatching { usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, start, end) }.getOrNull() ?: return null
         // daily buckets that start inside the window, so a day is never counted twice
-        val ms = stats.filter { it.firstTimeStamp >= start - 3_600_000 && it.firstTimeStamp < end && it.packageName != launcher && it.packageName != "com.android.systemui" && it.packageName != c.packageName }
+        val ms = stats.filter { it.firstTimeStamp >= start - 3_600_000 && it.firstTimeStamp < end && it.packageName != launcher && it.packageName != ime && it.packageName != "com.android.systemui" && !it.packageName.startsWith("com.samsung.android.app.aodservice") && it.packageName != c.packageName }
             .sumOf { it.totalTimeInForeground }
         return (ms / 3_600_000.0 / 7.0).coerceIn(0.0, 20.0)
     }

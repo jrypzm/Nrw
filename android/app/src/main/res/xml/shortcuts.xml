@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press the yrs. icon: write today's line, see the people you love, or estimate your lifespan. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="today" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_today" android:shortcutLongLabel="@string/sc_today_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="app.years" android:targetClass="app.years.MainActivity">
+            <extra android:name="open" android:value="TODAY" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="people" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_people" android:shortcutLongLabel="@string/sc_people_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="app.years" android:targetClass="app.years.MainActivity">
+            <extra android:name="open" android:value="PEOPLE" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="estimate" android:enabled="true" android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_estimate" android:shortcutLongLabel="@string/sc_estimate_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="app.years" android:targetClass="app.years.MainActivity">
+            <extra android:name="open" android:value="ESTIMATE" />
+        </intent>
+    </shortcut>
+</shortcuts>

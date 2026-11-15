@@ -15,4 +15,10 @@
     <string name="w_days_desc">The days you have left, and which day of your life today is.</string>
     <string name="w_today_desc">Today\'s day of your life and the one line you wrote about it.</string>
     <string name="w_people_desc">How many more times you\'ll see the people you love.</string>
+    <string name="sc_today">Today\'s line</string>
+    <string name="sc_today_long">Write today\'s line</string>
+    <string name="sc_people">People</string>
+    <string name="sc_people_long">Time left with the people you love</string>
+    <string name="sc_estimate">Estimate</string>
+    <string name="sc_estimate_long">Estimate my lifespan</string>
 </resources>

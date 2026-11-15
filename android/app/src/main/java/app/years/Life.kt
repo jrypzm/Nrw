@@ -144,12 +144,11 @@ object Life {
         return Headline(v, if (whole == 1L) measure.one else measure.many, word, pct, measure)
     }
 
-    private val INT = DecimalFormat("#,##0")
-    private val LIVE = DecimalFormat("#,##0.00000000")
-    private val LIVE_PCT = DecimalFormat("0.0000000")
-    fun whole(v: Double): String = INT.format(floor(v))
-    fun live(v: Double): String = LIVE.format(v)
-    fun livePct(v: Double): String = LIVE_PCT.format(v)
+    // Always "1,234.5": the Live number splits at the '.', and these run on worker threads too, so no shared formatters.
+    fun whole(v: Double): String = String.format(Locale.ENGLISH, "%,d", floor(v).toLong())
+    fun whole(v: Long): String = whole(v.toDouble())
+    fun live(v: Double): String = String.format(Locale.ENGLISH, "%,.8f", v)
+    fun livePct(v: Double): String = String.format(Locale.ENGLISH, "%.7f", v)
 
     /** 0 at night, 1 at midday. */
     fun sunLevel(now: LocalTime = LocalTime.now()): Float {
@@ -176,7 +175,7 @@ object Life {
         return when (s.zoom.coerceIn(0, 4)) {
             0 -> GridModel(ViewKind.LIFE, LIFETIMES, (LIFETIMES - 1 + (age / s.span).coerceIn(0.0, 1.0)), 50, "lifetime", null,
                 "Yours is the last one, filling now",
-                { i -> if (i == LIFETIMES - 1) "Your life" else "About ${INT.format((LIFETIMES - 1 - i) * 80L)} years ago" }, null)
+                { i -> if (i == LIFETIMES - 1) "Your life" else "About ${whole((LIFETIMES - 1 - i) * 80L)} years ago" }, null)
             2 -> GridModel(ViewKind.LIFE, s.span * 12, (age * 12).coerceIn(0.0, s.span * 12.0), 36, "month", null, sub,
                 { i -> val d = birth.plusMonths(i.toLong()); "${mon(d)} ${d.year} · age ${i / 12}" }, null)
             3 -> GridModel(ViewKind.LIFE, (s.span * 52.1775).roundToInt(), (age * 52.1775).coerceIn(0.0, s.span * 52.1775), 52, "week", null, sub,
@@ -222,41 +221,11 @@ object Life {
         return Together(floor(shared * p.often.perYear).toLong(), shared, theirAge)
     }
 
-    // ------------------------------------------------------------ the ledger
-
-    class Slice(val label: String, val years: Double)
-
-    /** Where the years you have left will go, given your phone time per day. */
-    fun ledger(s: Settings, phoneHours: Double): List<Slice> {
-        val left = yearsLeft(s)
-        val age = s.birth?.let { age(it) } ?: 30.0
-        val sleep = left * 8.0 / 24.0
-        val workYears = max(0.0, minOf(left, 65.0 - age))
-        val work = workYears * (40.0 * 48.0) / 8766.0
-        val upkeep = left * 3.0 / 24.0 // eating, washing, chores, getting around
-        val phone = minOf(left * phoneHours / 24.0, max(0.0, left - sleep - work - upkeep))
-        val free = max(0.0, left - sleep - work - phone - upkeep)
-        return listOf(Slice("Asleep", sleep), Slice("Working", work), Slice("On your phone", phone), Slice("Eating, chores, commuting", upkeep), Slice("Truly yours", free))
-    }
-
-    // ------------------------------------------------------------ lifespan check
-
-    /** Rough, population-level adjustments. An estimate to reflect on, not medical advice. */
-    val HABITS = listOf(
-        Triple("smoke", "I smoke", -10),
-        Triple("exercise", "I exercise most weeks", 3),
-        Triple("sleep", "I usually sleep 7 to 8 hours", 1),
-        Triple("drink", "I drink heavily", -5),
-        Triple("diet", "I mostly eat whole foods", 2),
-    )
-
-    fun estimate(habits: Set<String>, base: Int = 80): Int = (base + HABITS.filter { it.first in habits }.sumOf { it.third }).coerceIn(40, 120)
-
     /** A short, changing line for the lock screen. */
     fun lineOfDay(c: android.content.Context, s: Settings, today: LocalDate = LocalDate.now()): String? {
         val birth = s.birth ?: return null
-        val options = mutableListOf("Day ${INT.format(dayOfLife(birth, today))}", "${INT.format(daysLeft(s, today))} days left")
-        s.people.forEach { p -> val t = together(s, p, today); if (t.visits > 0) options += "${INT.format(t.visits)} more ${if (p.often == Often.DAILY) "days" else "visits"} with ${p.name}" }
+        val options = mutableListOf("Day ${whole(dayOfLife(birth, today))}", "${whole(daysLeft(s, today))} days left")
+        s.people.forEach { p -> val t = together(s, p, today); if (t.visits > 0) options += "${whole(t.visits)} more ${if (p.often == Often.DAILY) "days" else "visits"} with ${p.name}" }
         val lived = age(birth).toInt()
         s.names.forEach { (year, n) -> if (year <= lived) options += "$n · ${birth.year + year}" }
         s.events.filter { !it.date.isBefore(today) }.minByOrNull { it.date }?.let { e ->
