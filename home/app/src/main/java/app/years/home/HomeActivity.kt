@@ -104,8 +104,7 @@ class HomeActivity : Activity() {
         nudge = text("Make yrs. home your home screen  ›", 14f, Type.medium, K.MUTE).apply { visibility = View.GONE; setPadding(0, dpi(12f), 0, dpi(12f)); setOnClickListener { tap(); askToBeHome() } }
         topBox = top
         // whenever what's above the apps grows or shrinks (music starts, a timer ends), make everything fit again
-        top.addOnLayoutChangeListener { _, _, t, _, b, _, ot, _, ob -> if (b - t != ob - ot) home.post { fit() } }
-        home.addOnLayoutChangeListener { _, _, t, _, b, _, ot, _, ob -> if (b - t != ob - ot) home.post { fit() } }
+        home.addOnLayoutChangeListener { _, l, t, r, b, ol, ot, or, ob -> if (b - t != ob - ot || r - l != or - ol) renderFavs() }
         home.addView(column, FrameLayout.LayoutParams(-1, -1))
         home.addView(nudge, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.START))
         root.addView(home, FrameLayout.LayoutParams(-1, -1))
@@ -136,6 +135,7 @@ class HomeActivity : Activity() {
             rail.insetTop = b.top; rail.insetBottom = b.bottom
             drawer.setPadding(0, b.top, 0, max(b.bottom, ime.bottom))
             imeBottom = ime.bottom; sheet?.setPadding(0, 0, 0, max(0, ime.bottom - b.bottom))
+            renderFavs()
             ins
         }
 
@@ -203,7 +203,7 @@ class HomeActivity : Activity() {
     }
     private fun saveHomeList(l: List<String>) { val (m, _) = homeList(); if (m != null) Prefs.get(this).setMoment(m, l) else Prefs.get(this).favorites = l }
 
-    private fun renderFavs() {
+    private fun buildFavs() {
         favs.removeAllViews()
         val p = Prefs.get(this)
         val notes = Live.notes
@@ -231,7 +231,6 @@ class HomeActivity : Activity() {
             favs.addView(row, lp(-2, -2))
         }
         if (favs.childCount == (if (m != null) 1 else 0)) favs.addView(text(if (Apps.all.isEmpty()) "Finding your apps…" else "Swipe up for all your apps.\nHold one to put it here.", 16f, Type.medium, K.DIM).apply { setLineSpacing(0f, 1.3f) })
-        home.post { fit() }
     }
 
     /**
@@ -266,43 +265,60 @@ class HomeActivity : Activity() {
     }
 
     /** One line under the clock, only when it's worth a glance: music, an alarm soon, the next event, charging. */
-    // ---- fitting: home never runs off the screen, however many apps and however much is happening
-    private val sizes = floatArrayOf(34f, 30f, 27f, 24f, 21f); private val pads = floatArrayOf(10f, 8f, 6.5f, 5f, 4f)
+    // ---- fitting: home never runs off the screen, however many apps, however much is happening, whatever the phone
+    private val sizes = floatArrayOf(34f, 30f, 27f, 24f, 21f, 18f); private val pads = floatArrayOf(10f, 8f, 6.5f, 5f, 4f, 3f)
     private var favLevel = 0
     private val favSize get() = sizes[favLevel]; private val favPad get() = pads[favLevel]
-    private var cardFullH = 0
+    /** How much the top gives way: 0 everything; 1 the music card folds; 2 a smaller clock, one live line; 3 smaller still, no live lines; 4 only the clock; 5 a small clock. */
+    private var topLevel = 0
+    private var queued = false
+
+    /** Anything on home changed: lay it all out again, once, on the next frame. */
+    private fun renderFavs() { if (!queued) { queued = true; home.post { queued = false; if (!isDestroyed) arrange() } } }
+    private fun renderSmart() = renderFavs()
 
     /**
-     * Makes the apps fit under whatever is showing above them. First the words get a little smaller; if that's not
-     * enough the music card folds to one line; and they grow back as soon as there's room.
+     * Builds home so that it fits. Everything is measured for real, never estimated: the top gives way step by step
+     * and the app names step down in size until the clock, what's happening and every app you chose are all on screen.
      */
-    private fun fit() {
-        if (home.height == 0) return
-        val n = favs.childCount; if (n == 0) return
-        val dm = resources.displayMetrics
-        fun rowsH(level: Int): Float {
-            var h = 0f
-            for (i in 0 until n) { val v = favs.getChildAt(i); h += if (v is TextView) v.height.toFloat() else sizes[level] * 1.22f * dm.scaledDensity + 2 * pads[level] * dm.density }
-            return h + favs.paddingBottom + favs.paddingTop
+    private fun arrange() {
+        val w = home.width; val h = home.height
+        if (w == 0 || h == 0) { topLevel = 0; favLevel = 0; buildSmart(); buildFavs(); return }
+        val ws = View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY); val free = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        // the "make this your home screen" line sits under the apps: leave it room while it's showing
+        val nudgeH = if (nudge.visibility == View.VISIBLE) { nudge.measure(View.MeasureSpec.makeMeasureSpec(w - 2 * dpi(32f), View.MeasureSpec.AT_MOST), free); nudge.measuredHeight + dpi(16f) } else 0
+        favs.setPadding(favs.paddingLeft, 0, favs.paddingRight, insetBottom + if (nudgeH > 0) nudgeH + dpi(12f) else dpi(64f))
+        var best: Pair<Int, Int>? = null
+        search@ for (t in 0..5) {
+            topLevel = t; clock.setTextSize(TypedValue.COMPLEX_UNIT_SP, CLOCK[t]); buildSmart()
+            topBox.measure(ws, free)
+            val avail = h - topBox.measuredHeight
+            for (f in sizes.indices) {
+                favLevel = f; buildFavs(); favs.measure(ws, free)
+                if (favs.measuredHeight <= avail) {
+                    // good enough here if the names are still a comfortable size; otherwise see if the top can give more
+                    if (f <= 2 || t == 5) { best = t to f; break@search }
+                    if (best == null || f < best!!.second) best = t to f
+                    break
+                }
+            }
+            // smaller names beside the music beat bigger names with the music gone: only strip the top when nothing else fits
+            if (t == 3 && best != null && best!!.second <= 4) break
         }
-        val c = card?.takeIf { it.parent != null }
-        var topH = topBox.height
-        // how tall the top would be with the full music card
-        if (c != null && c.compact && cardFullH > 0) topH += cardFullH - c.height
-        fun levelFor(avail: Int): Int? = sizes.indices.firstOrNull { rowsH(it) <= avail }
-        var wantCompact = false
-        var level = levelFor(home.height - topH)
-        // rather fold the music card than shrink the words below the third size
-        if (c != null && (level == null || level > 2)) {
-            val fullH = if (c.compact) cardFullH else c.height
-            val compactH = dpi(84f)
-            val l2 = levelFor(home.height - (topH - fullH + compactH))
-            if (l2 != null && (level == null || l2 < level)) { wantCompact = true; level = l2 } else if (level == null) wantCompact = true
+        // still too much (a tiny screen with huge text): give the apps the bottom margin as well
+        if (best == null) favs.setPadding(favs.paddingLeft, 0, favs.paddingRight, insetBottom + if (nudgeH > 0) nudgeH + dpi(6f) else dpi(20f))
+        val (t, f) = best ?: (5 to sizes.lastIndex)
+        if (t != topLevel || f != favLevel) {
+            topLevel = t; clock.setTextSize(TypedValue.COMPLEX_UNIT_SP, CLOCK[t]); buildSmart()
+            favLevel = f; buildFavs()
         }
-        val lv = level ?: sizes.lastIndex
-        if (c != null && wantCompact != c.compact) { if (wantCompact) cardFullH = c.height; c.compact = wantCompact }
-        if (lv != favLevel) { favLevel = lv; renderFavs() }
+        // the very last resort: show as many of the apps as fit (the rest are a swipe away)
+        if (best == null) {
+            topBox.measure(ws, free); val avail = h - topBox.measuredHeight
+            while (favs.childCount > 1) { favs.measure(ws, free); if (favs.measuredHeight <= avail) break; favs.removeViewAt(favs.childCount - 1) }
+        }
     }
+    private val CLOCK = floatArrayOf(112f, 112f, 88f, 68f, 68f, 48f)
 
     private var card: MediaCard? = null
     private var awayView: View? = null
@@ -314,10 +330,11 @@ class HomeActivity : Activity() {
      * Under the clock, in order of what matters now: coming back from a break, The Hour, live things (a timer, a call,
      * a delivery), the music, then one quiet line (headphones in, an alarm soon, the next event, charging).
      */
-    private fun renderSmart() {
+    private fun buildSmart() {
         val p = Prefs.get(this)
         val want = ArrayList<View>()
-        awayView?.let { want += it }
+        if (topLevel >= 4) { smart.removeAllViews(); return }
+        if (topLevel < 3) awayView?.let { want += it }
         // The Hour: what it handed back, waiting to be read
         val hour = Live.hour
         if (hour.isNotEmpty()) {
@@ -330,7 +347,7 @@ class HomeActivity : Activity() {
         }
         // live things
         if (p.live) {
-            val now = Live.now.take(2)
+            val now = Live.now.take(intArrayOf(2, 2, 1, 0, 0, 0)[topLevel])
             nowRows.keys.retainAll(now.map { it.key }.toSet())
             for (n in now) want += nowRows.getOrPut(n.key) { NowRow(this, label(n.pkg)) }.also { it.bind(n) }
         }
@@ -340,7 +357,7 @@ class HomeActivity : Activity() {
             val c = card ?: MediaCard(this) { mc ->
                 if (mc.sessionActivity?.go(this) != true) runCatching { startActivity(packageManager.getLaunchIntentForPackage(mc.packageName)) }
             }.also { card = it }
-            c.bind(m); want += c
+            c.compact = topLevel >= 1; c.bind(m); want += c
         }
         // one quiet line
         if (m == null) quietLine()?.let { want += it }
@@ -557,6 +574,8 @@ class HomeActivity : Activity() {
         }
         strip = AlphaStrip(this) { l -> adapter.positionOf(l)?.let { list.setSelectionFromTop(it, 0) } }.apply { setPadding(0, dpi(12f), 0, dpi(24f)) }
         body.addView(list, FrameLayout.LayoutParams(-1, -1).apply { rightMargin = dpi(28f) })
+        // rows must never slide over the search bar (the letter bubble still may reach out, so only the list is clipped)
+        list.addOnLayoutChangeListener { v, l, t, r, b, _, _, _, _ -> v.clipBounds = android.graphics.Rect(0, 0, r - l, b - t) }
         body.addView(strip, FrameLayout.LayoutParams(dpi(26f), -1, Gravity.END).apply { rightMargin = dpi(4f) })
         col.addView(body, LinearLayout.LayoutParams(-1, 0, 1f))
         drawer.addView(col, FrameLayout.LayoutParams(-1, -1))
@@ -773,10 +792,10 @@ class HomeActivity : Activity() {
         closeSheet()
         val p = Prefs.get(this)
         val field = EditText(this).apply {
-            setText(app.label); setSelectAllOnFocus(true); setTextColor(K.FG); typeface = Type.display; textSize = 24f; isSingleLine = true
+            setText(app.label); setSelectAllOnFocus(true); highlightColor = 0x40FFFFFF; setTextColor(K.FG); typeface = Type.display; textSize = 24f; isSingleLine = true
             background = rounded(K.GLASS, dp(16f), dpi(1f), K.HAIR); setPadding(dpi(18f), dpi(14f), dpi(18f), dpi(14f)); imeOptions = EditorInfo.IME_ACTION_DONE
         }
-        val scrim = FrameLayout(this).apply { setBackgroundColor(0xCC000000.toInt()); setOnClickListener { closeSheet() } }
+        val scrim = FrameLayout(this).apply { setBackgroundColor(K.BG); setOnClickListener { closeSheet() } }
         val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dpi(28f), 0, dpi(28f), 0); isClickable = true }
         col.addView(caption("Rename"))
         col.addView(field, lp(-1, -2).apply { topMargin = dpi(12f) })
@@ -1008,10 +1027,10 @@ class HomeActivity : Activity() {
                     sub.visibility = View.GONE
                     fun plain() { cap.visibility = View.GONE; body.typeface = Type.body; body.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f); body.letterSpacing = -0.01f }
                     when (val h = r.h) {
-                        is Hit.Answer -> { cap.visibility = View.VISIBLE; cap.text = h.title.uppercase(); body.typeface = Type.thin; body.setTextSize(TypedValue.COMPLEX_UNIT_SP, 46f); body.text = h.value; body.letterSpacing = -0.04f }
+                        is Hit.Answer -> { cap.visibility = View.VISIBLE; cap.text = h.title.uppercase(); body.typeface = Type.thin; body.setTextSize(TypedValue.COMPLEX_UNIT_SP, bigSize(h.value)); body.text = h.value; body.letterSpacing = -0.04f }
                         is Hit.Action -> {
                             cap.visibility = View.VISIBLE; cap.text = h.caption.uppercase()
-                            body.typeface = Type.thin; body.setTextSize(TypedValue.COMPLEX_UNIT_SP, if (h.value.length > 14) 32f else 46f); body.text = h.value; body.letterSpacing = -0.04f
+                            body.typeface = Type.thin; body.setTextSize(TypedValue.COMPLEX_UNIT_SP, bigSize(h.value)); body.text = h.value; body.letterSpacing = -0.04f
                             sub.text = h.sub.ifEmpty { "Tap to go" }; sub.visibility = View.VISIBLE
                         }
                         is Hit.Person -> { plain(); body.text = highlight(h.name, q).let { s -> android.text.SpannableStringBuilder(s).append(if (h.phone != null) "   ·  Call" else "", android.text.style.ForegroundColorSpan(K.MUTE), 0) } }
@@ -1128,6 +1147,9 @@ class HomeActivity : Activity() {
         for (i in tries) if (runCatching { startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return
         packageManager.getLaunchIntentForPackage(pkg)?.let { startActivity(it); flash("Opened it. Search there for “$q”") }
     }
+
+    /** A big answer steps down in size as it gets longer, so the whole number is always readable. */
+    private fun bigSize(v: String): Float = when { v.length <= 9 -> 46f; v.length <= 12 -> 38f; v.length <= 16 -> 30f; v.length <= 21 -> 24f; else -> 19f }
 
     private fun copy(v: String) {
         getSystemService(android.content.ClipboardManager::class.java)?.setPrimaryClip(android.content.ClipData.newPlainText("result", v.replace(",", "")))
