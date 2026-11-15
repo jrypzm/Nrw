@@ -152,7 +152,7 @@ fun App(open: String?, consumed: () -> Unit) {
         AnimatedContent(
             targetState = st.s.birth == null,
             transitionSpec = { fadeIn(tween(600)) togetherWith fadeOut(tween(250)) }, label = "root",
-        ) { onboarding -> if (onboarding) Onboarding(st) else Home(st, open, consumed) }
+        ) { onboarding -> if (onboarding) Onboarding(st) else Home(st, open, consumed = consumed) }
     }
 }
 
