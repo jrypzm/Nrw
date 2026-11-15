@@ -9,7 +9,9 @@ use egui::{Align2, Color32, Context, CornerRadius, Id, Key, Pos2, Rect, Sense, S
 use std::collections::{BTreeMap, HashMap};
 
 /// When the page starts rising in after launch, in seconds.
-const INTRO_PAGE: f64 = 1.05;
+const INTRO_PAGE: f64 = 1.25;
+/// The whole opening, in seconds.
+const INTRO: f64 = 2.35;
 
 pub const PAGES: [&str; 5] = ["Life", "Decade", "Year", "People", "Time"];
 
@@ -45,6 +47,8 @@ pub struct App {
     started: f64,
     /// the opening: the name in the middle, gliding up into the corner as the page rises in
     intro: bool,
+    /// where the dot of the year you're in sat last frame, for the opening to land on
+    cur_dot: Option<(Pos2, f32)>,
 }
 
 impl App {
@@ -70,7 +74,7 @@ impl App {
         let still = std::env::var_os("YRS_STILL").is_some();
         let mut app = App {
             saved: s.clone(), lines: store::load_lines(), s, dirty_at: None, ov: None, ov_at: 0.0, page_at: -10.0, page_from: 0,
-            ob: Default::default(), facts: HashMap::new(), tex: HashMap::new(), toast: None, still, started: 0.0, intro: !still && !line,
+            ob: Default::default(), facts: HashMap::new(), tex: HashMap::new(), toast: None, still, started: 0.0, intro: !still && !line, cur_dot: None,
         };
         if line && app.s.birth.is_some() { app.open(Ov::Line { date: life::today(), text: app.lines.get(&life::today().to_string()).cloned().unwrap_or_default() }, 0.0); }
         app.moments();
@@ -159,7 +163,8 @@ impl eframe::App for App {
             if self.s.birth.is_none() { crate::onboarding::show(self, ui, full, now); } else { self.home(ui, full, now); }
         });
         if self.ov.is_some() { crate::sheets::show(self, ctx, now); }
-        let ck = if self.intro { ease_out(((now - self.started - INTRO_PAGE) / 0.6) as f32) } else { 1.0 };
+        if self.intro { self.intro_overlay(ctx, now); }
+        let ck = if self.intro { ease_out(((now - self.started - 1.9) / 0.5) as f32) } else { 1.0 };
         crate::chrome::controls(ctx, ck);
         self.draw_toast(ctx, now);
         if self.ov.is_none() && self.s.birth.is_some() { self.keys(ctx, now); }
@@ -202,6 +207,54 @@ impl App {
         if pressed(Key::T) { let t = life::today(); self.open(Ov::Line { date: t, text: self.lines.get(&t.to_string()).cloned().unwrap_or_default() }, now); }
     }
 
+    /// The opening: the name rises in and its dot fills to how much of your life you've lived; the letters
+    /// dissolve; the dot flies to the year you're in; and your life opens outward from it in a widening circle.
+    fn intro_overlay(&mut self, ctx: &Context, now: f64) {
+        let ms = ((now - self.started) * 1000.0) as f32;
+        if ms > (INTRO * 1000.0) as f32 { self.intro = false; return; }
+        ctx.request_repaint();
+        let seg = |a: f32, b: f32| ((ms - a) / (b - a)).clamp(0.0, 1.0);
+        let rise = ease_out(seg(0.0, 700.0));
+        let fill = ease_in_out(seg(250.0, 1150.0));
+        let dissolve = ease_out(seg(1100.0, 1500.0));
+        let fly = ease_in_out(seg(1350.0, 1950.0));
+        let open = ease_in_out(seg(1780.0, 2350.0));
+        let sr = ctx.screen_rect();
+        let p = ctx.layer_painter(egui::LayerId::new(egui::Order::Foreground, Id::new("intro")));
+        let b = self.s.birth().unwrap();
+        let age = life::age(b);
+        let lived = (age / self.s.span as f64).clamp(0.0, 1.0) as f32;
+        let year_fill = (age - age.floor()) as f32;
+        // the name, centred
+        let size = 132.0;
+        let g = galley(ctx, "yrs", F::DisplayBold, size, FG, -0.065, f32::INFINITY, None);
+        let d = size * 0.24;
+        let total = g.size().x + d * 1.15;
+        let origin = Pos2::new(sr.center().x - total / 2.0, sr.center().y - g.size().y / 2.0 - 10.0);
+        let home = Pos2::new(origin.x + g.size().x + d * 0.15 + d / 2.0, origin.y + g.size().y * 0.80 - d / 2.0);
+        let (dest, dest_r) = self.cur_dot.filter(|_| self.s.page == 0 && self.s.zoom == 1).unwrap_or((sr.center(), d / 2.0));
+        let arc = (fly * std::f32::consts::PI).sin() * sr.height().min(sr.width()) * 0.08;
+        let pos = Pos2::new(home.x + (dest.x - home.x) * fly - arc * 0.6, home.y + (dest.y - home.y) * fly - arc + (1.0 - rise) * 26.0 * (1.0 - fly));
+        let r = (d / 2.0) * (1.0 + 0.35 * ease_out(seg(1100.0, 1400.0)) * (1.0 - fly)) + (dest_r - d / 2.0) * fly;
+        // black everywhere, except a circle opening from where the dot landed
+        let corner = [sr.left_top(), sr.right_top(), sr.left_bottom(), sr.right_bottom()].iter().map(|c| c.distance(pos)).fold(0.0f32, f32::max) + 4.0;
+        let hole = if open > 0.0 { r + (corner - r) * open } else { 0.0 };
+        if hole <= 0.5 { p.rect_filled(sr, if crate::chrome::maximized(ctx) { 0 } else { crate::chrome::RADIUS }, BG); }
+        else if hole < corner { p.circle_stroke(pos, (hole + corner) / 2.0, Stroke::new(corner - hole, BG)); }
+        // the letters rise in, then dissolve and drift
+        let a = rise * (1.0 - dissolve);
+        if a > 0.0 {
+            let g = galley(ctx, "yrs", F::DisplayBold, size, alpha(FG, a), -0.065, f32::INFINITY, None);
+            p.galley(origin + Vec2::new(-dissolve * 28.0, (1.0 - rise) * 26.0 - dissolve * 6.0), g, FG);
+        }
+        // a soft glow while it flies
+        if fly > 0.0 && fly < 1.0 { p.circle_filled(pos, r * 2.6, alpha(FG, 0.08 * (fly * std::f32::consts::PI).sin())); }
+        // the dot fills to your life so far, then, landing, to how far you are through this year
+        let f = lived * fill + (year_fill - lived * fill) * fly;
+        let fade = 1.0 - ease_out(seg(2150.0, 2350.0));
+        if rise > 0.0 { partial_dot(&p, pos, r, f, alpha(FG, rise * fade), alpha(PARTIAL, rise * fade)); }
+    }
+
     fn draw_toast(&mut self, ctx: &Context, now: f64) {
         let Some((t, at)) = self.toast.clone() else { return };
         let age = now - at;
@@ -222,24 +275,8 @@ impl App {
         // top bar: the name, the pages, settings
         let bar_y = full.top() + 40.0;
         let logo_end = Pos2::new(full.left() + 40.0, bar_y);
-        if self.intro {
-            // the name appears large in the middle, holds a breath, then glides up into its corner
-            let t = (now - self.started) as f32;
-            if t > INTRO_PAGE as f32 + 0.8 { self.intro = false; }
-            ui.ctx().request_repaint();
-            let appear = ease_out(t / 0.6);
-            let glide = ease_in_out(((t - 0.75) / 0.75).clamp(0.0, 1.0));
-            let size = 112.0 + (22.0 - 112.0) * glide;
-            let w0 = width_of(ui.ctx(), "yrs.", F::DisplayBold, 112.0, -0.05);
-            let start = Pos2::new(full.center().x - w0 / 2.0, full.center().y - 10.0);
-            let pos = start + (logo_end - start) * glide + Vec2::new(0.0, (1.0 - appear) * 16.0 * (1.0 - glide));
-            let lp = ui.ctx().layer_painter(egui::LayerId::new(egui::Order::Middle, Id::new("intro")));
-            text(&lp, pos, Align2::LEFT_CENTER, "yrs.", F::DisplayBold, size, alpha(FG, appear), -0.05);
-            let ck = ease_out((t - INTRO_PAGE as f32) / 0.6).clamp(0.0, 1.0);
-            ui.multiply_opacity(ck);
-        }
         let p = ui.painter().clone();
-        if !self.intro { text(&p, logo_end, Align2::LEFT_CENTER, "yrs.", F::DisplayBold, 22.0, FG, -0.05); }
+        text(&p, logo_end, Align2::LEFT_CENTER, "yrs.", F::DisplayBold, 22.0, FG, -0.05);
         let bw = (full.width() - 440.0).clamp(380.0, 540.0);
         let bar = Rect::from_center_size(Pos2::new(full.center().x, bar_y), Vec2::new(bw, 46.0));
         p.rect_filled(bar, CornerRadius::same(23), GLASS);
@@ -447,6 +484,7 @@ impl App {
             }
             if entered < 2.0 { ui.ctx().request_repaint(); }
         }
+        if g.kind == Kind::Life && g.unit == "year" && done < g.total { self.cur_dot = Some((center(done), r0)); }
         if big && done < g.total {
             // the dot you're in, drawn live and a little larger so it can be found
             let c = center(done);

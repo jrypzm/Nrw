@@ -103,6 +103,20 @@ class ScreensTest {
     @Test fun estimate9_result() = est(9)
     @Test fun home4_ledger_set() = home(me.copy(page = 4, sleep = 7f, work = 50f, commute = 90f))
     @Test fun home0_life_pct() = home(me.copy(page = 0, pct = true, lived = true))
+    private fun intro(at: Float) = paparazzi.snapshot {
+        Frame {
+            Box(Modifier.fillMaxSize()) {
+                Home(AppState(LocalContext.current, me.copy(page = 0), persist = false), null, null) {}
+                Intro({ androidx.compose.ui.geometry.Offset(560f, 1080f) to 30f }, .2f, .4f, frozenAt = at) {}
+            }
+        }
+    }
+    @Test fun intro1_rise() = intro(.18f)
+    @Test fun intro2_fill() = intro(.42f)
+    @Test fun intro3_dissolve() = intro(.6f)
+    @Test fun intro4_fly() = intro(.72f)
+    @Test fun intro5_open() = intro(.84f)
+    @Test fun intro6_end() = intro(.97f)
     @Test fun widgets() = paparazzi.snapshot {
         Frame {
             val ctx = LocalContext.current

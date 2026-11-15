@@ -147,6 +147,10 @@ fun Home(st: AppState, open: String?, tourAt: Int? = null, consumed: () -> Unit)
 
     // The first-run tour: each step lights up one real control and moves on once you've tried it.
     val targets = remember { TourTargets() }
+    // the opening plays each time the app starts (not on rotation, not in screenshots or a replayed tour)
+    val still = LocalInspectionMode.current || Render.still || tourAt != null
+    var intro by rememberSaveable { mutableStateOf(!still && st.s.birth != null) }
+    var firstResume by remember { mutableStateOf(true) }
     var tourStep by remember { mutableIntStateOf(tourAt ?: -1) }
     fun tourSnap() = TourSnap(st.s, TourSignal.beats, TourSignal.taps, TourSignal.scrubs, sheet)
     var tourBase by remember { mutableStateOf(tourSnap()) }
@@ -167,7 +171,7 @@ fun Home(st: AppState, open: String?, tourAt: Int? = null, consumed: () -> Unit)
         tourBase = tourSnap()
         tourStep = n
     }
-    LaunchedEffect(Unit) { if (tourAt == null && !st.s.tourDone) { delay(700); tourGo(0) } }
+    LaunchedEffect(Unit) { if (tourAt == null && !st.s.tourDone) { delay(700L + if (intro) INTRO_MS else 0); tourGo(0) } }
     // you did it: the card says so, then moves on
     LaunchedEffect(tourStep, st.s, sheet, TourSignal.beats, TourSignal.taps, TourSignal.scrubs) {
         val step = TOUR.getOrNull(tourStep) ?: return@LaunchedEffect
@@ -221,7 +225,8 @@ fun Home(st: AppState, open: String?, tourAt: Int? = null, consumed: () -> Unit)
                 st.bump()
                 checkMoments()
                 if (st.s.ripple) scope.launch {
-                    delay(500)
+                    delay(if (firstResume && intro) INTRO_MS - 450L else 500L)
+                    firstResume = false
                     val lived = st.s.birth?.let { Life.age(it).toInt() } ?: 0
                     ripple.snapTo(0f)
                     ripple.animateTo(1f, tween(900 + lived * 16, easing = LinearEasing))
@@ -284,6 +289,22 @@ fun Home(st: AppState, open: String?, tourAt: Int? = null, consumed: () -> Unit)
             Text(toast ?: "", style = T.label.copy(fontSize = 14.sp), modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(C.Surface2).padding(horizontal = 16.dp, vertical = 10.dp))
         }
 
+        if (intro) {
+            val b = st.s.birth
+            val age = b?.let { Life.age(it) } ?: 0.0
+            Intro(
+                target = {
+                    // the dot of the year you're in, when the Life grid is showing years
+                    val r = targets.rects["grid"]
+                    if (r == null || pager.currentPage != 0 || st.s.zoom != Life.ZOOM_YEARS || age >= st.s.span) null else {
+                        val cell = r.width / 9.6f; val inset = cell * .2f; val i = age.toInt()
+                        androidx.compose.ui.geometry.Offset(r.left - inset + (i % 10 + .5f) * cell, r.top - inset + (i / 10 + .5f) * cell) to cell * .3f
+                    }
+                },
+                lived = (age / st.s.span).toFloat().coerceIn(0f, 1f),
+                yearFill = (age - floor(age)).toFloat(),
+            ) { intro = false }
+        }
         if (tourStep in TOUR.indices && sheet == null) {
             TourOverlay(st, targets, tourStep, tourOk, onNext = { view.tap(); tourGo(tourStep + 1) }, onBack = { view.tap(); tourGo((tourStep - 1).coerceAtLeast(0)) }, onSkip = { tourGo(-1) })
         }
