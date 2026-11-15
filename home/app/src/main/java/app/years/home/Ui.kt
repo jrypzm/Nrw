@@ -64,3 +64,16 @@ fun Context.caption(s: String): TextView = text(s.uppercase(), 11.5f, Type.semi,
 fun rounded(color: Int, radius: Float, stroke: Int = 0, strokeColor: Int = 0) = GradientDrawable().apply {
     setColor(color); cornerRadius = radius; if (stroke > 0) setStroke(stroke, strokeColor)
 }
+
+/**
+ * Lets you pick the home screen app. If yrs. home isn't home yet, Android's own "make this home?" prompt; if it already
+ * is, the system list of home apps, so you can always switch back.
+ */
+fun android.app.Activity.chooseHome() {
+    val rm = getSystemService(android.app.role.RoleManager::class.java)
+    val held = rm?.isRoleHeld(android.app.role.RoleManager.ROLE_HOME) == true
+    if (!held && rm != null && rm.isRoleAvailable(android.app.role.RoleManager.ROLE_HOME) &&
+        runCatching { startActivityForResult(rm.createRequestRoleIntent(android.app.role.RoleManager.ROLE_HOME), 7) }.isSuccess) return
+    for (a in listOf(android.provider.Settings.ACTION_HOME_SETTINGS, android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS, android.provider.Settings.ACTION_SETTINGS))
+        if (runCatching { startActivity(android.content.Intent(a)) }.isSuccess) return
+}

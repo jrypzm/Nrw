@@ -159,7 +159,7 @@ class HomeActivity : Activity() {
             row.setOnLongClickListener { it.confirm(); showSheet(app); true }
             favs.addView(row, lp(-2, -2))
         }
-        if (favs.childCount == 0) favs.addView(text("Hold any app in the list to add it here.", 15f, Type.medium, K.DIM))
+        if (favs.childCount == 0) favs.addView(text(if (Apps.all.isEmpty()) "Finding your apps…" else "Swipe up for all your apps.\nHold one to put it here.", 16f, Type.medium, K.DIM).apply { setLineSpacing(0f, 1.3f) })
     }
 
     /** One line under the clock, only when it's worth a glance: music, an alarm soon, the next event, charging. */
@@ -220,7 +220,7 @@ class HomeActivity : Activity() {
         super.onResume()
         renderClock(); renderSmart(); renderFavs()
         // nothing ticks while you're not looking: the clock listens only while home is on screen
-        registerReceiver(ticks, IntentFilter().apply { addAction(Intent.ACTION_TIME_TICK); addAction(Intent.ACTION_TIME_CHANGED); addAction(Intent.ACTION_TIMEZONE_CHANGED); addAction(Intent.ACTION_BATTERY_CHANGED); addAction(AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED) })
+        registerReceiver(ticks, IntentFilter().apply { addAction(Intent.ACTION_TIME_TICK); addAction(Intent.ACTION_TIME_CHANGED); addAction(Intent.ACTION_TIMEZONE_CHANGED); addAction(Intent.ACTION_BATTERY_CHANGED); addAction(AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED) }, Context.RECEIVER_NOT_EXPORTED)
         nudge.visibility = if (isHome()) View.GONE else View.VISIBLE
         Apps.refresh(this)
     }
@@ -237,10 +237,7 @@ class HomeActivity : Activity() {
     override fun onBackPressed() { if (sheet != null) closeSheet() else if (isDrawerOpen()) closeDrawer() }
 
     private fun isHome(): Boolean = getSystemService(RoleManager::class.java)?.isRoleHeld(RoleManager.ROLE_HOME) == true
-    private fun askToBeHome() {
-        val rm = getSystemService(RoleManager::class.java)
-        runCatching { startActivityForResult(rm.createRequestRoleIntent(RoleManager.ROLE_HOME), 7) }.onFailure { startActivity(Intent(Settings.ACTION_HOME_SETTINGS)) }
-    }
+    private fun askToBeHome() = chooseHome()
 
     // ================================================================== opening things
 
@@ -305,7 +302,13 @@ class HomeActivity : Activity() {
         }
     }
 
-    private fun yrsSettings(q: String): List<Hit.Setting> = if (App.fold(q).let { it.length >= 3 && ("yrs home settings".contains(it) || it.startsWith("home")) }) listOf(Hit.Setting("yrs. home settings", "yrs:settings")) else emptyList()
+    private fun yrsSettings(q: String): List<Hit.Setting> {
+        val f = App.fold(q).trim(); if (f.length < 3) return emptyList()
+        val out = ArrayList<Hit.Setting>()
+        if ("yrs home settings".contains(f) || f.startsWith("home") || f.startsWith("settings")) out += Hit.Setting("yrs. home settings", "yrs:settings")
+        if (listOf("launcher", "default", "home app", "change home", "home screen").any { it.startsWith(f) || f.startsWith(it) }) out += Hit.Setting("Change home app", "yrs:home")
+        return out
+    }
 
     fun isDrawerOpen() = drawer.visibility == View.VISIBLE && drawer.translationY < drawer.height * .5f
 
@@ -523,6 +526,8 @@ class HomeActivity : Activity() {
             val out = ArrayList<Row>(Apps.visible.size + 30); val ls = ArrayList<Char>()
             var last = ' '
             for (a in Apps.visible) { if (a.letter != last) { last = a.letter; out += Row.Letter(last); ls += last }; out += Row.AppRow(a) }
+            // always a way in to settings, and out to another home app
+            out += Row.Cap(""); out += Row.Hits(Hit.Setting("yrs. home settings", "yrs:settings")); out += Row.Hits(Hit.Setting("Change home app", "yrs:home"))
             rows = out; letters = ls; notifyDataSetChanged()
         }
 
@@ -598,7 +603,7 @@ class HomeActivity : Activity() {
                 is Row.Hits -> when (val h = r.h) {
                     is Hit.Answer -> copy(h.value)
                     is Hit.Person -> runCatching { startActivity(if (h.phone != null) Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(h.phone)}")) else Intent(Intent.ACTION_VIEW, h.uri)) }
-                    is Hit.Setting -> if (h.action == "yrs:settings") startActivity(Intent(this@HomeActivity, SettingsActivity::class.java)) else runCatching { startActivity(Intent(h.action)) }.onFailure { startActivity(Intent(Settings.ACTION_SETTINGS)) }
+                    is Hit.Setting -> if (h.action == "yrs:settings") startActivity(Intent(this@HomeActivity, SettingsActivity::class.java)) else if (h.action == "yrs:home") chooseHome() else runCatching { startActivity(Intent(h.action)) }.onFailure { startActivity(Intent(Settings.ACTION_SETTINGS)) }
                     is Hit.Web -> runCatching { startActivity(Intent(Intent.ACTION_WEB_SEARCH).putExtra(android.app.SearchManager.QUERY, h.query)) }.onFailure { runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=${Uri.encode(h.query)}"))) } }
                     is Hit.AppHit -> open(h.app, from)
                 }

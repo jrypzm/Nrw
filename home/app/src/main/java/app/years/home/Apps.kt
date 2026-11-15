@@ -73,6 +73,20 @@ object Apps {
             val renames = Prefs.get(ctx).renames
             for (u in um.userProfiles) {
                 val infos: List<LauncherActivityInfo> = runCatching { la.getActivityList(null, u) }.getOrDefault(emptyList())
+                if (infos.isEmpty() && u == me) {
+                    // some phones answer LauncherApps with nothing; ask the package manager instead
+                    val pm = ctx.packageManager
+                    val q = android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_LAUNCHER)
+                    for (r in runCatching { pm.queryIntentActivities(q, 0) }.getOrDefault(emptyList())) {
+                        val ai = r.activityInfo ?: continue
+                        if (ai.packageName == ctx.packageName) continue
+                        val cn = ComponentName(ai.packageName, ai.name)
+                        val key = "${cn.flattenToShortString()}#${um.getSerialNumberForUser(u)}"
+                        val label = renames[key] ?: runCatching { r.loadLabel(pm).toString().trim() }.getOrDefault("").ifEmpty { ai.packageName }
+                        list += App(key, label, ai.packageName, cn, u, false)
+                    }
+                    continue
+                }
                 for (i in infos) {
                     if (i.componentName.packageName == ctx.packageName) continue
                     val key = "${i.componentName.flattenToShortString()}#${um.getSerialNumberForUser(u)}"

@@ -123,9 +123,7 @@ class SettingsActivity : Page() {
         val home = getSystemService(RoleManager::class.java)?.isRoleHeld(RoleManager.ROLE_HOME) == true
         section("Home")
         group().also { g ->
-            row(g, "Your home screen", if (home) "yrs. home is your home screen" else "Make yrs. home your home screen", if (home) "On" else null) {
-                runCatching { startActivity(getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_HOME)) }.onFailure { startActivity(Intent(Settings.ACTION_HOME_SETTINGS)) }
-            }
+            row(g, "Home app", if (home) "yrs. home is your home screen. Tap to switch to another" else "Make yrs. home your home screen", if (home) "On" else null) { chooseHome() }
             row(g, "Apps on home", "${p.favorites.size} of up to 8, in the order you pick them") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "home")) }
             row(g, "Hidden apps", if (p.hidden.isEmpty()) "None" else "${p.hidden.size} hidden from the list and search") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "hidden")) }
             row(g, "Pause first", if (p.paused.isEmpty()) "A breath before the apps you choose" else "${p.paused.size} ${if (p.paused.size == 1) "app" else "apps"} ask first") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "pause")) }
