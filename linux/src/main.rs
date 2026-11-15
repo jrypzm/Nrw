@@ -45,8 +45,9 @@ fn main() -> eframe::Result {
     let mut vp = egui::ViewportBuilder::default()
         .with_title("yrs.")
         .with_app_id("yrs")
-        .with_inner_size([1280.0, 820.0])
-        .with_min_inner_size([960.0, 640.0])
+        // room for the shadow on every side
+        .with_inner_size([1280.0 + 2.0 * chrome::SHADOW, 820.0 + 2.0 * chrome::SHADOW])
+        .with_min_inner_size([960.0 + 2.0 * chrome::SHADOW, 640.0 + 2.0 * chrome::SHADOW])
         // yrs. draws its own title bar and rounded corners
         .with_decorations(false)
         .with_transparent(true)

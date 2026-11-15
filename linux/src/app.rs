@@ -182,7 +182,8 @@ impl eframe::App for App {
             let px = ((m.x * ppp).round() as u32, (m.y * ppp).round() as u32);
             if px.0 > 300 && px != self.s.screen { self.s.screen = px; }
         }
-        egui::CentralPanel::default().frame(egui::Frame::NONE).show(ctx, |ui| {
+        let pad = if crate::chrome::maximized(ctx) { 0.0 } else { crate::chrome::SHADOW };
+        egui::CentralPanel::default().frame(egui::Frame::NONE.inner_margin(egui::Margin::same(pad as i8))).show(ctx, |ui| {
             crate::chrome::drag_strip(ui, Rect::from_min_size(ui.max_rect().min, Vec2::new(ui.max_rect().width(), 80.0)));
             let full = ui.max_rect();
             if self.s.birth.is_none() { crate::onboarding::show(self, ui, full, now); } else { self.home(ui, full, now); }
@@ -247,8 +248,8 @@ impl App {
         let dissolve = ease_out(seg(1100.0, 1500.0));
         let fly = ease_in_out(seg(1350.0, 1950.0));
         let open = ease_in_out(seg(1780.0, 2350.0));
-        let sr = ctx.screen_rect();
-        let p = ctx.layer_painter(egui::LayerId::new(egui::Order::Foreground, Id::new("intro")));
+        let sr = crate::chrome::content(ctx);
+        let p = ctx.layer_painter(egui::LayerId::new(egui::Order::Foreground, Id::new("intro"))).with_clip_rect(crate::chrome::content(ctx));
         let b = self.s.birth().unwrap();
         let age = life::age(b);
         let lived = (age / self.s.span as f64).clamp(0.0, 1.0) as f32;
@@ -290,7 +291,7 @@ impl App {
         ctx.request_repaint();
         let k = (ease_out((age / 0.3) as f32) * (1.0 - ease_out(((age - 2.2) / 0.4).max(0.0) as f32))).clamp(0.0, 1.0);
         let p = ctx.layer_painter(egui::LayerId::new(egui::Order::Tooltip, Id::new("toast")));
-        let sr = ctx.screen_rect();
+        let sr = crate::chrome::content(ctx);
         let w = width_of(ctx, &t, F::Medium, 14.0, 0.0) + 36.0;
         let r = Rect::from_center_size(Pos2::new(sr.center().x, sr.bottom() - 52.0 + (1.0 - k) * 14.0), Vec2::new(w, 40.0));
         p.rect_filled(r, CornerRadius::same(20), alpha(SURFACE2, k));
@@ -543,7 +544,7 @@ impl App {
         let h = lines.iter().map(|l| l.2 * 1.35).sum::<f32>() + 16.0;
         let mut r = Rect::from_min_size(Pos2::new(c.x - w / 2.0, c.y - above - 10.0 - h), Vec2::new(w, h));
         if r.top() < bounds.top() - 60.0 { r = r.translate(Vec2::new(0.0, h + above * 2.0 + 20.0)); }
-        let sr = ctx.screen_rect();
+        let sr = crate::chrome::content(ctx);
         if r.left() < sr.left() + 8.0 { r = r.translate(Vec2::new(sr.left() + 8.0 - r.left(), 0.0)); }
         if r.right() > sr.right() - 8.0 { r = r.translate(Vec2::new(sr.right() - 8.0 - r.right(), 0.0)); }
         p.rect_filled(r.translate(Vec2::new(0.0, 4.0)).expand(2.0), CornerRadius::same(16), Color32::from_black_alpha(90));

@@ -10,7 +10,7 @@ use chrono::{Datelike, NaiveDate};
 use egui::{Align2, Color32, Context, CornerRadius, Id, Pos2, Rect, Sense, Stroke, StrokeKind, Ui, Vec2};
 
 pub fn show(app: &mut App, ctx: &Context, now: f64) {
-    let sr = ctx.screen_rect();
+    let sr = crate::chrome::content(ctx);
     let t = if app.still { 1.0 } else { ((now - app_ov_at(app)) / 0.32) as f32 };
     if t < 1.0 { ctx.request_repaint(); }
     let k = ease_out(t);

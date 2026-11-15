@@ -6,6 +6,11 @@ use egui::{Color32, Context, CornerRadius, CursorIcon, Id, Pos2, Rect, ResizeDir
 
 /// Rounded corners while the window floats; none when it fills the screen.
 pub const RADIUS: u8 = 14;
+/// Room around the window for its soft shadow. It doubles as the grab area for resizing.
+pub const SHADOW: f32 = 22.0;
+
+/// The window's visible area: inside the shadow, or all of it when maximised.
+pub fn content(ctx: &Context) -> Rect { let r = ctx.screen_rect(); if maximized(ctx) { r } else { r.shrink(SHADOW) } }
 
 pub fn maximized(ctx: &Context) -> bool {
     let asked = ctx.data(|d| d.get_temp::<bool>(Id::new("asked-max"))).unwrap_or(false);
@@ -13,11 +18,23 @@ pub fn maximized(ctx: &Context) -> bool {
 }
 fn set_maximized(ctx: &Context, on: bool) { ctx.data_mut(|d| d.insert_temp(Id::new("asked-max"), on)); ctx.send_viewport_cmd(ViewportCommand::Maximized(on)); }
 
-/// The window's own background: black, with rounded corners and a faint edge when it isn't maximised.
+/// The window's own background: black, with rounded corners, a faint edge and a soft shadow when it floats.
 pub fn background(ctx: &Context) {
-    let r = ctx.screen_rect();
     let p = ctx.layer_painter(egui::LayerId::background());
-    if maximized(ctx) { p.rect_filled(r, 0.0, BG); return; }
+    if maximized(ctx) { p.rect_filled(ctx.screen_rect(), 0.0, BG); return; }
+    let r = content(ctx);
+    // a shadow built from many faint rounded layers: tight and darker near the window, wide and soft further out,
+    // falling a little lower than the window, as light from above would cast it
+    let steps = 22;
+    for k in (1..=steps).rev() {
+        let t = k as f32 / steps as f32;
+        let grow = SHADOW * t;
+        let a = 0.075 * (1.0 - t).powf(1.7) + 0.006;
+        let sr = r.expand(grow).translate(Vec2::new(0.0, 5.0 * t));
+        p.rect_filled(sr, CornerRadius::same((RADIUS as f32 + grow) as u8), Color32::from_black_alpha((a * 255.0) as u8));
+    }
+    // a tight contact shadow right at the edge
+    p.rect_filled(r.expand(1.5).translate(Vec2::new(0.0, 1.0)), CornerRadius::same(RADIUS + 1), Color32::from_black_alpha(110));
     p.rect_filled(r, CornerRadius::same(RADIUS), BG);
     p.rect_stroke(r, CornerRadius::same(RADIUS), Stroke::new(1.0, HAIR2), StrokeKind::Inside);
 }
@@ -34,8 +51,9 @@ pub fn drag_strip(ui: &Ui, r: Rect) {
 pub fn edges(ctx: &Context) {
     if maximized(ctx) { return; }
     let Some(pos) = ctx.input(|i| i.pointer.hover_pos()) else { return };
+    // the shadow around the window is the grab area, plus a few pixels inside the edge
     let r = ctx.screen_rect();
-    let (e, c) = (6.0, 16.0);
+    let (e, c) = (SHADOW + 5.0, SHADOW + 18.0);
     let (l, rt, t, b) = (pos.x - r.left() < e, r.right() - pos.x < e, pos.y - r.top() < e, r.bottom() - pos.y < e);
     let (lc, rc, tc, bc) = (pos.x - r.left() < c, r.right() - pos.x < c, pos.y - r.top() < c, r.bottom() - pos.y < c);
     let dir = if (t && lc) || (l && tc) { Some((ResizeDirection::NorthWest, CursorIcon::ResizeNorthWest)) }
@@ -55,7 +73,7 @@ pub fn edges(ctx: &Context) {
 
 /// Minimise, maximise and close, top right, in the app's own style. Drawn above everything, sheets included.
 pub fn controls(ctx: &Context, opacity: f32) {
-    let sr = ctx.screen_rect();
+    let sr = content(ctx);
     let y = sr.top() + 40.0;
     egui::Area::new(Id::new("window-controls")).order(egui::Order::Debug).fixed_pos(Pos2::new(sr.right() - 126.0, y - 18.0)).show(ctx, |ui| {
         ui.multiply_opacity(opacity);
