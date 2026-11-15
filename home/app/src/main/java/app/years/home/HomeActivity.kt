@@ -136,6 +136,7 @@ class HomeActivity : Activity() {
 
         Apps.onChange { onApps() }.let { f -> subs += { Apps.off(f) } }
         Live.onChange { renderFavs(); renderSmart(); renderPeople(); if (isDrawerOpen()) adapter.notifyDataSetChanged() }.let { f -> subs += { Live.off(f) } }
+        Live.onMedia { renderSmart() }.let { f -> subs += { Live.off(f) } }
         Apps.start(this)
         // away time: the screen going off and the next unlock. Registered for as long as home lives.
         registerReceiver(screen, IntentFilter().apply { addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_USER_PRESENT); addAction(Intent.ACTION_SCREEN_ON) }, Context.RECEIVER_NOT_EXPORTED)
@@ -293,7 +294,7 @@ class HomeActivity : Activity() {
         val m = Live.media()
         if (m != null) {
             val c = card ?: MediaCard(this) { mc ->
-                runCatching { mc.sessionActivity!!.send() }.onFailure { runCatching { startActivity(packageManager.getLaunchIntentForPackage(mc.packageName)) } }
+                if (mc.sessionActivity?.go(this) != true) runCatching { startActivity(packageManager.getLaunchIntentForPackage(mc.packageName)) }
             }.also { card = it }
             c.bind(m); want += c
         }
@@ -376,7 +377,7 @@ class HomeActivity : Activity() {
             row.addView(field, LinearLayout.LayoutParams(0, dpi(48f), 1f))
             row.addView(text("↑", 17f, Type.semi, K.BG).apply { gravity = Gravity.CENTER; background = rounded(K.FG, dp(18f)); setOnClickListener { it.confirm(); send() } }, LinearLayout.LayoutParams(dpi(36f), dpi(36f)))
             addView(row, lp(-1, -2).apply { topMargin = dpi(20f) })
-            addView(text("Open the chat", 14f, Type.medium, K.MUTE).apply { setPadding(0, dpi(14f), 0, dpi(4f)); setOnClickListener { it.tap(); closeSheet(); seen(person); runCatching { person.open?.send() } } })
+            addView(text("Open the chat", 14f, Type.medium, K.MUTE).apply { setPadding(0, dpi(14f), 0, dpi(4f)); setOnClickListener { it.tap(); closeSheet(); seen(person); person.open?.go(this@HomeActivity) } })
         }
         field.requestFocus(); field.postDelayed({ getSystemService(InputMethodManager::class.java)?.showSoftInput(field, 0) }, 120)
     }

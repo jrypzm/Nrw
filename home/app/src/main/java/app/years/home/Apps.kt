@@ -59,7 +59,8 @@ object Apps {
     fun onChange(f: () -> Unit): () -> Unit { listeners += f; return f }
     fun off(f: () -> Unit) { listeners -= f }
 
-    fun start(c: Context) {
+    fun start(c0: Context) {
+        val c = c0.applicationContext
         if (started) { refresh(c); return }
         started = true
         val la = c.getSystemService(LauncherApps::class.java)
@@ -81,9 +82,15 @@ object Apps {
     }
 
     private var frozen = false
+    private var pending: Runnable? = null
+    /** Rebuilds the catalogue. A burst of updates (the Play Store updating twenty apps) becomes one rebuild. */
     fun refresh(c: Context) {
         if (frozen) return
         val ctx = c.applicationContext
+        pending?.let { main.removeCallbacks(it) }
+        pending = Runnable { pending = null; build(ctx) }.also { main.postDelayed(it, 250) }
+    }
+    private fun build(ctx: Context) {
         io.execute {
             val t0 = System.nanoTime()
             val la = ctx.getSystemService(LauncherApps::class.java)

@@ -38,7 +38,9 @@ class Prefs private constructor(private val sp: SharedPreferences) {
 
     private fun bool(k: String, d: Boolean) = sp.getBoolean(k, d)
     private fun setBool(k: String, v: Boolean) = sp.edit().putBoolean(k, v).apply()
-    private fun json(k: String) = runCatching { JSONObject(sp.getString(k, "{}")!!) }.getOrDefault(JSONObject())
+    /** Parsed once and kept: home reads these many times a second while it redraws. Writes update the same object. */
+    private val parsed = HashMap<String, JSONObject>()
+    @Synchronized private fun json(k: String): JSONObject = parsed.getOrPut(k) { runCatching { JSONObject(sp.getString(k, "{}")!!) }.getOrDefault(JSONObject()) }
 
     /** The Hour: notifications that aren't from people wait for these times (minutes after midnight). */
     var hourOn: Boolean get() = bool("hourOn", false); set(v) = setBool("hourOn", v)

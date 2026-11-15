@@ -145,7 +145,9 @@ class FeaturesTest {
         val texts = { p.window.decorView.findViewsOfType(android.widget.TextView::class.java).map { it.text.toString() } }
         val gone = ((android.os.SystemClock.uptimeMillis() - t0) / 1000).toInt()
         // the 4th open today waits 12 seconds, counting down
-        assertTrue("$gone s passed: ${texts()}", texts().contains("Open in ${12 - gone} s"))
+        // earlier tests may have opened it too: the wait follows the real count
+        val wait = PauseActivity.waitFor(Prefs.get(ctx).opensToday(key("Instagram")), false)
+        assertTrue("$gone s passed: ${texts()}", texts().contains("Open in ${wait - gone} s"))
         shot(p.window.decorView, "31-pause")
     }
 

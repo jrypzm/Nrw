@@ -17,7 +17,10 @@ object Smart {
     const val ALARM = "alarm"; const val TIMER = "timer"; const val CALL = "call"; const val TEXT = "text"; const val SAVE = "save"
     const val INSIDE = "inside"; const val DATE = "date"; const val LIGHT = "light"
 
-    fun actions(q: String, now: LocalDateTime = LocalDateTime.now(), h24: Boolean = false): List<Hit.Action> {
+    /** Never throws: whatever you type, search carries on. */
+    fun actions(q: String, now: LocalDateTime = LocalDateTime.now(), h24: Boolean = false): List<Hit.Action> = runCatching { read(q, now, h24) }.getOrDefault(emptyList())
+
+    private fun read(q: String, now: LocalDateTime, h24: Boolean): List<Hit.Action> {
         val t = q.trim().lowercase(Locale.ROOT).replace(Regex("\\s+"), " ")
         if (t.isEmpty()) return emptyList()
         val out = ArrayList<Hit.Action>()
@@ -39,6 +42,8 @@ object Smart {
         val asked = m.groupValues[1].isNotEmpty(); val hs = m.groupValues[2]; val mins = m.groupValues[3]; val ap = m.groupValues[4]
         // a bare number is a sum, not a time, unless you said "alarm"
         if (!asked && mins.isEmpty() && ap.isEmpty()) return emptyList()
+        // "5.50" is a price and "3.14" is pi: a dot only makes a time with am/pm or "alarm"
+        if ('.' in t && !asked && ap.isEmpty()) return emptyList()
         val h = hs.toInt(); val mi = mins.ifEmpty { "0" }.toInt()
         if (mi > 59) return emptyList()
         val candidates: List<LocalTime> = when {
@@ -50,7 +55,9 @@ object Smart {
         return candidates.mapIndexed { i, lt ->
             val at = next(lt, now)
             val label = clock(lt, h24)
-            if (i == 0) Hit.Action(ALARM, "Alarm", label, "${dayWord(at, now)} · in ${inWords(ChronoUnit.MINUTES.between(now, at))}", true, mapOf("h" to lt.hour, "m" to lt.minute))
+            // rounded up: an alarm 30 seconds away is "in 1 min", not "in 0 min"
+            val mins = (ChronoUnit.SECONDS.between(now, at) + 59) / 60
+            if (i == 0) Hit.Action(ALARM, "Alarm", label, "${dayWord(at, now)} · in ${inWords(mins)}", true, mapOf("h" to lt.hour, "m" to lt.minute))
             else Hit.Action(ALARM, "Alarm", label, "Set it for $label instead", false, mapOf("h" to lt.hour, "m" to lt.minute))
         }
     }
@@ -66,7 +73,8 @@ object Smart {
     private val timerRx = Regex("^(?:timer(?: for)? )?(?:(\\d+) ?(?:h|hr|hrs|hour|hours))? ?(?:(\\d+) ?(min|mins|minute|minutes|m))? ?(?:(\\d+) ?(?:s|sec|secs|second|seconds))?$")
 
     fun timer(t: String): Hit.Action? {
-        Regex("^timer(?: for)? (\\d+)$").matchEntire(t)?.let { return timerOf(it.groupValues[1].toLong() * 60) }
+        Regex("^timer(?: for)? (\\d{1,6})$").matchEntire(t)?.let { return timerOf(it.groupValues[1].toLong() * 60) }
+        if (Regex("\\d{7,}").containsMatchIn(t)) return null
         val m = timerRx.matchEntire(t) ?: return null
         val h = m.groupValues[1]; val mi = m.groupValues[2]; val unit = m.groupValues[3]; val s = m.groupValues[4]
         if (h.isEmpty() && mi.isEmpty() && s.isEmpty()) return null
@@ -85,7 +93,9 @@ object Smart {
     // ------------------------------------------------------------------ phone numbers
 
     fun phone(q: String): List<Hit.Action> {
-        if (!Regex("^\\+?[0-9][0-9 ()\\-]{5,}[0-9]$").matches(q)) return emptyList()
+        if (!Regex("^\\+?[(]?[0-9][0-9 ()\\-]{5,}[0-9]$").matches(q)) return emptyList()
+        // 2026-11-15 is a date
+        if (Regex("^\\d{4}-\\d{1,2}-\\d{1,2}$").matches(q)) return emptyList()
         val digits = q.count { it.isDigit() }; if (digits < 7 || digits > 15) return emptyList()
         val n = q.filter { it.isDigit() || it == '+' }
         return listOf(Hit.Action(CALL, "Call", q, "Call this number", false, mapOf("n" to n)), Hit.Action(TEXT, "Text", q, "Send a message", false, mapOf("n" to n)),
@@ -99,7 +109,7 @@ object Smart {
         "w" to "wikipedia", "wiki" to "wikipedia", "a" to "amazon", "g" to "web", "web" to "web", "ig" to "instagram", "x" to "x", "r" to "reddit", "n" to "netflix")
 
     fun inside(q: String): Hit.Action? {
-        val m = Regex("^\\.(\\S+)(?: (.*))?$").matchEntire(q) ?: return null
+        val m = Regex("^\\.([a-zA-Z]\\S*)(?: (.*))?$").matchEntire(q) ?: return null
         val alias = m.groupValues[1].lowercase(Locale.ROOT); val what = m.groupValues[2].trim()
         val name = ALIASES[alias] ?: alias
         if (name == "web") return Hit.Action(INSIDE, "Web", what.ifEmpty { "…" }, if (what.isEmpty()) "Type what to search the web for" else "Search the web", what.isNotEmpty(), mapOf("app" to "web", "q" to what))
@@ -109,7 +119,9 @@ object Smart {
     // ------------------------------------------------------------------ dates: "days to 25 dec", "christmas", "in 3 weeks", "10 days ago"
 
     private val months = listOf("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
-    private fun month(s: String): Int? = months.indexOfFirst { s.startsWith(it) }.takeIf { it >= 0 && s.length >= 3 }?.plus(1)
+    private val monthNames = listOf("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december")
+    /** "dec", "december" or "sept"; never "junk" or "mayday". */
+    private fun month(s: String): Int? = (monthNames.indexOfFirst { it == s || (s.length >= 3 && it.startsWith(s)) }).takeIf { it >= 0 }?.plus(1)
 
     fun parseDay(s: String, today: LocalDate): LocalDate? {
         val t = s.trim().removePrefix("the ").trim()
@@ -136,24 +148,28 @@ object Smart {
         }
         return null
     }
-    private fun upcoming(md: MonthDay, today: LocalDate): LocalDate { val d = md.atYear(today.year); return if (d.isBefore(today)) md.atYear(today.year + 1) else d }
-    private fun dayName(d: LocalDate) = d.format(DateTimeFormatter.ofPattern("EEEE d MMMM" + if (d.year != LocalDate.now().year) " yyyy" else "", Locale.ENGLISH))
+    /** The next time this day comes round; 29 February waits for a leap year rather than becoming the 28th. */
+    private fun upcoming(md: MonthDay, today: LocalDate): LocalDate {
+        var y = today.year
+        while (true) { if (md.isValidYear(y)) { val d = md.atYear(y); if (!d.isBefore(today)) return d }; y++ }
+    }
+    private fun dayName(d: LocalDate, today: LocalDate) = d.format(DateTimeFormatter.ofPattern("EEEE d MMMM" + if (d.year != today.year) " yyyy" else "", Locale.ENGLISH))
 
     fun date(t: String, today: LocalDate): Hit.Action? {
         // "in 3 weeks", "3 weeks from today", "10 days ago"
         Regex("^(?:in )?(\\d+) (day|days|week|weeks|month|months|year|years)(?: (from (?:today|now)|ago))?$").matchEntire(t)?.let { m ->
             val tail = m.groupValues[3]
             if (!t.startsWith("in ") && tail.isEmpty()) return null
-            val n = m.groupValues[1].toLong(); val u = m.groupValues[2]
+            val n = m.groupValues[1].toLongOrNull()?.takeIf { it <= 100_000 } ?: return null; val u = m.groupValues[2]
             val signed = if (tail == "ago") -n else n
             val d = when { u.startsWith("day") -> today.plusDays(signed); u.startsWith("week") -> today.plusWeeks(signed); u.startsWith("month") -> today.plusMonths(signed); else -> today.plusYears(signed) }
-            return Hit.Action(DATE, "Date", dayName(d), "${if (signed < 0) "Was" else "Will be"} ${count(ChronoUnit.DAYS.between(today, d))}", true)
+            return Hit.Action(DATE, "Date", dayName(d, today), "${if (signed < 0) "Was" else "Will be"} ${count(ChronoUnit.DAYS.between(today, d))}", true)
         }
         val m = Regex("^(?:how (?:long|many days) (?:until|till|to) |days? (?:until|till|to|before) |countdown (?:to )?)(.+)$").matchEntire(t)
         val target = if (m != null) parseDay(m.groupValues[1], today) else if (t in setOf("christmas", "xmas", "new year", "halloween")) parseDay(t, today) else null
         target ?: return null
         val days = ChronoUnit.DAYS.between(today, target)
-        return Hit.Action(DATE, "Days", if (days == 0L) "Today" else count(days), dayName(target), true)
+        return Hit.Action(DATE, "Days", if (days == 0L) "Today" else count(days), dayName(target, today), true)
     }
     private fun count(d: Long): String { val a = kotlin.math.abs(d); return if (a == 1L) "1 day" else "$a days" }
 }

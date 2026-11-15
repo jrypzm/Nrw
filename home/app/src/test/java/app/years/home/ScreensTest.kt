@@ -84,10 +84,10 @@ class ScreensTest {
             pt.shader = android.graphics.LinearGradient(0f, 0f, 300f, 300f, 0xFFE0A15A.toInt(), 0xFF5A2D82.toInt(), android.graphics.Shader.TileMode.CLAMP); cv.drawRect(0f, 0f, 300f, 300f, pt)
         }
         val ms = android.media.session.MediaSession(a, "test")
-        val mc = android.media.session.MediaController(a, ms.sessionToken); val sh = shadowOf(mc)
+        val mc = android.media.session.MediaController(a, ms.sessionToken); val sh = shadowOf(mc); sh.setPackageName("p.spotify")
         sh.setMetadata(android.media.MediaMetadata.Builder().putString(android.media.MediaMetadata.METADATA_KEY_TITLE, "Midnight City")
             .putString(android.media.MediaMetadata.METADATA_KEY_ARTIST, "M83").putLong(android.media.MediaMetadata.METADATA_KEY_DURATION, 214_000).putBitmap(android.media.MediaMetadata.METADATA_KEY_ALBUM_ART, art).build())
-        fun state(s: Int) = sh.setPlaybackState(android.media.session.PlaybackState.Builder().setState(s, 72_000, if (s == android.media.session.PlaybackState.STATE_PLAYING) 1f else 0f, android.os.SystemClock.elapsedRealtime()).build())
+        fun state(s: Int) { sh.setPlaybackState(android.media.session.PlaybackState.Builder().setState(s, 72_000, if (s == android.media.session.PlaybackState.STATE_PLAYING) 1f else 0f, android.os.SystemClock.elapsedRealtime()).build()); Live.played(mc.packageName, mc.playbackState) }
         state(android.media.session.PlaybackState.STATE_PLAYING)
         Live.sessions = listOf(mc); Live.changed(); idle()
         assertNotNull("playing music shows", Live.media())

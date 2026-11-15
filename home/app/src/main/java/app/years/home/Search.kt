@@ -90,6 +90,8 @@ object Search {
     fun answer(q: String): Hit.Answer? {
         val t = q.trim(); if (t.isEmpty()) return null
         convert(t)?.let { return it }
+        // a phone number or a date isn't a sum
+        if (Smart.phone(t).isNotEmpty() || Regex("^\\d{4}-\\d{1,2}-\\d{1,2}$").matches(t) || Regex("^\\d{1,2}/\\d{1,2}(/\\d{2,4})?$").matches(t)) return null
         if (!t.any { it.isDigit() } || !t.any { it in "+-*/×÷^%()" }) return null
         val v = Calc.eval(t) ?: return null
         return Hit.Answer("Calculator", fmt(v))
@@ -102,12 +104,40 @@ object Search {
         "c" to ("°F" to { v -> v * 9 / 5 + 32 }), "°c" to ("°F" to { v -> v * 9 / 5 + 32 }), "f" to ("°C" to { v -> (v - 32) * 5 / 9 }), "°f" to ("°C" to { v -> (v - 32) * 5 / 9 }),
         "l" to ("gal" to { v -> v * 0.264172 }), "gal" to ("l" to { v -> v / 0.264172 }), "g" to ("oz" to { v -> v / 28.3495 }), "oz" to ("g" to { v -> v * 28.3495 }),
     )
-    private val unitRx = Regex("^\\s*(-?[0-9]+(?:[.,][0-9]+)?)\\s*([a-z°]+)(?:\\s+(?:in|to)\\s+[a-z°]+)?\\s*$", RegexOption.IGNORE_CASE)
+    private val unitRx = Regex("^\\s*(-?[0-9][0-9,]*(?:\\.[0-9]+)?)\\s*([a-z°]+?)(?:\\s+(?:(?:in|to|into)\\s+)?([a-z°]+))?\\s*$", RegexOption.IGNORE_CASE)
+    /** Each unit as a multiple of its family's base: metres, kilograms, litres. Temperatures are handled apart. */
+    private val BASE = mapOf(
+        "mm" to ("len" to .001), "cm" to ("len" to .01), "m" to ("len" to 1.0), "km" to ("len" to 1000.0), "in" to ("len" to .0254), "inch" to ("len" to .0254), "inches" to ("len" to .0254),
+        "ft" to ("len" to .3048), "feet" to ("len" to .3048), "yd" to ("len" to .9144), "mi" to ("len" to 1609.344), "mile" to ("len" to 1609.344), "miles" to ("len" to 1609.344),
+        "g" to ("mass" to .001), "kg" to ("mass" to 1.0), "oz" to ("mass" to .0283495), "lb" to ("mass" to .453592), "lbs" to ("mass" to .453592), "st" to ("mass" to 6.35029),
+        "ml" to ("vol" to .001), "l" to ("vol" to 1.0), "gal" to ("vol" to 3.78541), "cup" to ("vol" to .236588), "cups" to ("vol" to .236588),
+    )
+    private val TEMP = mapOf("c" to "c", "°c" to "c", "celsius" to "c", "f" to "f", "°f" to "f", "fahrenheit" to "f", "k" to "k", "kelvin" to "k")
+    private val SHOW = mapOf("inch" to "in", "inches" to "in", "feet" to "ft", "mile" to "mi", "miles" to "mi", "lbs" to "lb", "cups" to "cup")
     private fun convert(t: String): Hit.Answer? {
         val m = unitRx.matchEntire(t) ?: return null
-        val v = m.groupValues[1].replace(',', '.').toDoubleOrNull() ?: return null
-        val (to, f) = UNITS[m.groupValues[2].lowercase()] ?: return null
-        return Hit.Answer("Conversion", "${fmt(f(v), 2)} $to")
+        val v = number(m.groupValues[1]) ?: return null
+        val from = m.groupValues[2].lowercase(); val to = m.groupValues[3].lowercase()
+        // temperatures
+        TEMP[from]?.let { f ->
+            val target = if (to.isEmpty()) (if (f == "c") "f" else "c") else TEMP[to] ?: return null
+            val c = when (f) { "c" -> v; "f" -> (v - 32) * 5 / 9; else -> v - 273.15 }
+            val out = when (target) { "c" -> c; "f" -> c * 9 / 5 + 32; else -> c + 273.15 }
+            return Hit.Answer("Conversion", "${fmt(out, 2)} ${if (target == "k") "K" else "°" + target.uppercase()}")
+        }
+        val (fam, k) = BASE[from] ?: return null
+        val target = if (to.isNotEmpty()) to else UNITS[from]?.first ?: return null
+        val (tfam, tk) = BASE[target] ?: return null
+        if (tfam != fam) return null
+        return Hit.Answer("Conversion", "${fmt(v * k / tk, 2)} ${SHOW[target] ?: target}")
+    }
+
+    /** "1,000" is a thousand; "2,5" is two and a half (when there's no dot and not three digits after the comma). */
+    fun number(s: String): Double? {
+        val t = s.trim()
+        if (Regex("^-?\\d{1,3}(,\\d{3})+(\\.\\d+)?$").matches(t)) return t.replace(",", "").toDoubleOrNull()
+        if (Regex("^-?\\d+,\\d{1,2}$").matches(t) || Regex("^-?\\d+,\\d{4,}$").matches(t)) return t.replace(',', '.').toDoubleOrNull()
+        return if (',' in t) null else t.toDoubleOrNull()
     }
 
     fun fmt(v: Double, places: Int = 6): String {
@@ -124,7 +154,9 @@ object Search {
 /** A small, careful calculator: + − × ÷ ^ %, brackets, decimals. Returns null for anything it can't read. */
 object Calc {
     fun eval(src: String): Double? = runCatching {
-        val s = src.replace('×', '*').replace('÷', '/').replace('−', '-').replace(',', '.').replace(" ", "")
+        var s = src.replace('×', '*').replace('÷', '/').replace('−', '-').replace(" ", "")
+        // 1,000,000 is a million; a lone comma between digits is a decimal point
+        s = Regex("(?<![\\d.])\\d{1,3}(,\\d{3})+(?![\\d,])").replace(s) { it.value.replace(",", "") }.replace(',', '.')
         val p = P(s); val v = p.expr(); if (p.i != s.length) null else v
     }.getOrNull()?.takeIf { it.isFinite() }
 
@@ -132,9 +164,10 @@ object Calc {
         var i = 0
         fun peek() = if (i < s.length) s[i] else '\u0000'
         fun expr(): Double { var v = term(); while (true) { when (peek()) { '+' -> { i++; v += term() }; '-' -> { i++; v -= term() }; else -> return v } } }
-        fun term(): Double { var v = pow(); while (true) { when (peek()) { '*' -> { i++; v *= pow() }; '/' -> { i++; v /= pow() }; else -> return v } } }
-        fun pow(): Double { val b = unary(); return if (peek() == '^') { i++; Math.pow(b, pow()) } else b }
-        fun unary(): Double = if (peek() == '-') { i++; -unary() } else if (peek() == '+') { i++; unary() } else post()
+        fun term(): Double { var v = unary(); while (true) { when (peek()) { '*' -> { i++; v *= unary() }; '/' -> { i++; v /= unary() }; else -> return v } } }
+        // powers bind tighter than a leading minus: -2^2 is -4
+        fun pow(): Double { val b = post(); return if (peek() == '^') { i++; Math.pow(b, unary()) } else b }
+        fun unary(): Double = if (peek() == '-') { i++; -unary() } else if (peek() == '+') { i++; unary() } else pow()
         fun post(): Double { var v = atom(); while (peek() == '%') { i++; v /= 100 }; return v }
         fun atom(): Double {
             if (peek() == '(') { i++; val v = expr(); require(peek() == ')'); i++; return v }

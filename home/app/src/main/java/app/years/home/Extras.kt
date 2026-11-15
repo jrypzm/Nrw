@@ -38,14 +38,15 @@ object Torch {
     }
 
     fun init(c: Context) {
-        if (cm != null) return
+        // looked up again until it works: the camera service is often not ready when the phone has just started
+        if (cm != null && id != null) return
         val m = c.applicationContext.getSystemService(CameraManager::class.java) ?: return
+        if (cm == null) runCatching { m.registerTorchCallback(cb, main) }
         cm = m
         runCatching {
             id = m.cameraIdList.firstOrNull { i -> val ch = m.getCameraCharacteristics(i); ch.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true && ch.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK }
                 ?: m.cameraIdList.firstOrNull { m.getCameraCharacteristics(it).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true }
             if (Build.VERSION.SDK_INT >= 33 && id != null) max = m.getCameraCharacteristics(id!!).get(CameraCharacteristics.FLASH_INFO_STRENGTH_MAXIMUM_LEVEL) ?: 1
-            m.registerTorchCallback(cb, main)
         }
     }
     /** For tests: forget the camera so it's looked up again. */
@@ -80,12 +81,12 @@ object Feel {
         rich = Build.VERSION.SDK_INT >= 31 && vib?.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_LOW_TICK, VibrationEffect.Composition.PRIMITIVE_CLICK) == true
     }
     fun tick(v: View) {
-        if (rich && Build.VERSION.SDK_INT >= 31) runCatching { vib?.vibrate(VibrationEffect.startComposition().addPrimitive(VibrationEffect.Composition.PRIMITIVE_LOW_TICK, .7f).compose()) }
-        else v.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+        val ok = rich && Build.VERSION.SDK_INT >= 31 && runCatching { vib?.vibrate(VibrationEffect.startComposition().addPrimitive(VibrationEffect.Composition.PRIMITIVE_LOW_TICK, .7f).compose()) }.isSuccess
+        if (!ok) v.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
     }
     fun knock(v: View) {
-        if (rich && Build.VERSION.SDK_INT >= 31) runCatching { vib?.vibrate(VibrationEffect.startComposition().addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, 1f).compose()) }
-        else v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        val ok = rich && Build.VERSION.SDK_INT >= 31 && runCatching { vib?.vibrate(VibrationEffect.startComposition().addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, 1f).compose()) }.isSuccess
+        if (!ok) v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
     }
 }
 
@@ -118,7 +119,8 @@ object Away {
 object Ears {
     private val TYPES = buildSet {
         add(AudioDeviceInfo.TYPE_WIRED_HEADSET); add(AudioDeviceInfo.TYPE_WIRED_HEADPHONES); add(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP); add(AudioDeviceInfo.TYPE_USB_HEADSET)
-        if (Build.VERSION.SDK_INT >= 31) { add(AudioDeviceInfo.TYPE_BLE_HEADSET); add(AudioDeviceInfo.TYPE_BLE_SPEAKER) }
+        add(AudioDeviceInfo.TYPE_HEARING_AID)
+        if (Build.VERSION.SDK_INT >= 31) add(AudioDeviceInfo.TYPE_BLE_HEADSET)
     }
     @Volatile var connected = false; private set
     private var am: AudioManager? = null
@@ -138,16 +140,36 @@ object Usage {
         c.getSystemService(AppOpsManager::class.java).unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), c.packageName) == AppOpsManager.MODE_ALLOWED
     }.getOrDefault(false)
 
-    /** Minutes in the app today. */
+    /**
+     * Minutes in the app since midnight, from the open and close events themselves (daily totals can include
+     * yesterday). Call it off the main thread.
+     */
     fun minutesToday(c: Context, pkg: String): Int? {
         if (!allowed(c)) return null
-        val start = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        return runCatching { c.getSystemService(UsageStatsManager::class.java).queryAndAggregateUsageStats(start, System.currentTimeMillis())[pkg]?.totalTimeInForeground?.div(60_000)?.toInt() ?: 0 }.getOrNull()
+        val start = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(); val now = System.currentTimeMillis()
+        return runCatching {
+            val ev = c.getSystemService(UsageStatsManager::class.java).queryEvents(start, now)
+            val e = android.app.usage.UsageEvents.Event(); var since = -1L; var total = 0L
+            while (ev.hasNextEvent()) {
+                ev.getNextEvent(e); if (e.packageName != pkg) continue
+                when (e.eventType) {
+                    android.app.usage.UsageEvents.Event.ACTIVITY_RESUMED -> if (since < 0) since = e.timeStamp
+                    android.app.usage.UsageEvents.Event.ACTIVITY_PAUSED, android.app.usage.UsageEvents.Event.ACTIVITY_STOPPED -> if (since >= 0) { total += e.timeStamp - since; since = -1 }
+                }
+            }
+            if (since >= 0) total += now - since
+            (total / 60_000).toInt()
+        }.getOrNull()
     }
-    /** When each app was last used, over the last two months. */
+    private var usedAt = 0L
+    private var used: Map<String, Long> = emptyMap()
+    /** When each app was last used, over the last two months. Read at most once an hour: it's a big query. */
     fun lastUsed(c: Context): Map<String, Long> {
         if (!allowed(c)) return emptyMap()
         val now = System.currentTimeMillis()
-        return runCatching { c.getSystemService(UsageStatsManager::class.java).queryAndAggregateUsageStats(now - 60L * 86_400_000L, now).mapValues { it.value.lastTimeUsed } }.getOrDefault(emptyMap())
+        if (now - usedAt < 3_600_000L && used.isNotEmpty()) return used
+        used = runCatching { c.getSystemService(UsageStatsManager::class.java).queryAndAggregateUsageStats(now - 60L * 86_400_000L, now).mapValues { it.value.lastTimeUsed } }.getOrDefault(emptyMap())
+        usedAt = now
+        return used
     }
 }

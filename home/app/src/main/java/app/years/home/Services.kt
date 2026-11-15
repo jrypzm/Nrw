@@ -46,17 +46,30 @@ object Live {
     @Volatile var connected = false
     @Volatile var service: NotifService? = null
     private val lastPlayed = HashMap<String, Long>()
+    /** Music state as Android last told us, so home never has to ask the player app (a call into another process). */
+    val meta = HashMap<String, MediaMetadata?>()
+    val state = HashMap<String, PlaybackState?>()
     private val listeners = mutableListOf<() -> Unit>()
+    private val mediaListeners = mutableListOf<() -> Unit>()
     private val main = Handler(Looper.getMainLooper())
     fun onChange(f: () -> Unit): () -> Unit { listeners += f; return f }
-    fun off(f: () -> Unit) { listeners -= f }
-    fun changed() { main.post { remember(); listeners.toList().forEach { it() } } }
+    fun off(f: () -> Unit) { listeners -= f; mediaListeners -= f }
+    /** Only the music changed: just the player redraws. */
+    fun onMedia(f: () -> Unit): () -> Unit { mediaListeners += f; return f }
+    // many updates in a burst (a group of notifications, a player's progress) become one redraw
+    private val fire = Runnable { listeners.toList().forEach { it() } }
+    private val fireMedia = Runnable { mediaListeners.toList().forEach { it() } }
+    fun changed() { main.removeCallbacks(fire); main.postDelayed(fire, 60) }
+    fun mediaChanged() { main.removeCallbacks(fireMedia); main.postDelayed(fireMedia, 60) }
+    /** Remember when music was last playing, or was paused, so paused music stays a while. */
+    fun played(pkg: String, s: PlaybackState?) { if (s?.state == PlaybackState.STATE_PLAYING || s?.state == PlaybackState.STATE_PAUSED) lastPlayed[pkg] = System.currentTimeMillis() }
 
     fun enabled(c: Context): Boolean =
         Settings.Secure.getString(c.contentResolver, "enabled_notification_listeners")?.contains(ComponentName(c, NotifService::class.java).flattenToString()) == true
 
-    fun isPlaying(m: MediaController) = m.playbackState?.state.let { it == PlaybackState.STATE_PLAYING || it == PlaybackState.STATE_BUFFERING || it == PlaybackState.STATE_CONNECTING }
-    private fun remember() { val t = System.currentTimeMillis(); for (m in sessions) if (isPlaying(m)) lastPlayed[m.packageName] = t }
+    fun stateOf(m: MediaController): PlaybackState? = if (state.containsKey(m.packageName)) state[m.packageName] else m.playbackState
+    fun metaOf(m: MediaController): MediaMetadata? = if (meta.containsKey(m.packageName)) meta[m.packageName] else m.metadata
+    fun isPlaying(m: MediaController) = stateOf(m)?.state.let { it == PlaybackState.STATE_PLAYING || it == PlaybackState.STATE_BUFFERING || it == PlaybackState.STATE_CONNECTING }
 
     /** How long paused music stays on home, so you can press play again. */
     const val KEEP_PAUSED_MS = 20 * 60_000L
@@ -64,9 +77,9 @@ object Live {
     /** The music worth showing: whatever is playing, or else what you paused in the last few minutes. */
     fun media(): MediaController? {
         val list = sessions
-        list.firstOrNull { isPlaying(it) && it.metadata != null }?.let { return it }
+        list.firstOrNull { isPlaying(it) && metaOf(it) != null }?.let { return it }
         val t = System.currentTimeMillis()
-        return list.filter { it.metadata != null && it.playbackState?.state == PlaybackState.STATE_PAUSED }
+        return list.filter { metaOf(it) != null && stateOf(it)?.state == PlaybackState.STATE_PAUSED }
             .maxByOrNull { lastPlayed[it.packageName] ?: 0L }
             ?.takeIf { t - (lastPlayed[it.packageName] ?: 0L) < KEEP_PAUSED_MS }
     }
@@ -92,6 +105,10 @@ object Kinds {
         fullScreen || category in PASS -> Kind.PASS
         else -> Kind.QUIET
     }
+
+    /** Looks quiet, but can't wait for The Hour. */
+    fun urgent(importanceHigh: Boolean, priorityHigh: Boolean, conversationShortcut: Boolean, people: Boolean, replyBox: Boolean) =
+        importanceHigh || priorityHigh || conversationShortcut || people || replyBox
 
     /** The next Hour after [nowMs], given times as minutes after midnight. */
     fun nextHour(nowMs: Long, times: List<Int>, zone: ZoneId = ZoneId.systemDefault()): Long {
@@ -140,7 +157,7 @@ class NotifService : NotificationListenerService() {
     override fun onListenerDisconnected() {
         Live.connected = false; Live.service = null
         runCatching { msm?.removeOnActiveSessionsChangedListener(sessionsChanged) }
-        watch(null); Live.notes = emptyMap(); Live.people = emptyList(); Live.now = emptyList(); Live.changed()
+        watch(null); Live.notes = emptyMap(); Live.people = emptyList(); Live.now = emptyList(); Live.hour = emptyList(); Live.holding = 0; Live.changed()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -148,6 +165,11 @@ class NotifService : NotificationListenerService() {
         main.removeCallbacks(rebuildSoon); main.postDelayed(rebuildSoon, 120)
     }
     override fun onNotificationRemoved(sbn: StatusBarNotification?) { main.removeCallbacks(rebuildSoon); main.postDelayed(rebuildSoon, 120) }
+    override fun onNotificationRemoved(sbn: StatusBarNotification?, rankingMap: RankingMap?, reason: Int) {
+        // the app took back something we were holding: it won't come back, so stop counting it
+        if (sbn != null && (reason == REASON_APP_CANCEL || reason == REASON_APP_CANCEL_ALL) && held.remove(sbn.key) != null) dirty = true
+        onNotificationRemoved(sbn)
+    }
 
     // ---------------------------------------------------------------- reading one notification
 
@@ -169,22 +191,37 @@ class NotifService : NotificationListenerService() {
 
     private fun maybeHold(sbn: StatusBarNotification) {
         val p = Prefs.get(this)
-        if (!p.hourOn || sbn.packageName == packageName || sbn.packageName == "android" || sbn.packageName == "com.android.systemui") return
-        if (sbn.packageName in p.hourAlways || sbn.packageName == defaultSms() || sbn.packageName == defaultDialer()) return
-        if (kindOf(sbn) != Kinds.Kind.QUIET) return
         val now = System.currentTimeMillis()
+        // first: is this one coming back from its Hour? (checked even when The Hour has been switched off since)
         val h = held[sbn.key]
         if (h != null && now >= h.until - 90_000) {
-            // Android handed it back at its Hour: let it be, and list it in this Hour's digest
-            held.remove(sbn.key); batch.removeAll { it.key == sbn.key }; batch += h; save(); return
+            held.remove(sbn.key); batch.removeAll { it.key == sbn.key }; batch += h; dirty = true; return
         }
+        if (!p.hourOn || sbn.packageName == packageName || sbn.packageName == "android" || sbn.packageName == "com.android.systemui") return
+        if (sbn.packageName in p.hourAlways || sbn.packageName == defaultSms() || sbn.packageName == defaultDialer()) return
+        val n = sbn.notification
+        // never a group summary: snoozing a summary makes Android snooze the whole group, messages included
+        if (n.flags and Notification.FLAG_GROUP_SUMMARY != 0 || sbn.tag == "ranker_group") return
+        if (kindOf(sbn) != Kinds.Kind.QUIET || urgent(sbn)) return
         if (batch.any { it.key == sbn.key }) return
+        // it shares a group with something that matters: leave the whole group alone
+        val active = runCatching { activeNotifications }.getOrNull().orEmpty()
+        if (active.any { it.key != sbn.key && it.groupKey == sbn.groupKey && it.notification.flags and Notification.FLAG_GROUP_SUMMARY == 0 && runCatching { kindOf(it) != Kinds.Kind.QUIET || urgent(it) }.getOrDefault(true) }) return
         val until = Kinds.nextHour(now, p.hourTimes)
-        val ex = sbn.notification.extras
+        val ex = n.extras
         snoozeNotification(sbn.key, until - now)
-        // summaries are remembered too, so they're let through when they come back, but never listed
-        held[sbn.key] = Live.Held(sbn.key, sbn.packageName, title(ex), body(ex), sbn.postTime, until, sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY != 0)
-        save()
+        held[sbn.key] = Live.Held(sbn.key, sbn.packageName, title(ex), body(ex), sbn.postTime, until)
+        dirty = true
+    }
+
+    /** Things that look quiet but can't wait: high importance, someone's name on it, or a reply box. */
+    private fun urgent(sbn: StatusBarNotification): Boolean {
+        val n = sbn.notification; val ex = n.extras
+        val important = runCatching { val r = Ranking(); currentRanking.getRanking(sbn.key, r) && r.importance >= android.app.NotificationManager.IMPORTANCE_HIGH }.getOrDefault(false)
+        @Suppress("DEPRECATION") val loud = n.priority >= Notification.PRIORITY_HIGH
+        val people = runCatching { ex.getParcelableArrayList<android.app.Person>(Notification.EXTRA_PEOPLE_LIST)?.isNotEmpty() == true }.getOrDefault(false)
+        val reply = n.actions?.any { a -> a.remoteInputs?.isNotEmpty() == true } == true
+        return Kinds.urgent(important, loud, n.shortcutId != null, people, reply)
     }
 
     private fun defaultSms() = runCatching { android.provider.Telephony.Sms.getDefaultSmsPackage(this) }.getOrNull()
@@ -192,18 +229,19 @@ class NotifService : NotificationListenerService() {
 
     private fun toJson(l: Collection<Live.Held>) = JSONArray().also { a -> l.forEach { a.put(JSONObject().put("k", it.key).put("p", it.pkg).put("t", it.title).put("x", it.text).put("w", it.time).put("u", it.until).put("s", it.summary)) } }.toString()
     private fun fromJson(s: String): List<Live.Held> = runCatching { val a = JSONArray(s); (0 until a.length()).map { a.getJSONObject(it).let { o -> Live.Held(o.getString("k"), o.getString("p"), o.optString("t"), o.optString("x"), o.optLong("w"), o.optLong("u"), o.optBoolean("s")) } } }.getOrDefault(emptyList())
-    private fun save() { val p = Prefs.get(this); p.hourHeld = toJson(held.values); p.hourBatch = toJson(batch) }
+    private var dirty = false
+    private fun save() { if (!dirty) return; dirty = false; val p = Prefs.get(this); p.hourHeld = toJson(held.values); p.hourBatch = toJson(batch) }
     private fun load() { held.clear(); fromJson(Prefs.get(this).hourHeld).forEach { held[it.key] = it }; batch.clear(); batch += fromJson(Prefs.get(this).hourBatch) }
 
     /** Clear this Hour: every notification it handed back. */
-    fun clearHour() { runCatching { cancelNotifications(batch.map { it.key }.toTypedArray()) }; batch.clear(); save(); rebuild() }
+    fun clearHour() { runCatching { cancelNotifications(batch.map { it.key }.toTypedArray()) }; batch.clear(); dirty = true; save(); rebuild() }
     /** Open one app's part of the Hour and clear it. */
     fun openHour(pkg: String) {
         val active = runCatching { activeNotifications }.getOrNull().orEmpty()
         val keys = batch.filter { it.pkg == pkg }.map { it.key }.toSet()
-        active.filter { it.key in keys }.maxByOrNull { it.postTime }?.notification?.contentIntent?.let { pi -> runCatching { pi.send() } }
+        active.filter { it.key in keys }.maxByOrNull { it.postTime }?.notification?.contentIntent?.let { pi -> pi.go(this) }
         runCatching { cancelNotifications(keys.toTypedArray()) }
-        batch.removeAll { it.key in keys }; save(); rebuild()
+        batch.removeAll { it.key in keys }; dirty = true; save(); rebuild()
     }
 
     // ---------------------------------------------------------------- everything at once
@@ -217,25 +255,42 @@ class NotifService : NotificationListenerService() {
         for (sbn in active) {
             if (sbn.packageName == packageName) continue
             keys += sbn.key
+            // another app's odd extras must never crash the home screen: skip that one
+            runCatching { read(sbn, notes, people, now) }
+        }
+        // the Hour's digest is what it handed back and you haven't cleared
+        if (batch.retainAll { it.key in keys }) dirty = true
+        Live.notes = notes
+        Live.people = people.values.sortedByDescending { it.time }
+        Live.now = now.sortedByDescending { it.base }
+        Live.hour = batch.filter { !it.summary }
+        Live.holding = held.values.count { !it.summary && it.until > System.currentTimeMillis() - 120_000 }
+        // forget anything held long ago that Android never handed back
+        if (held.values.removeAll { System.currentTimeMillis() - it.until > 24 * 3_600_000L }) dirty = true
+        save()
+        Live.changed()
+    }
+
+    private fun read(sbn: StatusBarNotification, notes: HashMap<String, Live.Note>, people: LinkedHashMap<String, Live.Person>, now: ArrayList<Live.Now>) {
             val n = sbn.notification; val ex = n.extras
             val summary = n.flags and Notification.FLAG_GROUP_SUMMARY != 0
             when (kindOf(sbn)) {
                 Kinds.Kind.MEDIA, Kinds.Kind.PASS -> if (!sbn.isOngoing && !summary) note(notes, sbn, title(ex), body(ex))
                 Kinds.Kind.NOW -> {
                     val t = title(ex); val x = body(ex)
-                    if (t.isEmpty() && x.isEmpty()) continue
+                    if (t.isEmpty() && x.isEmpty()) return
                     val countDown = ex.getBoolean(Notification.EXTRA_CHRONOMETER_COUNT_DOWN)
                     now += Live.Now(sbn.key, sbn.packageName, t, x, ex.getInt(Notification.EXTRA_PROGRESS), ex.getInt(Notification.EXTRA_PROGRESS_MAX), ex.getBoolean(Notification.EXTRA_PROGRESS_INDETERMINATE),
                         n.`when`, ex.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER), countDown, n.contentIntent)
                 }
                 Kinds.Kind.PERSON -> {
-                    if (summary) continue
+                    if (summary) return
                     val msgs = messages(ex)
                     val group = ex.getBoolean(Notification.EXTRA_IS_GROUP_CONVERSATION)
                     val conv = ex.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString()?.trim()
                     val last = msgs.lastOrNull()
                     val name = (if (group) conv else null) ?: last?.second?.takeIf { it.isNotEmpty() } ?: title(ex)
-                    if (name.isEmpty()) continue
+                    if (name.isEmpty()) return
                     val text = when {
                         last != null && group && last.second.isNotEmpty() -> "${last.second}: ${last.first}"
                         last != null -> last.first
@@ -252,18 +307,6 @@ class NotifService : NotificationListenerService() {
                 }
                 Kinds.Kind.QUIET -> if (!summary) note(notes, sbn, title(ex), body(ex))
             }
-        }
-        // the Hour's digest is what it handed back and you haven't cleared
-        batch.retainAll { it.key in keys }
-        Live.notes = notes
-        Live.people = people.values.sortedByDescending { it.time }
-        Live.now = now.sortedByDescending { it.base }
-        Live.hour = batch.filter { !it.summary }
-        Live.holding = held.values.count { !it.summary && it.until > System.currentTimeMillis() - 120_000 }
-        // forget anything held long ago that Android never handed back (cleared, or the app withdrew it)
-        held.values.removeAll { System.currentTimeMillis() - it.until > 24 * 3_600_000L }
-        save()
-        Live.changed()
     }
 
     private fun note(out: HashMap<String, Live.Note>, sbn: StatusBarNotification, t: String, x: String, count: Int = 1) {
@@ -290,15 +333,20 @@ class NotifService : NotificationListenerService() {
         callbacks.clear()
         val now = list.orEmpty()
         for (m in now) {
+            val pkg = m.packageName
             val cb = object : MediaController.Callback() {
-                override fun onPlaybackStateChanged(state: PlaybackState?) = Live.changed()
-                override fun onMetadataChanged(metadata: MediaMetadata?) = Live.changed()
+                override fun onPlaybackStateChanged(state: PlaybackState?) { Live.state[pkg] = state; Live.played(pkg, state); Live.mediaChanged() }
+                override fun onMetadataChanged(metadata: MediaMetadata?) { Live.meta[pkg] = metadata; Live.mediaChanged() }
                 override fun onSessionDestroyed() { runCatching { watch(msm?.getActiveSessions(me())) } }
             }
-            runCatching { m.registerCallback(cb, main); callbacks[m] = cb }
+            runCatching {
+                Live.meta[pkg] = m.metadata; Live.state[pkg] = m.playbackState.also { Live.played(pkg, it) }
+                m.registerCallback(cb, main); callbacks[m] = cb
+            }
         }
+        Live.meta.keys.retainAll(now.map { it.packageName }.toSet()); Live.state.keys.retainAll(now.map { it.packageName }.toSet())
         Live.sessions = now
-        Live.changed()
+        Live.mediaChanged()
     }
 }
 
@@ -315,3 +363,14 @@ class LockService : AccessibilityService() {
         fun on(): Boolean = me != null
     }
 }
+
+/**
+ * Opens what a notification points to. From Android 14 an app must say it allows the activity start it's sending
+ * on someone's behalf; without this, taps on the home screen could do nothing.
+ */
+fun PendingIntent.go(c: Context, fill: android.content.Intent? = null): Boolean = runCatching {
+    if (android.os.Build.VERSION.SDK_INT >= 34) {
+        val o = android.app.ActivityOptions.makeBasic().setPendingIntentBackgroundActivityStartMode(android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED).toBundle()
+        send(c, 0, fill, null, null, null, o)
+    } else send(c, 0, fill)
+}.isSuccess

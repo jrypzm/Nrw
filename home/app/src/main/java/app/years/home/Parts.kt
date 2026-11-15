@@ -77,7 +77,7 @@ class PersonCard(c: Context, val p: Live.Person, private val appName: String, pr
         layoutParams = LayoutParams(-2, -2).apply { leftMargin = dpi(10f) }
     }
 
-    private fun open() { onSeen(p); runCatching { p.open?.send() } }
+    private fun open() { onSeen(p); p.open?.go(context) }
 
     companion object Reply {
         /** Answers through the app's own reply action, exactly as the notification's reply box would. */
@@ -87,8 +87,8 @@ class PersonCard(c: Context, val p: Live.Person, private val appName: String, pr
                 val i = Intent(); val b = Bundle()
                 a.remoteInputs.forEach { b.putCharSequence(it.resultKey, msg) }
                 RemoteInput.addResultsToIntent(a.remoteInputs, i, b)
-                a.actionIntent.send(c, 0, i)
-            }.isSuccess
+                a.actionIntent.go(c, i)
+            }.getOrDefault(false)
         }
         fun ago(t: Long): String { val m = (System.currentTimeMillis() - t) / 60000; return when { m < 1 -> "now"; m < 60 -> "$m min"; m < 1440 -> "${m / 60} h"; else -> "${m / 1440} d" } }
     }
@@ -137,7 +137,7 @@ class NowRow(c: Context, private val appName: String) : LinearLayout(c) {
         val r = LinearLayout(c).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         r.addView(line, LayoutParams(0, -2, 1f)); r.addView(right, LayoutParams(-2, -2).apply { leftMargin = dpi(10f) })
         addView(r); addView(bar, LayoutParams(-1, dpi(12f)).apply { topMargin = dpi(4f) })
-        setOnClickListener { tap(); runCatching { item?.open?.send() } }
+        setOnClickListener { tap(); item?.open?.go(context) }
     }
     fun bind(n: Live.Now) {
         item = n

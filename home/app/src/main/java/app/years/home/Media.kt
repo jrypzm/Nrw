@@ -43,7 +43,7 @@ class MediaCard(c: Context, private val openApp: (MediaController) -> Unit) : Li
     private val prev = Glyph(c, Glyph.PREV)
     private val play = Glyph(c, Glyph.PLAY)
     private val next = Glyph(c, Glyph.NEXT)
-    private var artFor: Any? = null
+    private var artFor: String? = null
     private var playingNow = false
     private val labels = HashMap<String, String>()
 
@@ -91,7 +91,7 @@ class MediaCard(c: Context, private val openApp: (MediaController) -> Unit) : Li
     /** Show this session. Cheap to call often: only what changed is touched. */
     fun bind(mc: MediaController) {
         m = mc
-        val md = mc.metadata
+        val md = Live.metaOf(mc)
         val t = md?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: md?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE) ?: ""
         val a = md?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: md?.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST) ?: md?.getString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE) ?: ""
         if (title.text.toString() != t) title.text = t
@@ -103,8 +103,9 @@ class MediaCard(c: Context, private val openApp: (MediaController) -> Unit) : Li
         play.kind = if (playingNow) Glyph.PAUSE else Glyph.PLAY
 
         val bmp: Bitmap? = md?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART) ?: md?.getBitmap(MediaMetadata.METADATA_KEY_ART) ?: md?.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON)
-        val key: Any = bmp ?: "$t|$a"
-        if (key !== artFor) {
+        // the player hands over a new picture object every time; compare what it shows, not the object
+        val key = "${mc.packageName}|$t|$a|${bmp?.width}x${bmp?.height}|${bmp?.generationId}"
+        if (key != artFor) {
             artFor = key
             if (bmp != null) { art.setImageBitmap(bmp); art.setPadding(0, 0, 0, 0) }
             else { art.setImageDrawable(NoteDrawable(context)); val p = dpi(17f); art.setPadding(p, p, p, p) }
@@ -114,8 +115,8 @@ class MediaCard(c: Context, private val openApp: (MediaController) -> Unit) : Li
 
     private fun tickProgress() {
         val mc = m ?: return
-        val dur = mc.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
-        val st = mc.playbackState
+        val dur = Live.metaOf(mc)?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
+        val st = Live.stateOf(mc)
         var pos = st?.position ?: 0L
         if (st != null && st.state == PlaybackState.STATE_PLAYING && st.lastPositionUpdateTime > 0)
             pos += ((SystemClock.elapsedRealtime() - st.lastPositionUpdateTime) * st.playbackSpeed).toLong()

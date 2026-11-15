@@ -72,9 +72,14 @@ class PauseActivity : Page() {
         col.minimumHeight = resources.displayMetrics.heightPixels
         col.addView(caption("A moment"))
         col.addView(text(if (opens == 0) "Open ${app.label}?" else "${app.label},\n${ordinal(opens + 1)} time today.", 40f, Type.display, K.FG, -0.035f).apply { setLineSpacing(0f, 1.02f) }, lp(top = 12f))
-        val mins = Usage.minutesToday(this, app.pkg)
-        val lead = listOfNotNull(mins?.takeIf { it > 0 }?.let { "$it ${if (it == 1) "minute" else "minutes"} so far." }, if (opens > 0) "Each open waits a little longer." else "A few seconds, then it's yours.").joinToString(" ")
-        col.addView(text(lead, 16f, Type.body, K.MUTE).apply { setLineSpacing(0f, 1.3f) }, lp(top = 14f))
+        val rest = if (opens > 0) "Each open waits a little longer." else "A few seconds, then it's yours."
+        val leadView = text(rest, 16f, Type.body, K.MUTE).apply { setLineSpacing(0f, 1.3f) }
+        col.addView(leadView, lp(top = 14f))
+        // minutes today, read on a spare thread, added when ready
+        Thread {
+            val mins = Usage.minutesToday(this, app.pkg)
+            if (mins != null && mins > 0) runOnUiThread { if (!isDestroyed) leadView.text = "$mins ${if (mins == 1) "minute" else "minutes"} so far. $rest" }
+        }.start()
 
         // the breath, with the seconds inside it
         val box = FrameLayout(this)

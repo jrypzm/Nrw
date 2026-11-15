@@ -161,4 +161,74 @@ class LogicTest {
     @Test fun away() {
         assertEquals("2 h 41 m", Away.words((2 * 60 + 41) * 60_000L)); assertEquals("45 m", Away.words(45 * 60_000L))
     }
+
+    // ---- regressions from the bug audit
+
+    @Test fun search_never_crashes() {
+        for (q in listOf("timer 99999999999999999999", "99999999999999999999 min", "in 99999999999999999999 days", "in 9999999999 years", "in 99999999999 days", ".", "..", "(", "1/0", "-", "+", "1e999", "%%%", "alarm 99"))
+            Smart.actions(q, now)
+        assertNull(Smart.timer("99999999999999999999 min"))
+    }
+
+    @Test fun prices_are_not_alarms() {
+        assertTrue(Smart.alarms("5.50", now, false).isEmpty())
+        assertTrue(Smart.alarms("3.14", now, false).isEmpty())
+        assertEquals("5:50 pm", Smart.alarms("5.50pm", now, false).single().value)
+        assertTrue(Smart.alarms("alarm 6.30", now, false).isNotEmpty())
+    }
+
+    @Test fun alarm_minute_rounds_up() {
+        val a = Smart.alarms("11:05am", LocalDateTime.of(2026, 11, 15, 11, 4, 30), false).single()
+        assertEquals("Today · in 1 min", a.sub)
+    }
+
+    @Test fun numbers_and_units() {
+        assertEquals("1,001", Search.answer("1,000+1")!!.value)
+        assertEquals("2,000,000", Search.answer("1,000,000*2")!!.value)
+        assertEquals("3.5", Search.answer("1,5+2")!!.value)
+        assertEquals("-4", Search.answer("-2^2")!!.value)
+        assertEquals("0.25", Search.answer("2^-2")!!.value)
+        assertEquals("621.37 mi", Search.answer("1,000 km")!!.value)
+        assertEquals("5,000 m", Search.answer("5 km to m")!!.value)
+        assertEquals("100 cm", Search.answer("1 m in cm")!!.value)
+        assertEquals("12.7 cm", Search.answer("5 in cm")!!.value)
+        assertEquals("37.78 °C", Search.answer("100 f to c")!!.value)
+        assertEquals("310.93 K", Search.answer("100 f to k")!!.value)
+        assertEquals("86 °F", Search.answer("30 c")!!.value)
+        assertNull("kilometres aren't kilograms", Search.answer("5 km to kg"))
+        assertNull(Search.answer("3 apples"))
+        assertNull(Search.answer("10 min"))
+    }
+
+    @Test fun phone_numbers_and_dates_are_not_sums() {
+        assertNull(Search.answer("555-1234"))
+        assertNull(Search.answer("2026-11-15"))
+        assertNull(Search.answer("+44 20 7946 0958"))
+        assertTrue(Smart.phone("2026-11-15").isEmpty())
+        assertEquals(3, Smart.phone("(555) 123-4567").size)
+        assertEquals(3, Smart.phone("555-1234").size)
+    }
+
+    @Test fun decimals_are_not_app_searches() {
+        assertNull(Smart.inside(".5*4")); assertNull(Smart.inside(".25+1"))
+        assertEquals("20", Search.answer(".5*40")!!.value)
+    }
+
+    @Test fun months_and_leap_days() {
+        val today = LocalDate.of(2026, 11, 15)
+        assertNull(Smart.parseDay("5 junk", today)); assertNull(Smart.parseDay("mayday 5", today))
+        assertEquals(LocalDate.of(2027, 6, 5), Smart.parseDay("5 june", today))
+        assertEquals(LocalDate.of(2027, 9, 1), Smart.parseDay("1 sept", today))
+        assertEquals(LocalDate.of(2028, 2, 29), Smart.parseDay("29 feb", today))
+        assertEquals("Tuesday 29 February 2028", Smart.date("days to 29 feb", today)!!.sub)
+    }
+
+    @Test fun urgent_is_never_held() {
+        assertTrue(Kinds.urgent(true, false, false, false, false))
+        assertTrue(Kinds.urgent(false, true, false, false, false))
+        assertTrue(Kinds.urgent(false, false, true, false, false))
+        assertTrue(Kinds.urgent(false, false, false, true, false))
+        assertTrue(Kinds.urgent(false, false, false, false, true))
+        assertFalse(Kinds.urgent(false, false, false, false, false))
+    }
 }
