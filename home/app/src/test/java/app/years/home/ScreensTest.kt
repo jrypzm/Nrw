@@ -73,6 +73,36 @@ class ScreensTest {
         shot(root, "6-hold")
     }
 
+    @Test fun music() {
+        val c = Robolectric.buildActivity(HomeActivity::class.java).setup()
+        val a = c.get(); idle()
+        Apps.setForTest(fake())
+        Prefs.get(a).favorites = listOf("Phone", "Messages", "Camera", "WhatsApp").map { "p.$it/.Main#0" }; Prefs.get(a).favoritesSet = true
+        // a song with artwork, 1:12 into 3:34
+        val art = Bitmap.createBitmap(300, 300, Bitmap.Config.ARGB_8888).also { b ->
+            val cv = android.graphics.Canvas(b); val pt = android.graphics.Paint()
+            pt.shader = android.graphics.LinearGradient(0f, 0f, 300f, 300f, 0xFFE0A15A.toInt(), 0xFF5A2D82.toInt(), android.graphics.Shader.TileMode.CLAMP); cv.drawRect(0f, 0f, 300f, 300f, pt)
+        }
+        val ms = android.media.session.MediaSession(a, "test")
+        val mc = android.media.session.MediaController(a, ms.sessionToken); val sh = shadowOf(mc)
+        sh.setMetadata(android.media.MediaMetadata.Builder().putString(android.media.MediaMetadata.METADATA_KEY_TITLE, "Midnight City")
+            .putString(android.media.MediaMetadata.METADATA_KEY_ARTIST, "M83").putLong(android.media.MediaMetadata.METADATA_KEY_DURATION, 214_000).putBitmap(android.media.MediaMetadata.METADATA_KEY_ALBUM_ART, art).build())
+        fun state(s: Int) = sh.setPlaybackState(android.media.session.PlaybackState.Builder().setState(s, 72_000, if (s == android.media.session.PlaybackState.STATE_PLAYING) 1f else 0f, android.os.SystemClock.elapsedRealtime()).build())
+        state(android.media.session.PlaybackState.STATE_PLAYING)
+        Live.sessions = listOf(mc); Live.changed(); idle()
+        assertNotNull("playing music shows", Live.media())
+        c.pause().resume(); shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(600)); idle()
+        val root = a.window.decorView
+        shot(root, "10-music")
+        // pausing keeps it on home, so you can press play again
+        state(android.media.session.PlaybackState.STATE_PAUSED); Live.changed(); idle()
+        assertNotNull("paused music stays", Live.media())
+        shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(600)); idle()
+        shot(root, "11-music-paused")
+        Live.sessions = emptyList(); Live.changed(); idle()
+        assertTrue("and leaves when the session ends", Live.media() == null)
+    }
+
     @Test fun pages() {
         Apps.setForTest(fake())
         val s = Robolectric.buildActivity(SettingsActivity::class.java).setup().get(); idle(); shot(s.window.decorView, "7-settings")

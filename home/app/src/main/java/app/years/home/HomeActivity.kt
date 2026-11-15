@@ -163,23 +163,22 @@ class HomeActivity : Activity() {
     }
 
     /** One line under the clock, only when it's worth a glance: music, an alarm soon, the next event, charging. */
+    private var card: MediaCard? = null
     private fun renderSmart() {
-        smart.removeAllViews()
-        Live.playing()?.let { m ->
-            val md = m.metadata
-            val title = md?.getString(android.media.MediaMetadata.METADATA_KEY_TITLE).orEmpty()
-            val artist = md?.getString(android.media.MediaMetadata.METADATA_KEY_ARTIST).orEmpty()
-            val line = text("", 15f, Type.medium, K.MUTE).apply { isSingleLine = true; ellipsize = TextUtils.TruncateAt.END }
-            line.text = android.text.SpannableStringBuilder().apply {
-                append(title, android.text.style.ForegroundColorSpan(K.FG), 0); if (artist.isNotEmpty()) append(" · $artist")
+        val m = Live.media()
+        if (m != null) {
+            val c = card ?: MediaCard(this) { mc ->
+                // open the player: its own "now playing" screen if it offers one, else the app
+                runCatching { mc.sessionActivity!!.send() }.onFailure { runCatching { startActivity(packageManager.getLaunchIntentForPackage(mc.packageName)) } }
+            }.also { card = it }
+            c.bind(m)
+            if (c.parent !== smart) {
+                smart.removeAllViews(); smart.addView(c, lp(-1, -2))
+                c.alpha = 0f; c.translationY = dp(12f); c.animate().alpha(1f).translationY(0f).setDuration(420).setInterpolator(K.EASE).start()
             }
-            line.setOnClickListener { m.sessionActivity?.let { pi -> runCatching { pi.send() } } }
-            smart.addView(line, lp(0, -2).apply { weight = 1f })
-            val tc = m.transportControls
-            fun ctl(s: String, f: () -> Unit) = text(s, 15f, Type.semi, K.FG).apply { setPadding(dpi(12f), dpi(8f), dpi(4f), dpi(8f)); setOnClickListener { tap(); f() } }
-            smart.addView(ctl("⏮") { tc.skipToPrevious() }); smart.addView(ctl("❚❚") { tc.pause() }); smart.addView(ctl("⏭") { tc.skipToNext() })
             return
         }
+        smart.removeAllViews()
         val line = nextThing() ?: return
         smart.addView(text(line, 15f, Type.medium, K.MUTE).apply { isSingleLine = true; ellipsize = TextUtils.TruncateAt.END })
     }
@@ -222,6 +221,8 @@ class HomeActivity : Activity() {
         // nothing ticks while you're not looking: the clock listens only while home is on screen
         registerReceiver(ticks, IntentFilter().apply { addAction(Intent.ACTION_TIME_TICK); addAction(Intent.ACTION_TIME_CHANGED); addAction(Intent.ACTION_TIMEZONE_CHANGED); addAction(Intent.ACTION_BATTERY_CHANGED); addAction(AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED) }, Context.RECEIVER_NOT_EXPORTED)
         nudge.visibility = if (isHome()) View.GONE else View.VISIBLE
+        // after an update Android sometimes forgets to reconnect the listener; ask it to
+        if (!Live.connected && Live.enabled(this)) runCatching { android.service.notification.NotificationListenerService.requestRebind(android.content.ComponentName(this, NotifService::class.java)) }
         Apps.refresh(this)
     }
 
