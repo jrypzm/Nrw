@@ -255,6 +255,28 @@
   .guide .gi b { display: block; font-size: 17px; font-weight: 500; }
   .guide .gi span { display: block; margin-top: 3px; font-size: 14px; line-height: 1.42; color: var(--mute); }
 
+
+  /* ---------- install ---------- */
+  .ins-head { display: flex; align-items: center; gap: 16px; margin: 6px 0 18px; }
+  .ins-head img { width: 64px; height: 64px; border-radius: 15px; box-shadow: 0 0 0 .5px rgba(255,255,255,.12); }
+  .ins-head h2 { margin: 0; font-size: 22px; }
+  .ins-head p { font-size: 14px; color: var(--mute); margin-top: 3px; line-height: 1.35; }
+  .perks { display: flex; gap: 8px; margin-bottom: 20px; }
+  .perks span { flex: 1; text-align: center; padding: 10px 4px; border-radius: 12px; background: var(--surface2); font-size: 12px; font-weight: 500; color: var(--mute); line-height: 1.25; }
+  .perks b { display: block; color: var(--fg); font-size: 13px; font-weight: 600; margin-bottom: 1px; }
+  .steps { counter-reset: s; }
+  .steps .st { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 14px; background: var(--surface2); }
+  .steps .st + .st { margin-top: 8px; }
+  .steps .st::before { counter-increment: s; content: counter(s); flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--fg); color: #000; font-size: 14px; font-weight: 700; display: grid; place-items: center; }
+  .steps .st span { flex: 1; font-size: 15px; line-height: 1.38; }
+  .steps .st span small { display: block; font-size: 13px; color: var(--mute); margin-top: 2px; }
+  .steps .ic { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px; background: var(--surface3); display: grid; place-items: center; }
+  .steps .ic svg { width: 20px; height: 20px; stroke: #4c9cff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .steps .ic.txt { font-size: 14px; font-weight: 600; color: #4c9cff; width: auto; padding: 0 10px; }
+  .steps .st.hot { box-shadow: 0 0 0 1.5px var(--fg); animation: nudge 2.4s ease-in-out infinite; }
+  @keyframes nudge { 0%, 100% { box-shadow: 0 0 0 1.5px rgba(255,255,255,.9); } 50% { box-shadow: 0 0 0 1.5px rgba(255,255,255,.3); } }
+  .ins-note { font-size: 13px; color: var(--mute); margin: 12px 4px 0; line-height: 1.45; }
+
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; } }
   @media (min-width: 600px) { .page, #ob, #home .top { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .controls { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .sheet { max-width: 560px; margin: 0 auto; } }
 </style>
@@ -734,6 +756,7 @@ function startHome() {
   requestAnimationFrame(() => { $('pager').scrollTo({ left: S.page * $('pager').clientWidth, behavior: 'instant' }); });
   setTimeout(rippleNow, 700);
   setTimeout(checkMoments, 900);
+  if (S.tourDone) offerInstall(2600);
   if (!S.tourDone && !DEMO && tourAt < 0) setTimeout(() => { if (!layer.classList.contains('open')) tourGo(0); }, 1100);
 }
 function buildHome() {
@@ -930,7 +953,7 @@ const SHEETS = {
       <div class="caps">Feel</div><div class="group"><div class="row" id="rSun"><span class="t">Daylight<small>Dots glow by day and dim at night</small></span></div><div class="row" id="rRip"><span class="t">Ripple<small>A wave runs through your years each time you come back</small></span></div></div>
       <div class="caps">Lock screen</div><div class="walls" id="sWalls"></div><div style="height:14px"></div>
       <div class="group"><button class="row" id="sSave"><span class="t">Save as lock screen<small>Then in Photos: Share → Use as Wallpaper</small></span><span class="chev">›</span></button><button class="row" id="sShare"><span class="t">Share your grid</span><span class="chev">›</span></button></div>
-      <div class="caps">Use it like an app</div><div class="group"><div class="row"><span class="t">${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'yrs. is on your Home Screen' : 'Add to Home Screen'}<small>${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'Opens full screen and works offline.' : "From your browser's Share or menu button. It then opens full screen and works offline."}</small></span></div></div>
+      <div class="caps">Use it like an app</div><div class="group"><button class="row" id="sInstall"><span class="t">${STANDALONE() ? 'yrs. is installed' : 'Add to Home Screen'}<small>${STANDALONE() ? 'You are using it as an app. It works offline.' : 'Install it as an app: full screen, offline, its own icon'}</small></span><span class="chev">›</span></button></div>
       <div class="caps">About</div><div class="group"><button class="row" id="sAbout"><span class="t">About yrs.<small>A one-person, open source project</small></span><span class="chev">›</span></button><a class="row" href="https://github.com/jrypzm/yrs" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Star yrs. on GitHub<small>Free, no ads, no tracking. A star says thanks and helps others find it.</small></span><span class="chev">›</span></a></div>
       <p class="small" style="margin:20px 4px 0">Everything stays on this phone. Nothing is ever sent anywhere.</p>
       <div style="height:20px"></div><button class="primary" id="sDone">Done</button>`;
@@ -939,6 +962,7 @@ const SHEETS = {
     $('sEst').onclick = () => { tick(); openSheet('lifespan'); };
     $('sGuide').onclick = () => { tick(); openSheet('guide'); };
     $('sAbout').onclick = () => { tick(); openSheet('about'); };
+    $('sInstall').onclick = () => { tick(); openSheet('install'); };
     $('sStyle').append(seg([['classic', 'Classic'], ['hero', 'Large'], ['live', 'Live']], S.style, v => { S.style = v; save(); swapHead(); }));
     $('rSun').append(sw(S.sun, v => { S.sun = v; refresh(); paintWalls(); }));
     $('rRip').append(sw(S.ripple, v => { S.ripple = v; save(); }));
@@ -1048,6 +1072,7 @@ function tourGo(n) {
     tourAt = -1; S.tourDone = true; save();
     $('tour').classList.remove('on'); cancelAnimationFrame(tourRAF);
     if (finished) setTimeout(() => toast("You're all set. The guide is in Settings."), 700);
+    offerInstall(finished ? 2600 : 1200);
     return;
   }
   if (n === 0 && tourAt < 0) { $('pager').scrollTo({ left: 0, behavior: 'smooth' }); if (S.zoom !== 1) setZoom(1); if (S.pct) { S.pct = false; save(); swapHead(); } }
@@ -1168,7 +1193,7 @@ const GUIDE = [
     ['Share your grid', 'Makes an image of your years to share anywhere you like.'],
   ]],
   ['Use it like an app', [
-    ['Add to Home Screen', "Open your browser's Share or menu button and choose Add to Home Screen. yrs. then opens full screen with its own icon and works offline."],
+    ['Add to Home Screen', "Settings → Add to Home Screen shows you how on your device. On Android and computers it's one tap. On iPhone: Share → Add to Home Screen → Add. yrs. then opens full screen with its own icon and works offline."],
     ['Nothing leaves your device', 'There is no account and no server. Everything is stored only in this browser, on your device.'],
     ['About yrs.', 'Who made it, the MIT license that lets you use and change the code freely, and links to the website and the source.'],
   ]],
@@ -1181,6 +1206,75 @@ SHEETS.guide = () => {
   $('gTour').onclick = () => { tick(); closeSheet(); setTimeout(() => tourGo(0), 450); };
   $('gDone').onclick = () => { tick(); closeSheet(); };
 };
+
+// ================================================= install
+// One tap where the browser allows it (Chrome, Edge, Samsung on Android and computers). iPhone has no such
+// button for any website, so there it's a short, illustrated walk through Share → Add to Home Screen.
+const UA = navigator.userAgent;
+const IOS = /iP(hone|od|ad)/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
+const ANDROID = /Android/i.test(UA);
+const IN_APP = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|Line\/|Twitter|TikTok|BytedanceWebview|musical_ly|Snapchat|LinkedInApp|Pinterest|GSA\//.test(UA);
+const IOS_OTHER = IOS && /CriOS|FxiOS|EdgiOS|OPiOS/.test(UA);
+const STANDALONE = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+let installEvt = null;
+addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); installEvt = e;
+  // the browser became ready while the popup is open: swap the steps for the one-tap button
+  if (openKind === 'install' && layer.classList.contains('open')) SHEETS.install();
+});
+addEventListener('appinstalled', () => { installEvt = null; if (openKind === 'install' && layer.classList.contains('open')) closeSheet(); toast('yrs. is on your Home Screen'); });
+const ICON = {
+  share: '<svg viewBox="0 0 24 24"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M8 11H6.5A1.5 1.5 0 0 0 5 12.5v7A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-7A1.5 1.5 0 0 0 17.5 11H16"/></svg>',
+  add: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>',
+  more: '<svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/></svg>',
+  dots: '<svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="18" r="1.2"/></svg>',
+};
+const insStep = (txt, sub, ic, now) => `<div class="st${now ? ' hot' : ''}"><span>${txt}${sub ? `<small>${sub}</small>` : ''}</span>${ic ? `<i class="ic${ic.startsWith('<') ? '' : ' txt'}">${ic}</i>` : ''}</div>`;
+SHEETS.install = () => {
+  const head = `<div class="ins-head"><img src="icons/apple-touch-icon.png" alt=""><div><h2>Install yrs.</h2><p>Put it on your Home Screen and it works like any app.</p></div></div>
+    <div class="perks"><span><b>Full screen</b>no browser bars</span><span><b>Offline</b>works anywhere</span><span><b>Free</b>no App Store</span></div>`;
+  let main, foot = '<button class="quiet" id="iLater">Not now</button>';
+  if (STANDALONE()) {
+    main = `<p class="ins-note" style="font-size:15px;color:var(--fg)">yrs. is already installed. You're using it from your Home Screen.</p>`; foot = '';
+  } else if (installEvt) {
+    main = `<button class="primary" id="iGo">Install</button>${ANDROID ? '<p class="ins-note">Want widgets and a lock screen that updates itself? <a href="https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk" style="color:var(--fg)">Get the Android app</a>.</p>' : ''}`;
+  } else if (IN_APP) {
+    main = `<div class="steps">${insStep("This page is open inside another app", "Its built-in browser can't add apps to your Home Screen.", '', false)}${insStep(`Open it in ${IOS ? 'Safari' : 'your browser'}`, `Tap ${ICON.more.replace('<svg', '<svg style="width:16px;height:16px;vertical-align:-3px;stroke:currentColor;fill:none;stroke-width:2"')} or the menu, then <b>Open in ${IOS ? 'Safari' : 'browser'}</b>. Or copy the link and paste it there.`, '', true)}${insStep('Then come back here', 'and tap Settings → Add to Home Screen.', '', false)}</div>
+      <div style="height:16px"></div><button class="primary" id="iCopy">Copy link</button>`;
+  } else if (IOS) {
+    const where = IOS_OTHER ? 'in the address bar' : "in Safari's toolbar";
+    main = `<div class="steps">${insStep('Tap Share', `${where}. On iOS 26, it's inside the ••• menu.`, ICON.share, true)}${insStep('Choose Add to Home Screen', 'Scroll down the list if you don\'t see it.', ICON.add, false)}${insStep('Tap Add', 'yrs. appears on your Home Screen with its own icon.', 'Add', false)}</div>
+      <p class="ins-note">Apple doesn't let websites add themselves, so this is the one way, and it only takes a moment. ${IOS_OTHER ? "If you don't see the option, open this page in Safari." : ''}</p>
+      <div style="height:16px"></div><button class="primary" id="iOk">Got it</button>`;
+  } else if (ANDROID) {
+    main = `<div class="steps">${insStep('Open your browser menu', 'The ⋮ or ≡ button, usually at the top or bottom.', ICON.dots, true)}${insStep('Tap Install app, or Add to Home screen', '', ICON.add, false)}</div>
+      <p class="ins-note">Want widgets and a lock screen that updates itself? <a href="https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk" style="color:var(--fg)">Get the Android app</a>.</p>
+      <div style="height:16px"></div><button class="primary" id="iOk">Got it</button>`;
+  } else {
+    main = `<div class="steps">${insStep('Chrome or Edge', 'Click the install icon at the right of the address bar.', ICON.add, true)}${insStep('Safari on Mac', 'File → Add to Dock.', '', false)}</div>
+      <div style="height:16px"></div><button class="primary" id="iOk">Got it</button>`;
+  }
+  body.innerHTML = head + main + (foot ? `<div style="height:4px"></div>${foot}` : '<div style="height:20px"></div><button class="primary" id="iOk">Done</button>');
+  try { localStorage.setItem('yrs.install.shown', '1'); } catch {}
+  const later = $('iLater'); if (later) later.onclick = () => { tick(); closeSheet(); };
+  const ok = $('iOk'); if (ok) ok.onclick = () => { tick(); closeSheet(); };
+  const go = $('iGo'); if (go) go.onclick = async () => {
+    tick(); const e = installEvt; if (!e) { closeSheet(); return; }
+    try { e.prompt(); const r = await e.userChoice; installEvt = null; if (r && r.outcome === 'accepted') closeSheet(); else toast('You can install it any time from Settings'); } catch { closeSheet(); }
+  };
+  const copy = $('iCopy'); if (copy) copy.onclick = async () => {
+    tick(); const url = location.href.split('#')[0];
+    try { await navigator.clipboard.writeText(url); toast('Link copied. Paste it in your browser'); }
+    catch { const t = document.createElement('textarea'); t.value = url; document.body.append(t); t.select(); try { document.execCommand('copy'); toast('Link copied. Paste it in your browser'); } catch { toast(url); } t.remove(); }
+  };
+};
+/** Offered once, never over a tour or another sheet, and never when it's already an app. */
+function offerInstall(delay = 1800) {
+  if (DEMO || STANDALONE()) return;
+  let shown = false; try { shown = localStorage.getItem('yrs.install.shown') === '1'; } catch {}
+  if (shown) return;
+  setTimeout(() => { if (tourAt < 0 && !layer.classList.contains('open') && !document.hidden) openSheet('install'); }, delay);
+}
 
 // ================================================= lifecycle
 document.addEventListener('gesturestart', e => e.preventDefault());
