@@ -62,6 +62,16 @@ A black, quiet home screen: the time, your favourite apps as words, and everythi
 2. Open it and tap **Make yrs. home your home screen**.
 3. Swipe up for all apps and search, slide your thumb down the right edge to open any app by letter, hold an app for more, double-tap to lock.
 
+What it does, all on the phone:
+- **Words that glow.** No dots: an app's name lights up when something new arrives, and says who.
+- **People waiting.** Messages from people across WhatsApp, SMS, Telegram and others, with reply right there.
+- **The Hour.** Optional. People reach you straight away; shops, social and news wait for the times you pick and arrive together.
+- **The live line.** Timers, calls, deliveries and directions under the clock, with music controls when something plays.
+- **Search that understands.** `7:30` sets an alarm, `10 min` a timer, a number calls, `.yt lofi` searches inside YouTube, `days to christmas` counts.
+- **Moments.** A different home for morning, work, evening and night. Headphones in brings your music app forward.
+- **A pause that grows.** Chosen apps wait a few seconds more each time you open them today, and ask why.
+- **Away time, new and quiet apps, a torch that's a word, a thumb rail you can feel, Work and Private Space** as their own sections.
+
 **Try it in your browser** &nbsp;·&nbsp; free, nothing to install
 
 1. Open **[jrypzm.github.io/yrs/web](https://jrypzm.github.io/yrs/web/)** on any phone, tablet or computer.

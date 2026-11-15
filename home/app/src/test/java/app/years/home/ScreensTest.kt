@@ -131,8 +131,3 @@ class ScreensTest {
     }
 }
 
-private fun <T : View> View.findViewsOfType(cls: Class<T>): List<T> {
-    val out = mutableListOf<T>()
-    fun walk(v: View) { if (cls.isInstance(v)) out += cls.cast(v)!!; if (v is android.view.ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i)) }
-    walk(this); return out
-}

@@ -16,6 +16,10 @@ import java.util.concurrent.Executors
 /** One app you can open. [key] is stable across launches: package/activity/profile. */
 class App(
     val key: String, val label: String, val pkg: String, val component: ComponentName, val user: UserHandle, val work: Boolean,
+    /** When it was installed, for "new". */
+    val installed: Long = 0L,
+    /** 0 your own apps, 1 work, 2 Private Space. */
+    val profile: Int = if (work) 1 else 0,
 ) {
     /** The label folded for matching: lower case, accents removed. */
     val norm: String = fold(label)
@@ -39,6 +43,14 @@ object Apps {
     /** What the list shows: everything, minus hidden apps, sorted A to Z. */
     @Volatile var visible: List<App> = emptyList(); private set
     @Volatile var buildMs = 0L; private set
+    /** Private Space (Android 15+): its apps, only while it's unlocked, and never in the main list or search. */
+    @Volatile var private: List<App> = emptyList(); private set
+    @Volatile var privateUser: UserHandle? = null; private set
+    @Volatile var privateLocked = true; private set
+    @Volatile var workUser: UserHandle? = null; private set
+    @Volatile var workPaused = false; private set
+    /** When each package was last used, from usage access if you allowed it. */
+    @Volatile var lastUsed: Map<String, Long> = emptyMap(); private set
     private val listeners = mutableListOf<() -> Unit>()
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
@@ -57,6 +69,13 @@ object Apps {
             override fun onPackagesAvailable(p: Array<out String>, u: UserHandle, r: Boolean) = refresh(c)
             override fun onPackagesUnavailable(p: Array<out String>, u: UserHandle, r: Boolean) = refresh(c)
         }, main)
+        // work and private profiles locking and unlocking
+        val f = android.content.IntentFilter().apply {
+            addAction(android.content.Intent.ACTION_MANAGED_PROFILE_AVAILABLE); addAction(android.content.Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE)
+            addAction("android.intent.action.PROFILE_AVAILABLE"); addAction("android.intent.action.PROFILE_UNAVAILABLE")
+            addAction(android.content.Intent.ACTION_MANAGED_PROFILE_UNLOCKED)
+        }
+        runCatching { c.applicationContext.registerReceiver(object : android.content.BroadcastReceiver() { override fun onReceive(x: Context, i: android.content.Intent) = refresh(x) }, f, Context.RECEIVER_NOT_EXPORTED) }
         refresh(c)
     }
 
@@ -70,8 +89,22 @@ object Apps {
             val um = ctx.getSystemService(UserManager::class.java)
             val me = Process.myUserHandle()
             val list = ArrayList<App>(256)
+            val priv = ArrayList<App>()
             val renames = Prefs.get(ctx).renames
-            for (u in um.userProfiles) {
+            var pUser: UserHandle? = null; var pLocked = true; var wUser: UserHandle? = null; var wPaused = false
+            val users = runCatching { if (android.os.Build.VERSION.SDK_INT >= 30) la.profiles else um.userProfiles }.getOrDefault(um.userProfiles)
+            for (u in users) {
+                val userType = if (android.os.Build.VERSION.SDK_INT >= 35) runCatching { la.getLauncherUserInfo(u)?.userType }.getOrNull() else null
+                val type = when {
+                    u == me -> 0
+                    userType == "android.os.usertype.profile.PRIVATE" -> 2
+                    // a cloned app ("dual apps") is yours, not work
+                    userType != null && userType != "android.os.usertype.profile.MANAGED" -> 3
+                    else -> 1
+                }
+                val quiet = runCatching { um.isQuietModeEnabled(u) }.getOrDefault(false)
+                if (type == 2) { pUser = u; pLocked = quiet; if (quiet) continue }
+                if (type == 1 && wUser == null) { wUser = u; wPaused = quiet }
                 val infos: List<LauncherActivityInfo> = runCatching { la.getActivityList(null, u) }.getOrDefault(emptyList())
                 if (infos.isEmpty() && u == me) {
                     // some phones answer LauncherApps with nothing; ask the package manager instead
@@ -91,21 +124,46 @@ object Apps {
                     if (i.componentName.packageName == ctx.packageName) continue
                     val key = "${i.componentName.flattenToShortString()}#${um.getSerialNumberForUser(u)}"
                     val label = renames[key] ?: i.label?.toString()?.trim().orEmpty().ifEmpty { i.componentName.packageName }
-                    list += App(key, label, i.componentName.packageName, i.componentName, u, u != me)
+                    val app = App(key, label, i.componentName.packageName, i.componentName, u, type == 1, runCatching { i.firstInstallTime }.getOrDefault(0L), type)
+                    if (type == 2) priv += app else list += app
                 }
             }
             list.sortWith(compareBy<App> { it.letter == '#' }.thenBy { it.norm }.thenBy { it.work })
             val hidden = Prefs.get(ctx).hidden
             val vis = list.filter { it.key !in hidden }
+            priv.sortBy { it.norm }
+            val used = Usage.lastUsed(ctx)
             buildMs = (System.nanoTime() - t0) / 1_000_000
-            main.post { all = list; visible = vis; listeners.forEach { it() } }
+            main.post {
+                all = list; visible = vis; private = priv; privateUser = pUser; privateLocked = pLocked; workUser = wUser; workPaused = wPaused; lastUsed = used
+                listeners.toList().forEach { it() }
+            }
         }
     }
 
-    fun byKey(key: String): App? = all.firstOrNull { it.key == key }
+    fun byKey(key: String): App? = all.firstOrNull { it.key == key } ?: private.firstOrNull { it.key == key }
+
+    /** Lock or unlock a profile. Android asks for your fingerprint when unlocking Private Space. */
+    fun setQuiet(c: Context, u: UserHandle, quiet: Boolean): Boolean =
+        runCatching { c.getSystemService(UserManager::class.java).requestQuietModeEnabled(quiet, u) }.getOrDefault(false).also { refresh(c) }
+
+    /** New for three days after it's installed, until you open it. */
+    fun isNew(a: App, now: Long, opened: Map<String, Long>): Boolean = a.installed > 0 && now - a.installed < 3 * 86_400_000L && (opened[a.key] ?: 0L) == 0L
+
+    /** Not opened in a month (by usage access, or by yrs. home's own count once it has watched for a month). */
+    fun isQuiet(a: App, now: Long, opened: Map<String, Long>, used: Map<String, Long>, firstRun: Long): Boolean {
+        val month = 30 * 86_400_000L
+        if (a.installed > 0 && now - a.installed < month) return false
+        val last = maxOf(opened[a.key] ?: 0L, used[a.pkg] ?: 0L)
+        if (last > 0) return now - last > month
+        return used.isNotEmpty() || now - firstRun > month
+    }
 
     /** For tests: a fixed set of apps instead of the phone's. */
-    fun setForTest(list: List<App>) { started = true; frozen = true; all = list.sortedBy { it.norm }; visible = all; listeners.forEach { it() } }
+    fun setForTest(list: List<App>, priv: List<App> = emptyList(), privUser: UserHandle? = null, privLocked: Boolean = true, work: UserHandle? = null, used: Map<String, Long> = emptyMap()) {
+        started = true; frozen = true; all = list.sortedBy { it.norm }; visible = all; private = priv; privateUser = privUser; privateLocked = privLocked; workUser = work; lastUsed = used
+        listeners.toList().forEach { it() }
+    }
 
     /** A sensible first home screen: the phone, messages, camera, browser, maps, music, if they exist. */
     fun defaultFavorites(): List<String> {

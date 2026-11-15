@@ -59,31 +59,71 @@ abstract class Page : Activity() {
     }
 }
 
-/** For the apps you chose: a breath before they open. */
+/** For the apps you chose: a breath before they open. Each open today waits a little longer, and asks why. */
 class PauseActivity : Page() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val app = intent.getStringExtra("key")?.let { Apps.byKey(it) } ?: run { finish(); return }
-        val opens = Prefs.get(this).opensToday(app.key)
+        val p = Prefs.get(this)
+        val opens = p.opensToday(app.key)
+        val strict = p.strict
+        val wait = waitFor(opens, strict)
         col.gravity = Gravity.CENTER_VERTICAL
         col.minimumHeight = resources.displayMetrics.heightPixels
         col.addView(caption("A moment"))
-        col.addView(text("Open ${app.label}?", 38f, Type.display, K.FG, -0.035f), lp(top = 12f))
-        col.addView(text(if (opens == 0) "You haven't opened it today." else "You've opened it $opens ${if (opens == 1) "time" else "times"} today.", 16f, Type.body, K.MUTE), lp(top = 14f))
-        val breath = Breath(this)
-        col.addView(breath, lp(dpi(150f), dpi(150f), 36f).apply { gravity = Gravity.CENTER_HORIZONTAL })
-        val hint = text("Breathe in…", 13f, Type.medium, K.MUTE).apply { gravity = Gravity.CENTER }
-        col.addView(hint, lp(top = 10f))
-        val no = text("Not now", 16f, Type.medium, K.FG).apply { gravity = Gravity.CENTER; background = rounded(0, dp(26f), dpi(1f), K.HAIR2); setOnClickListener { it.tap(); finish() } }
-        val yes = text("Open in 3", 16f, Type.semi, android.graphics.Color.BLACK).apply { gravity = Gravity.CENTER; background = rounded(K.FG, dp(26f)); alpha = .35f; isEnabled = false }
-        col.addView(no, lp(h = dpi(52f), top = 40f)); col.addView(yes, lp(h = dpi(52f), top = 10f))
-        var left = 3
+        col.addView(text(if (opens == 0) "Open ${app.label}?" else "${app.label},\n${ordinal(opens + 1)} time today.", 40f, Type.display, K.FG, -0.035f).apply { setLineSpacing(0f, 1.02f) }, lp(top = 12f))
+        val mins = Usage.minutesToday(this, app.pkg)
+        val lead = listOfNotNull(mins?.takeIf { it > 0 }?.let { "$it ${if (it == 1) "minute" else "minutes"} so far." }, if (opens > 0) "Each open waits a little longer." else "A few seconds, then it's yours.").joinToString(" ")
+        col.addView(text(lead, 16f, Type.body, K.MUTE).apply { setLineSpacing(0f, 1.3f) }, lp(top = 14f))
+
+        // the breath, with the seconds inside it
+        val box = FrameLayout(this)
+        box.addView(Breath(this), FrameLayout.LayoutParams(-1, -1))
+        val count = text("$wait", 40f, Type.display, K.BG, -0.04f).apply { gravity = Gravity.CENTER; fontFeatureSettings = "tnum" }
+        box.addView(count, FrameLayout.LayoutParams(-1, -1))
+        col.addView(box, lp(dpi(170f), dpi(170f), 34f).apply { gravity = Gravity.CENTER_HORIZONTAL })
+
+        col.addView(caption("Why now?"), lp(top = 30f))
+        val reasons = FlowRow(this)
+        val hint = text(if (strict) "Pick one to continue." else "", 14f, Type.medium, K.MUTE)
+        var chosen: TextView? = null
+        val no = text("Not now", 16f, Type.medium, K.FG).apply { gravity = Gravity.CENTER; background = rounded(0, dp(27f), dpi(1f), K.HAIR2); setOnClickListener { it.tap(); finish() } }
+        val yes = text("Open in $wait s", 16f, Type.semi, K.DIM).apply { gravity = Gravity.CENTER; background = rounded(0xFF1C1C1E.toInt(), dp(27f)); isEnabled = false }
+        var left = wait
+        fun ready() = left <= 0 && (!strict || chosen != null)
+        fun paint() {
+            if (ready()) {
+                yes.text = "Open"; yes.setTextColor(android.graphics.Color.BLACK); yes.background = rounded(K.FG, dp(27f)); yes.isEnabled = true
+                yes.setOnClickListener { it.tap(); HomeActivity.launch(this@PauseActivity, app, it); finish() }
+            } else yes.text = if (left > 0) "Open in $left s" else "Pick a reason"
+        }
+        for (r in listOf("Reply to someone", "Post something", "Look something up", "Just bored")) reasons.addView(text(r, 13.5f, Type.medium, K.MUTE).apply {
+            background = rounded(0, dp(16f), dpi(1f), K.HAIR2); setPadding(dpi(14f), dpi(8f), dpi(14f), dpi(8f))
+            setOnClickListener { v ->
+                v.tap()
+                chosen?.let { it.setTextColor(K.MUTE); it.background = rounded(0, dp(16f), dpi(1f), K.HAIR2) }
+                chosen = this; setTextColor(K.BG); background = rounded(K.FG, dp(16f))
+                hint.text = when (r) { "Just bored" -> "Fair. Maybe a walk instead?"; "Look something up" -> "Find it, then come back."; else -> "Go do that one thing." }
+                // honest answer, gentle nudge: "Not now" gets the spotlight
+                if (r == "Just bored") { no.setTextColor(K.BG); no.background = rounded(K.FG, dp(27f)) } else { no.setTextColor(K.FG); no.background = rounded(0, dp(27f), dpi(1f), K.HAIR2) }
+                paint()
+            }
+        })
+        col.addView(reasons, lp(top = 12f)); col.addView(hint, lp(top = 6f))
+        val buttons = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        buttons.addView(no, LinearLayout.LayoutParams(0, dpi(54f), 1f)); buttons.addView(yes, LinearLayout.LayoutParams(0, dpi(54f), 1f).apply { leftMargin = dpi(10f) })
+        col.addView(buttons, lp(top = 26f))
         val tick = object : Runnable { override fun run() {
-            left--
-            if (left > 0) { yes.text = "Open in $left"; yes.postDelayed(this, 1000) }
-            else { yes.text = "Open"; yes.isEnabled = true; yes.animate().alpha(1f).setDuration(250).start(); hint.text = "…and out." ; yes.setOnClickListener { it.tap(); HomeActivity.launch(this@PauseActivity, app, it); finish() } }
+            left--; count.text = if (left > 0) "$left" else ""
+            paint(); if (left > 0) count.postDelayed(this, 1000)
         } }
-        yes.postDelayed(tick, 1000)
+        count.postDelayed(tick, 1000)
+    }
+
+    companion object {
+        /** 3 seconds the first time today, 3 more each time after, up to half a minute. Strict doubles it. */
+        fun waitFor(opensToday: Int, strict: Boolean): Int = ((3 + 3 * opensToday).coerceAtMost(30)) * (if (strict) 2 else 1)
+        fun ordinal(n: Int): String = "$n" + if (n % 100 in 11..13) "th" else when (n % 10) { 1 -> "st"; 2 -> "nd"; 3 -> "rd"; else -> "th" }
     }
 
     /** A dot that slowly grows and settles: one breath in four seconds. */
@@ -98,8 +138,8 @@ class PauseActivity : Page() {
         override fun onDraw(c: Canvas) {
             val r = width / 2f; val k = ((1 - kotlin.math.cos(t * 2 * Math.PI)) / 2).toFloat()
             c.drawCircle(r, r, r - ring.strokeWidth, ring)
-            c.drawCircle(r, r, r * (.36f + .36f * k), halo)
-            c.drawCircle(r, r, r * (.2f + .12f * k), dot)
+            c.drawCircle(r, r, r * (.6f + .3f * k), halo)
+            c.drawCircle(r, r, r * (.44f + .08f * k), dot)
             @Suppress("UNUSED_VARIABLE") val unused = sin(0.0)
         }
     }
@@ -129,6 +169,47 @@ class SettingsActivity : Page() {
             row(g, "Pause first", if (p.paused.isEmpty()) "A breath before the apps you choose" else "${p.paused.size} ${if (p.paused.size == 1) "app" else "apps"} ask first") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "pause")) }
         }
 
+        section("On home")
+        group().also { g ->
+            fun sw(t: String, sub: String, on: Boolean, set: (Boolean) -> Unit) = row(g, t, sub, if (on) "On" else "Off") { set(!on); render() }
+            sw("Words that glow", "An app's name lights up when something new arrives", p.glow) { p.glow = it }
+            sw("People waiting", "Messages from people, across apps, with reply", p.peopleHome) { p.peopleHome = it }
+            sw("The live line", "Timers, calls, deliveries and directions under the clock", p.live) { p.live = it }
+            sw("Away time", "How long you were off your phone, when you come back", p.away) { p.away = it }
+            sw("Headphones", "Your music app, when headphones connect", p.headphones) { p.headphones = it }
+            sw("New and quiet", "New apps at the top of the list; apps you never open move to a quiet shelf", p.tidy) { p.tidy = it }
+            if (Torch.also { it.init(this) }.available) {
+                val lit = HomeActivity.LIGHT in p.favorites
+                sw("Light", "A torch on home, as a word" + if (Torch.dimmable) ". Slide to dim it" else "", lit) { p.favorites = if (it) p.favorites + HomeActivity.LIGHT else p.favorites - HomeActivity.LIGHT }
+            }
+            sw("Strict pause", "Paused apps wait twice as long and ask why before they open", p.strict) { p.strict = it }
+        }
+
+        section("Moments")
+        group().also { g ->
+            row(g, "Home for each part of the day", "Morning 5–9, work 9–5 on weekdays, evening 5–10, night. Empty ones use your usual home.", if (p.momentsOn) "On" else "Off") { p.momentsOn = !p.momentsOn; render() }
+            if (p.momentsOn) for ((m, label) in listOf("morning" to "Morning", "work" to "Work", "evening" to "Evening", "night" to "Night")) {
+                val n = p.moment(m).size
+                row(g, label, if (n == 0) "Uses your usual home" else "$n ${if (n == 1) "app" else "apps"}") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "moment:$m")) }
+            }
+        }
+
+        section("The Hour")
+        group().also { g ->
+            val listening = Live.enabled(this)
+            row(g, "Notifications on your schedule", if (!listening) "Needs notification access first. People always get through." else "People reach you straight away. Shops, social and news wait and arrive together.", if (p.hourOn && listening) "On" else "Off") {
+                if (!listening) startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) else { p.hourOn = !p.hourOn; render() }
+            }
+            if (p.hourOn) {
+                val h24 = android.text.format.DateFormat.is24HourFormat(this)
+                val presets = listOf(listOf(780, 1140), listOf(540, 780, 1080), listOf(720), listOf(1080), listOf(480, 720, 1020, 1260))
+                val cur = presets.indexOf(p.hourTimes).let { if (it < 0) 0 else it }
+                row(g, "Times", "Tap to change", p.hourTimes.joinToString(", ") { Kinds.hourName(it, h24) }) { p.hourTimes = presets[(cur + 1) % presets.size]; render() }
+                row(g, "Always let through", if (p.hourAlways.isEmpty()) "Calls, messages, alarms and reminders always do" else "${p.hourAlways.size} more ${if (p.hourAlways.size == 1) "app" else "apps"}") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "always")) }
+                row(g, "Turning it off", "Anything already waiting still arrives at its time.")
+            }
+        }
+
         section("Thumb rail")
         group().also { g ->
             row(g, "Side", "Slide down the edge of home to reach any app", if (p.railLeft) "Left" else "Right") { p.railLeft = !p.railLeft; render() }
@@ -145,6 +226,10 @@ class SettingsActivity : Page() {
             val people = checkSelfPermission(Manifest.permission.READ_CONTACTS) == android.content.pm.PackageManager.PERMISSION_GRANTED && p.people
             row(g, "People in search", if (people) "On" else "Off", if (people) "On" else null) {
                 if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != android.content.pm.PackageManager.PERMISSION_GRANTED) requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), 1) else { p.people = !p.people; render() }
+            }
+            val usage = Usage.allowed(this)
+            row(g, "Usage access", if (usage) "On. Shows minutes today when an app pauses, and finds apps you never open" else "Optional. For minutes today and the quiet shelf", if (usage) "On" else null) {
+                startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
             }
             val cal = checkSelfPermission(Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED && p.calendar
             row(g, "Next event on home", if (cal) "On. Shown under the clock when it's today" else "Off", if (cal) "On" else null) {
@@ -193,27 +278,46 @@ class SettingsActivity : Page() {
     private fun restartHome() { startActivity(Intent(this, HomeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)); Runtime.getRuntime().exit(0) }
 }
 
-/** Choosing apps: for home (in order), to hide, or to pause first. */
+/** Choosing apps: for home (in order), a moment of the day, to hide, to pause first, or to get through The Hour. */
 class PickActivity : Page() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val mode = intent.getStringExtra("mode") ?: "home"
+        val moment = mode.removePrefix("moment:").takeIf { mode.startsWith("moment:") }
         val p = Prefs.get(this)
+        val ordered = mode == "home" || moment != null
         title(
-            when (mode) { "home" -> "Apps on home"; "hidden" -> "Hidden apps"; else -> "Pause first" },
-            when (mode) { "home" -> "Tap apps in the order you want them, up to 8."; "hidden" -> "Hidden apps leave the list and search. They stay installed."; else -> "These apps show a breathing moment and today's count before they open." },
+            when { moment != null -> moment.replaceFirstChar { it.uppercase() }; mode == "home" -> "Apps on home"; mode == "hidden" -> "Hidden apps"; mode == "always" -> "Always let through"; else -> "Pause first" },
+            when {
+                moment != null -> "Home during this part of the day. Tap in order, up to 8. Leave it empty to use your usual home."
+                mode == "home" -> "Tap apps in the order you want them, up to 8."
+                mode == "hidden" -> "Hidden apps leave the list and search. They stay installed."
+                mode == "always" -> "These apps' notifications never wait for The Hour."
+                else -> "These apps show a breathing moment and today's count before they open."
+            },
         )
         val g = Card(this); col.addView(g, lp(top = 20f))
-        val chosen = when (mode) { "home" -> p.favorites.toMutableList(); "hidden" -> p.hidden.toMutableList(); else -> p.paused.toMutableList() }
-        fun save() { when (mode) { "home" -> { p.favorites = chosen; p.favoritesSet = true }; "hidden" -> { p.hidden = chosen.toSet(); Apps.refresh(this) }; else -> p.paused = chosen.toSet() } }
+        val chosen: MutableList<String> = when { moment != null -> p.moment(moment).toMutableList(); mode == "home" -> p.favorites.toMutableList(); mode == "hidden" -> p.hidden.toMutableList(); mode == "always" -> p.hourAlways.toMutableList(); else -> p.paused.toMutableList() }
+        fun save() {
+            when {
+                moment != null -> p.setMoment(moment, chosen)
+                mode == "home" -> { p.favorites = chosen; p.favoritesSet = true }
+                mode == "hidden" -> { p.hidden = chosen.toSet(); Apps.refresh(this) }
+                mode == "always" -> p.hourAlways = chosen.toSet()
+                else -> p.paused = chosen.toSet()
+            }
+        }
         val marks = HashMap<String, TextView>()
-        fun paint() { for ((k, v) in marks) { val i = chosen.indexOf(k); v.text = if (i < 0) "" else if (mode == "home") "${i + 1}" else "✓"; v.setTextColor(K.FG) } }
-        for (a in Apps.all) {
+        fun paint() { for ((k, v) in marks) { val i = chosen.indexOf(k); v.text = if (i < 0) "" else if (ordered) "${chosen.filter { it != HomeActivity.LIGHT }.indexOf(k) + 1}" else "✓"; v.setTextColor(K.FG) } }
+        // The Hour works by app, so each app appears once there
+        val apps = if (mode == "always") Apps.all.distinctBy { it.pkg } else Apps.all
+        for (a in apps) {
+            val id = if (mode == "always") a.pkg else a.key
             val v = row(g, a.label, if (a.work) "Work" else null, "") {
-                if (a.key in chosen) chosen.remove(a.key) else if (mode != "home" || chosen.size < 8) chosen += a.key
+                if (id in chosen) chosen.remove(id) else if (!ordered || chosen.count { it != HomeActivity.LIGHT } < 8) chosen += id
                 save(); paint()
             }
-            marks[a.key] = v
+            marks[id] = v
         }
         paint()
     }

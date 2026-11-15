@@ -53,7 +53,7 @@ fun View.confirm() { performHapticFeedback(HapticFeedbackConstants.CONFIRM) }
 
 /** A text view in the house style. */
 fun Context.text(s: CharSequence = "", size: Float = 16f, face: Typeface = Type.body, color: Int = K.FG, track: Float = -0.01f): TextView =
-    TextView(this).apply {
+    GlowText(this).apply {
         text = s; typeface = face; setTextColor(color); setTextSize(TypedValue.COMPLEX_UNIT_SP, size)
         letterSpacing = track; includeFontPadding = false; isSingleLine = false
     }
@@ -76,4 +76,25 @@ fun android.app.Activity.chooseHome() {
         runCatching { startActivityForResult(rm.createRequestRoleIntent(android.app.role.RoleManager.ROLE_HOME), 7) }.isSuccess) return
     for (a in listOf(android.provider.Settings.ACTION_HOME_SETTINGS, android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS, android.provider.Settings.ACTION_SETTINGS))
         if (runCatching { startActivity(android.content.Intent(a)) }.isSuccess) return
+}
+
+/**
+ * Text that can glow: a soft blurred copy of the word drawn behind it. Drawn by hand rather than with a text shadow,
+ * so it looks the same on every phone and never stops at a hard edge (give it padding to fade into).
+ */
+class GlowText(c: Context) : TextView(c) {
+    var glowColor = 0; set(v) { field = v; invalidate() }
+    var glowRadius = 0f; set(v) { field = v; blur.maskFilter = if (v > 0) android.graphics.BlurMaskFilter(v, android.graphics.BlurMaskFilter.Blur.NORMAL) else null; invalidate() }
+    private val blur = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+    override fun onDraw(canvas: android.graphics.Canvas) {
+        val l = layout
+        if (glowColor != 0 && glowRadius > 0 && l != null && l.lineCount > 0) {
+            blur.set(paint); blur.color = glowColor; blur.maskFilter = android.graphics.BlurMaskFilter(glowRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
+            val t = text.toString()
+            val x = totalPaddingLeft + l.getLineLeft(0); val y = (totalPaddingTop + l.getLineBaseline(0)).toFloat()
+            canvas.drawText(t, 0, l.getLineEnd(0), x, y, blur)
+            canvas.drawText(t, 0, l.getLineEnd(0), x, y, blur)
+        }
+        super.onDraw(canvas)
+    }
 }

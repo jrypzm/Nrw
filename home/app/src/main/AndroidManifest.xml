@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Everything optional is asked for only when you switch the feature on. No internet permission at all. -->
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
@@ -8,6 +9,12 @@
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <!-- A home screen has to see every app you can open. Without this, Android 11+ shows it almost none. -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- Search can set an alarm or a timer in your clock app ("7:30", "10 min"). -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+    <!-- Android 15 Private Space: shown as its own locked section, only to the home screen app. -->
+    <uses-permission android:name="android.permission.ACCESS_HIDDEN_PROFILES" />
+    <!-- Optional, granted by you in Settings: minutes today on the pause screen, and the quiet shelf. -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
 
     <queries>
         <intent>

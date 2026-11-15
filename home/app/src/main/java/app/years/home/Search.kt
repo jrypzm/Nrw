@@ -16,6 +16,10 @@ sealed class Hit {
     class Setting(val title: String, val action: String) : Hit()
     class Answer(val title: String, val value: String) : Hit()
     class Web(val query: String) : Hit()
+    /** Something search can do: set an alarm, start a timer, call, search inside an app. [big] cards lead the results. */
+    class Action(val kind: String, val caption: String, val value: String, val sub: String, val big: Boolean, val data: Map<String, Any> = emptyMap()) : Hit()
+    /** An app's own shortcut, like "New chat". */
+    class Shortcut(val info: android.content.pm.ShortcutInfo, val app: String) : Hit()
 }
 
 /** Search that answers as you type. Apps come from memory; people from the phone's contacts; nothing leaves the phone. */

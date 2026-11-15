@@ -31,6 +31,9 @@ class RailView(c: Context, private val onActive: (Boolean) -> Unit, private val 
     private val glow = Paint(Paint.ANTI_ALIAS_FLAG)
     private var topY = 0f; private var botY = 0f
     var insetTop = 0; var insetBottom = 0
+    /** Letters that hold one of your home apps: they knock instead of tick, and carry a small mark. */
+    var favLetters: Set<Char> = emptySet()
+    private val mark = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = K.FG }
 
     init { isClickable = false; alpha = 0f }
 
@@ -58,13 +61,13 @@ class RailView(c: Context, private val onActive: (Boolean) -> Unit, private val 
                 letter = i
                 val l = letters[i]
                 apps = Apps.visible.filter { it.letter == l }.take(9)
-                tick()
+                if (l in favLetters) Feel.knock(this) else Feel.tick(this)
             }
             pick = -1
         } else {
             // moved toward the middle: the finger picks one of the apps that fanned out
             val p = appIndexAt(fy)
-            if (p != pick && p >= 0) { pick = p; tick() }
+            if (p != pick && p >= 0) { pick = p; Feel.tick(this) }
         }
         invalidate()
     }
@@ -101,6 +104,7 @@ class RailView(c: Context, private val onActive: (Boolean) -> Unit, private val 
                 letterPaint.color = K.BG
             } else letterPaint.color = if (abs(i - letter) == 1) K.MUTE else K.FAINT
             canvas.drawText(l.toString(), railX, y + dp(4f), letterPaint)
+            if (l in favLetters && !(i == letter && pick < 0)) canvas.drawCircle(railX + (if (left) dp(10f) else -dp(10f)), y, dp(1.6f), mark)
         }
         if (letter < 0) return
         // the apps for this letter, lined up beside the thumb
