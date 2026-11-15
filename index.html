@@ -1010,7 +1010,7 @@ addEventListener('load', () => {
 <script>
 /* Visit counting for this website only. The app (/web and Android) never sends anything. */
 (() => {
-  const ENDPOINT = ''; // set to the collector address, e.g. https://example.workers.dev/e
+  const ENDPOINT = '';
   if (!ENDPOINT || navigator.webdriver || /bot|crawl|spider|preview|headless/i.test(navigator.userAgent)) return;
   const rid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)).replace(/-/g, '').slice(0, 20);
   let vid, sid, first = false;
