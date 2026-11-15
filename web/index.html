@@ -202,6 +202,9 @@
   /* ---------- the tour: a spotlight that never blocks your fingers ---------- */
   .tour { position: fixed; inset: 0; z-index: 15; pointer-events: none; opacity: 0; transition: opacity .4s var(--ease); }
   .tour.on { opacity: 1; }
+  /* once the tour is hidden or over, nothing of it may catch a touch */
+  .tour:not(.on) { visibility: hidden; transition: opacity .4s var(--ease), visibility 0s .4s; }
+  .tour:not(.on) .tcard { pointer-events: none; }
   .tour .hole { position: absolute; border-radius: 22px; box-shadow: 0 0 0 200vmax rgba(0,0,0,.74); transition: left .55s var(--spring), top .55s var(--spring), width .55s var(--spring), height .55s var(--spring), border-radius .55s var(--spring); }
   .tour .hole::after { content: ""; position: absolute; inset: -6px; border-radius: inherit; border: 1.2px solid rgba(255,255,255,.3); animation: ring 1.8s ease-in-out infinite; }
   .tour .hole.none::after { display: none; }
