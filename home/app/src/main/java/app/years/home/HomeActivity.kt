@@ -64,6 +64,7 @@ class HomeActivity : Activity() {
     private lateinit var date: TextView
     private lateinit var clock: TextView
     private lateinit var smart: LinearLayout
+    private lateinit var topBox: LinearLayout
     private lateinit var favs: LinearLayout
     private lateinit var peopleCol: FitColumn
     private lateinit var flashView: TextView
@@ -101,6 +102,10 @@ class HomeActivity : Activity() {
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         column.addView(top, lp(-1, -2)); column.addView(peopleCol, LinearLayout.LayoutParams(-1, 0, 1f)); column.addView(favs, lp(-1, -2))
         nudge = text("Make yrs. home your home screen  ›", 14f, Type.medium, K.MUTE).apply { visibility = View.GONE; setPadding(0, dpi(12f), 0, dpi(12f)); setOnClickListener { tap(); askToBeHome() } }
+        topBox = top
+        // whenever what's above the apps grows or shrinks (music starts, a timer ends), make everything fit again
+        top.addOnLayoutChangeListener { _, _, t, _, b, _, ot, _, ob -> if (b - t != ob - ot) home.post { fit() } }
+        home.addOnLayoutChangeListener { _, _, t, _, b, _, ot, _, ob -> if (b - t != ob - ot) home.post { fit() } }
         home.addView(column, FrameLayout.LayoutParams(-1, -1))
         home.addView(nudge, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.START))
         root.addView(home, FrameLayout.LayoutParams(-1, -1))
@@ -213,19 +218,20 @@ class HomeActivity : Activity() {
             val app = Apps.byKey(key)?.takeIf { it.profile != 2 } ?: continue
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
             val lit = fresh(app.pkg)
-            val t = text(app.label, 34f, Type.display, if (lit || !anyNew) K.FG else 0xFF9A9AA0.toInt(), -0.03f).apply { isSingleLine = true; ellipsize = TextUtils.TruncateAt.END }
+            val t = text(app.label, favSize, Type.display, if (lit || !anyNew) K.FG else 0xFF9A9AA0.toInt(), -0.03f).apply { isSingleLine = true; ellipsize = TextUtils.TruncateAt.END }
             row.addView(t, lp(0, -2).apply { weight = 1f; width = -2 })
             if (lit) glow(t, 14f, 0xA6FFFFFF.toInt())
             if (lit) notes[app.pkg]?.let { n ->
                 val who = if (n.count > 1) "${n.count}" else n.title.take(18)
                 if (who.isNotEmpty()) row.addView(text(who, 15f, Type.medium, K.MUTE), lp(-2, -2).apply { leftMargin = dpi(12f); topMargin = dpi(4f) })
             } else if (!p.glow && notes.containsKey(app.pkg)) row.addView(Dot(this), lp(dpi(7f), dpi(7f)).apply { leftMargin = dpi(10f); bottomMargin = dpi(14f) })
-            row.setPadding(0, dpi(10f), 0, dpi(10f))
+            row.setPadding(0, dpi(favPad), 0, dpi(favPad))
             row.setOnClickListener { open(app, t) }
             row.setOnLongClickListener { it.confirm(); showSheet(app); true }
             favs.addView(row, lp(-2, -2))
         }
         if (favs.childCount == (if (m != null) 1 else 0)) favs.addView(text(if (Apps.all.isEmpty()) "Finding your apps…" else "Swipe up for all your apps.\nHold one to put it here.", 16f, Type.medium, K.DIM).apply { setLineSpacing(0f, 1.3f) })
+        home.post { fit() }
     }
 
     /**
@@ -242,10 +248,10 @@ class HomeActivity : Activity() {
 
     /** "Light": a torch that's a word. Tap to switch, slide to dim (where the phone can). */
     private fun lightRow(anyNew: Boolean): View {
-        val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(0, dpi(10f), 0, dpi(10f)); clipChildren = false; clipToPadding = false }
+        val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(0, dpi(favPad), 0, dpi(favPad)); clipChildren = false; clipToPadding = false }
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; clipChildren = false; clipToPadding = false }
         val on = Torch.on
-        val t = text("Light", if (on) 44f else 34f, Type.display, if (on || !anyNew) K.FG else 0xFF9A9AA0.toInt(), -0.03f)
+        val t = text("Light", if (on) favSize * 1.3f else favSize, Type.display, if (on || !anyNew) K.FG else 0xFF9A9AA0.toInt(), -0.03f)
         row.addView(t)
         if (on) glow(t, 20f, 0xD9FFFFFF.toInt())
         if (on && Torch.dimmable) row.addView(text("${(Torch.level * 100).toInt()}%", 15f, Type.medium, K.FG), lp(-2, -2).apply { leftMargin = dpi(14f); topMargin = dpi(6f) })
@@ -260,6 +266,44 @@ class HomeActivity : Activity() {
     }
 
     /** One line under the clock, only when it's worth a glance: music, an alarm soon, the next event, charging. */
+    // ---- fitting: home never runs off the screen, however many apps and however much is happening
+    private val sizes = floatArrayOf(34f, 30f, 27f, 24f, 21f); private val pads = floatArrayOf(10f, 8f, 6.5f, 5f, 4f)
+    private var favLevel = 0
+    private val favSize get() = sizes[favLevel]; private val favPad get() = pads[favLevel]
+    private var cardFullH = 0
+
+    /**
+     * Makes the apps fit under whatever is showing above them. First the words get a little smaller; if that's not
+     * enough the music card folds to one line; and they grow back as soon as there's room.
+     */
+    private fun fit() {
+        if (home.height == 0) return
+        val n = favs.childCount; if (n == 0) return
+        val dm = resources.displayMetrics
+        fun rowsH(level: Int): Float {
+            var h = 0f
+            for (i in 0 until n) { val v = favs.getChildAt(i); h += if (v is TextView) v.height.toFloat() else sizes[level] * 1.22f * dm.scaledDensity + 2 * pads[level] * dm.density }
+            return h + favs.paddingBottom + favs.paddingTop
+        }
+        val c = card?.takeIf { it.parent != null }
+        var topH = topBox.height
+        // how tall the top would be with the full music card
+        if (c != null && c.compact && cardFullH > 0) topH += cardFullH - c.height
+        fun levelFor(avail: Int): Int? = sizes.indices.firstOrNull { rowsH(it) <= avail }
+        var wantCompact = false
+        var level = levelFor(home.height - topH)
+        // rather fold the music card than shrink the words below the third size
+        if (c != null && (level == null || level > 2)) {
+            val fullH = if (c.compact) cardFullH else c.height
+            val compactH = dpi(84f)
+            val l2 = levelFor(home.height - (topH - fullH + compactH))
+            if (l2 != null && (level == null || l2 < level)) { wantCompact = true; level = l2 } else if (level == null) wantCompact = true
+        }
+        val lv = level ?: sizes.lastIndex
+        if (c != null && wantCompact != c.compact) { if (wantCompact) cardFullH = c.height; c.compact = wantCompact }
+        if (lv != favLevel) { favLevel = lv; renderFavs() }
+    }
+
     private var card: MediaCard? = null
     private var awayView: View? = null
     private val nowRows = HashMap<String, NowRow>()

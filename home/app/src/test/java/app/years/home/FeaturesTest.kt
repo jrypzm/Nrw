@@ -79,6 +79,37 @@ class FeaturesTest {
         shot(root, "21b-reply")
     }
 
+    /** The bug from a real phone: music playing and seven apps on home pushed the apps off the bottom of the screen. */
+    @Test fun home_always_fits() {
+        val (c, a) = home()
+        val p = Prefs.get(a)
+        val root = a.window.decorView
+        val ms = android.media.session.MediaSession(a, "t"); val mc = android.media.session.MediaController(a, ms.sessionToken); val sh = shadowOf(mc); sh.setPackageName("p.spotify")
+        sh.setMetadata(android.media.MediaMetadata.Builder().putString(android.media.MediaMetadata.METADATA_KEY_TITLE, "øneheart - her eyes").putString(android.media.MediaMetadata.METADATA_KEY_ARTIST, "dreamscape").putLong(android.media.MediaMetadata.METADATA_KEY_DURATION, 120_000).build())
+        sh.setPlaybackState(android.media.session.PlaybackState.Builder().setState(android.media.session.PlaybackState.STATE_PLAYING, 7_000, 1f, android.os.SystemClock.elapsedRealtime()).build())
+        fun check(n: Int, music: Boolean, live: Int, name: String?) {
+            p.favorites = names.take(n).map { key(it) }
+            Live.meta.clear(); Live.state.clear()
+            Live.sessions = if (music) listOf(mc) else emptyList()
+            val pi = PendingIntent.getActivity(a, 0, Intent(), PendingIntent.FLAG_IMMUTABLE)
+            Live.now = (1..live).map { Live.Now("k$it", "p.clock", "Timer $it", "Pasta", 0, 0, false, System.currentTimeMillis() + 60_000, true, true, pi) }
+            Live.changed(); Live.mediaChanged(); c.pause().resume(); idle(700); idle(300)
+            val words = root.findViewsOfType(GlowText::class.java).filter { it.text.toString() in names.take(n) && it.isShown && it.textSize > 18 * a.resources.displayMetrics.scaledDensity && it.height > 0 }
+            assertEquals("$n apps, music=$music, live=$live: all on home", n, words.size)
+            val loc = IntArray(2)
+            for (w in words) { w.getLocationInWindow(loc); assertTrue("${w.text} ends at ${loc[1] + w.height} of ${root.height} ($n apps, music=$music, live=$live)", loc[1] + w.height - w.paddingBottom <= root.height) }
+            // and nothing overlaps what's above
+            val first = words.minOf { it.getLocationInWindow(loc); loc[1] + it.paddingTop }
+            root.findViewsOfType(MediaCard::class.java).firstOrNull { it.isShown }?.let { it.getLocationInWindow(loc); assertTrue("apps start below the music card", first >= loc[1] + it.height) }
+            if (name != null) shot(root, name)
+        }
+        check(7, true, 0, "34-fits-7-apps-music")
+        check(8, true, 2, "35-fits-8-apps-music-timers")
+        check(8, false, 0, null)
+        check(3, true, 0, "36-roomy-again")
+        for (n in 1..8) for (m in listOf(true, false)) for (l in 0..2) check(n, m, l, null)
+    }
+
     @Test fun smart_search() {
         val (_, a) = home()
         a.openDrawer(); idle(800)

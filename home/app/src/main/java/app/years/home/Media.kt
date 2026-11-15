@@ -44,6 +44,16 @@ class MediaCard(c: Context, private val openApp: (MediaController) -> Unit) : Li
     private val play = Glyph(c, Glyph.PLAY)
     private val next = Glyph(c, Glyph.NEXT)
     private var artFor: String? = null
+    private val mini = Glyph(c, Glyph.PLAY)
+    private val times = FrameLayout(c)
+    private val ctl = LinearLayout(c)
+    /** When home is full of apps, the card folds to one line: art, song, play. Swipe still skips. */
+    var compact = false; set(v) {
+        if (v == field) return; field = v
+        val full = if (v) GONE else VISIBLE
+        bar.visibility = full; times.visibility = full; ctl.visibility = full; mini.visibility = if (v) VISIBLE else GONE
+        setPadding(dpi(if (v) 12f else 16f), dpi(if (v) 12f else 16f), dpi(if (v) 12f else 18f), dpi(12f))
+    }
     private var playingNow = false
     private val labels = HashMap<String, String>()
 
@@ -62,15 +72,15 @@ class MediaCard(c: Context, private val openApp: (MediaController) -> Unit) : Li
         val words = LinearLayout(c).apply { orientation = VERTICAL }
         words.addView(source); words.addView(title, LayoutParams(-1, -2).apply { topMargin = dpi(4f) }); words.addView(artist, LayoutParams(-1, -2).apply { topMargin = dpi(1f) })
         top.addView(words, LayoutParams(0, -2, 1f).apply { leftMargin = dpi(14f) })
+        top.addView(mini, LayoutParams(dpi(44f), dpi(44f)).apply { leftMargin = dpi(10f) })
         addView(top, LayoutParams(-1, -2))
 
         addView(bar, LayoutParams(-1, dpi(14f)).apply { topMargin = dpi(14f) })
-        val times = FrameLayout(c)
         times.addView(elapsed, FrameLayout.LayoutParams(-2, -2, Gravity.START))
         times.addView(remaining, FrameLayout.LayoutParams(-2, -2, Gravity.END))
         addView(times, LayoutParams(-1, -2))
 
-        val ctl = LinearLayout(c).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER }
+        ctl.orientation = HORIZONTAL; ctl.gravity = Gravity.CENTER
         ctl.addView(prev, LayoutParams(dpi(56f), dpi(48f)))
         ctl.addView(play, LayoutParams(dpi(56f), dpi(56f)).apply { leftMargin = dpi(22f); rightMargin = dpi(22f) })
         ctl.addView(next, LayoutParams(dpi(56f), dpi(48f)))
@@ -78,13 +88,15 @@ class MediaCard(c: Context, private val openApp: (MediaController) -> Unit) : Li
 
         prev.setOnClickListener { it.tap(); m?.transportControls?.skipToPrevious() }
         next.setOnClickListener { it.tap(); m?.transportControls?.skipToNext() }
-        play.setOnClickListener {
+        val toggle = View.OnClickListener {
             it.confirm()
-            val tc = m?.transportControls ?: return@setOnClickListener
+            val tc = m?.transportControls ?: return@OnClickListener
             // answer the tap at once; Android's own update follows a moment later
             if (playingNow) tc.pause() else tc.play()
-            playingNow = !playingNow; play.kind = if (playingNow) Glyph.PAUSE else Glyph.PLAY
+            playingNow = !playingNow; play.kind = if (playingNow) Glyph.PAUSE else Glyph.PLAY; mini.kind = play.kind
         }
+        play.setOnClickListener(toggle); mini.setOnClickListener(toggle)
+        mini.visibility = GONE
         setOnClickListener { m?.let(openApp) }
     }
 
@@ -100,7 +112,7 @@ class MediaCard(c: Context, private val openApp: (MediaController) -> Unit) : Li
         val app = labels.getOrPut(mc.packageName) { runCatching { context.packageManager.getApplicationLabel(context.packageManager.getApplicationInfo(mc.packageName, 0)).toString() }.getOrDefault("") }
         playingNow = Live.isPlaying(mc)
         source.text = (if (playingNow) "Now playing" else "Paused").let { if (app.isNotEmpty()) "$it · $app" else it }.uppercase()
-        play.kind = if (playingNow) Glyph.PAUSE else Glyph.PLAY
+        play.kind = if (playingNow) Glyph.PAUSE else Glyph.PLAY; mini.kind = play.kind
 
         val bmp: Bitmap? = md?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART) ?: md?.getBitmap(MediaMetadata.METADATA_KEY_ART) ?: md?.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON)
         // the player hands over a new picture object every time; compare what it shows, not the object
@@ -120,6 +132,7 @@ class MediaCard(c: Context, private val openApp: (MediaController) -> Unit) : Li
         var pos = st?.position ?: 0L
         if (st != null && st.state == PlaybackState.STATE_PLAYING && st.lastPositionUpdateTime > 0)
             pos += ((SystemClock.elapsedRealtime() - st.lastPositionUpdateTime) * st.playbackSpeed).toLong()
+        if (compact) return
         if (dur <= 0 || pos < 0) {
             bar.visibility = INVISIBLE; elapsed.text = ""; remaining.text = ""; return
         }

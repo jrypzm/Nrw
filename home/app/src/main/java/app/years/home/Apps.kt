@@ -143,6 +143,7 @@ object Apps {
             val used = Usage.lastUsed(ctx)
             buildMs = (System.nanoTime() - t0) / 1_000_000
             main.post {
+                if (frozen) return@post
                 all = list; visible = vis; private = priv; privateUser = pUser; privateLocked = pLocked; workUser = wUser; workPaused = wPaused; lastUsed = used
                 listeners.toList().forEach { it() }
             }
@@ -173,6 +174,7 @@ object Apps {
 
     /** For tests: a fixed set of apps instead of the phone's. */
     fun setForTest(list: List<App>, priv: List<App> = emptyList(), privUser: UserHandle? = null, privLocked: Boolean = true, work: UserHandle? = null, used: Map<String, Long> = emptyMap()) {
+        pending?.let { main.removeCallbacks(it) }; pending = null
         started = true; frozen = true; all = list.sortedBy { it.norm }; visible = all; private = priv; privateUser = privUser; privateLocked = privLocked; workUser = work; lastUsed = used
         listeners.toList().forEach { it() }
     }
