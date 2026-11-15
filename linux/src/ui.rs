@@ -301,6 +301,7 @@ pub fn wheel(ui: &Ui, r: Rect, items: &[String], index: usize, id: Id) -> Option
     if resp.hovered() {
         ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeVertical);
         let dy = ui.ctx().input(|i| i.raw_scroll_delta.y);
+        ui.ctx().input_mut(|i| { i.smooth_scroll_delta = Vec2::ZERO; i.raw_scroll_delta = Vec2::ZERO; });
         if dy != 0.0 {
             let acc = ui.ctx().data(|d| d.get_temp::<f32>(id.with("acc"))).unwrap_or(0.0) + dy;
             let steps = (acc / 40.0).trunc();

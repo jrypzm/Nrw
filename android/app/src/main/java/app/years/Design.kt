@@ -144,7 +144,7 @@ fun LeftLived(lived: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = 
             listOf(false to "Left", true to "Lived").forEach { (v, label) ->
                 val c by animateColorAsState(if (v == lived) C.Fg else C.Mute, label = "llc")
                 Box(Modifier.width(74.dp).height(34.dp).clickable(remember { MutableInteractionSource() }, indication = null) { if (v != lived) { view.tick(); onChange(v) } }, contentAlignment = Alignment.Center) {
-                    Text(label, style = T.label.copy(fontSize = 15.sp, color = c))
+                    Text(label, style = T.label.copy(fontSize = with(LocalDensity.current) { 15.dp.toSp() }, color = c), maxLines = 1, softWrap = false)
                 }
             }
         }
@@ -216,7 +216,9 @@ fun PageBar(current: Float, labels: List<String>, onPick: (Int) -> Unit, modifie
                 val on = abs(current - i) < .5f
                 val c by animateColorAsState(if (on) C.Fg else C.Mute, label = "pb")
                 Box(Modifier.weight(1f).fillMaxHeight().clickable(remember { MutableInteractionSource() }, indication = null) { view.tick(); onPick(i) }, contentAlignment = Alignment.Center) {
-                    Text(l, style = T.label.copy(fontSize = 14.sp, color = c, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Medium), maxLines = 1)
+                    // sized in dp, not sp: five words share one bar, so a large system font must not push them out
+                    val fs = with(LocalDensity.current) { 14.dp.toSp() }
+                    Text(l, style = T.label.copy(fontSize = fs, color = c, fontWeight = if (on) FontWeight.SemiBold else FontWeight.Medium), maxLines = 1, softWrap = false)
                 }
             }
         }

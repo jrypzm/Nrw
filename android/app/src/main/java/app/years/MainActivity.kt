@@ -82,12 +82,24 @@ class AppState(private val ctx: Context, initial: Settings? = null, private val 
     var tick by mutableIntStateOf(0)
         private set
 
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val saveLater = Runnable { Prefs.save(ctx, s) }
+
     fun update(refresh: Boolean = true, forceLock: Boolean = false, f: (Settings) -> Settings) {
         s = f(s)
         if (!persist) return
-        Prefs.save(ctx, s)
-        if (refresh) Background.refreshNow(ctx, forceLock)
+        handler.removeCallbacks(saveLater)
+        if (refresh) {
+            Prefs.save(ctx, s)
+            Background.refreshNow(ctx, forceLock)
+        } else {
+            // dragging a slider changes settings dozens of times a second: write once it settles
+            handler.postDelayed(saveLater, 250)
+        }
     }
+
+    /** Writes anything still waiting. Called when the app leaves the screen. */
+    fun flush() { if (persist) { handler.removeCallbacks(saveLater); Prefs.save(ctx, s) } }
 
     fun bump() { tick++ }
 }
@@ -220,6 +232,7 @@ fun Home(st: AppState, open: String?, tourAt: Int? = null, consumed: () -> Unit)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle) {
         val obs = LifecycleEventObserver { _, e ->
+            if (e == Lifecycle.Event.ON_PAUSE) st.flush()
             if (e == Lifecycle.Event.ON_RESUME) {
                 now = ZonedDateTime.now()
                 st.bump()

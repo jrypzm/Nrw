@@ -7,7 +7,11 @@ use egui::{Color32, Context, CornerRadius, CursorIcon, Id, Pos2, Rect, ResizeDir
 /// Rounded corners while the window floats; none when it fills the screen.
 pub const RADIUS: u8 = 14;
 
-pub fn maximized(ctx: &Context) -> bool { ctx.input(|i| i.viewport().maximized.unwrap_or(false) || i.viewport().fullscreen.unwrap_or(false)) }
+pub fn maximized(ctx: &Context) -> bool {
+    let asked = ctx.data(|d| d.get_temp::<bool>(Id::new("asked-max"))).unwrap_or(false);
+    ctx.input(|i| i.viewport().maximized.unwrap_or(asked) || i.viewport().fullscreen.unwrap_or(false))
+}
+fn set_maximized(ctx: &Context, on: bool) { ctx.data_mut(|d| d.insert_temp(Id::new("asked-max"), on)); ctx.send_viewport_cmd(ViewportCommand::Maximized(on)); }
 
 /// The window's own background: black, with rounded corners and a faint edge when it isn't maximised.
 pub fn background(ctx: &Context) {
@@ -22,7 +26,7 @@ pub fn background(ctx: &Context) {
 pub fn drag_strip(ui: &Ui, r: Rect) {
     let resp = ui.interact(r, Id::new("window-drag"), Sense::click_and_drag());
     let ctx = ui.ctx();
-    if resp.double_clicked() { ctx.send_viewport_cmd(ViewportCommand::Maximized(!maximized(ctx))); }
+    if resp.double_clicked() { set_maximized(ctx, !maximized(ctx)); }
     else if resp.drag_started() { ctx.send_viewport_cmd(ViewportCommand::StartDrag); }
 }
 
@@ -53,7 +57,7 @@ pub fn edges(ctx: &Context) {
 pub fn controls(ctx: &Context, opacity: f32) {
     let sr = ctx.screen_rect();
     let y = sr.top() + 40.0;
-    egui::Area::new(Id::new("window-controls")).order(egui::Order::Foreground).fixed_pos(Pos2::new(sr.right() - 126.0, y - 18.0)).show(ctx, |ui| {
+    egui::Area::new(Id::new("window-controls")).order(egui::Order::Debug).fixed_pos(Pos2::new(sr.right() - 126.0, y - 18.0)).show(ctx, |ui| {
         ui.multiply_opacity(opacity);
         ui.set_min_size(Vec2::new(120.0, 36.0));
         let max = maximized(ctx);
@@ -88,7 +92,7 @@ pub fn controls(ctx: &Context, opacity: f32) {
             if resp.clicked() {
                 match k {
                     0 => ctx.send_viewport_cmd(ViewportCommand::Minimized(true)),
-                    1 => ctx.send_viewport_cmd(ViewportCommand::Maximized(!max)),
+                    1 => set_maximized(ctx, !max),
                     _ => ctx.send_viewport_cmd(ViewportCommand::Close),
                 }
             }

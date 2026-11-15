@@ -127,7 +127,13 @@ impl App {
 
     /// An image cached until [key] changes.
     fn texture(&mut self, ctx: &Context, name: &str, key: String, make: impl FnOnce() -> tiny_skia::Pixmap) -> egui::TextureId {
-        if let Some((k, t)) = self.tex.get(name) { if *k == key { return t.id(); } }
+        let now = ctx.input(|i| i.time);
+        if let Some((k, t)) = self.tex.get(name) {
+            if *k == key { return t.id(); }
+            let built = ctx.data(|d| d.get_temp::<f64>(Id::new(("texbuilt", name)))).unwrap_or(-10.0);
+            if now - built < 0.3 { ctx.request_repaint_after(std::time::Duration::from_millis(320)); return t.id(); }
+        }
+        ctx.data_mut(|d| d.insert_temp(Id::new(("texbuilt", name)), now));
         let pm = make();
         let img = egui::ColorImage::from_rgba_premultiplied([pm.width() as usize, pm.height() as usize], pm.data());
         let t = ctx.load_texture(name, img, egui::TextureOptions::LINEAR);
@@ -155,7 +161,7 @@ impl eframe::App for App {
         if self.started == 0.0 {
             self.started = now.max(1e-6);
             // the page waits for the opening, then rises in
-            if self.intro && self.s.birth.is_some() { self.page_at = self.started + INTRO_PAGE; } else { self.intro = false; }
+            if self.intro && self.s.birth.is_some() && self.ov.is_none() { self.page_at = self.started + INTRO_PAGE; } else { self.intro = false; }
         }
         if !self.still {
             if let Some(what) = system::take_raise() {
@@ -187,7 +193,7 @@ impl eframe::App for App {
         crate::chrome::controls(ctx, ck);
         self.draw_toast(ctx, now);
         if self.ov.is_none() && self.s.birth.is_some() { self.keys(ctx, now); }
-        else if ctx.input(|i| i.key_pressed(Key::Escape)) { self.ov = None; }
+        else if ctx.input(|i| i.key_pressed(Key::Escape)) && self.ov.is_some() { crate::sheets::closing(self); self.ov = None; }
 
         // save shortly after things stop changing, never mid-drag
         if self.s != self.saved {

@@ -56,7 +56,7 @@ fn app_ov_at(app: &App) -> f64 { app.ov_at_pub() }
 fn sheet_kind(app: &App) -> u8 { match app.ov { Some(Ov::Settings { .. }) => 0, Some(Ov::Milestone { .. }) => 1, Some(Ov::Line { .. }) => 2, Some(Ov::Person { .. }) => 3, Some(Ov::Event { .. }) => 4, Some(Ov::Story { .. }) => 5, Some(Ov::Estimate { .. }) => 6, Some(Ov::Letter(_)) => 7, Some(Ov::Review) => 8, Some(Ov::About) => 9, None => 10 } }
 
 /// What closing keeps: answers to the estimate, a read letter, a reviewed year.
-fn closing(app: &mut App) {
+pub fn closing(app: &mut App) {
     match &app.ov {
         Some(Ov::Estimate { e, onboarding: false, .. }) => app.s.est = Some(e.clone()),
         Some(Ov::Estimate { e, onboarding: true, .. }) => app.ob.est = Some(e.clone()),
@@ -183,7 +183,7 @@ fn settings(app: &mut App, ui: &mut Ui, w: f32, birth_open: &mut bool, now: f64)
     row(ui, nth(g, rh, 0), "Show in the system tray", Some("Your years left, one click away"), Id::new("s-tray"), true);
     if toggle(ui, Pos2::new(g.right() - 40.0, nth(g, rh, 0).center().y), app.s.tray, Id::new("t-tray")) {
         app.s.tray = !app.s.tray; crate::store::save(&app.s);
-        if app.s.tray { system::ensure_background(&app.s); } else { system::stop_background(); system::ensure_background(&app.s); }
+        system::stop_background(); system::ensure_background(&app.s);
     }
     row(ui, nth(g, rh, 1), "Start at login", Some("Quietly, in the tray, so your wallpaper stays true"), Id::new("s-auto"), false);
     if toggle(ui, Pos2::new(g.right() - 40.0, nth(g, rh, 1).center().y), app.s.autostart, Id::new("t-auto")) { app.s.autostart = !app.s.autostart; system::set_autostart(app.s.autostart); }
@@ -507,8 +507,9 @@ fn estimate(app: &mut App, ui: &mut Ui, w: f32, e: &mut Est, step: &mut usize, q
         // a pick moves on by itself after a moment
         if let Some((t, st)) = ui.ctx().data(|d| d.get_temp::<(f64, usize)>(Id::new("advance"))) {
             let el = ui.ctx().input(|x| x.time) - t;
-            if st == *step && el > 0.42 { *step += 1; ui.ctx().data_mut(|d| d.remove::<(f64, usize)>(Id::new("advance"))); }
-            else if st == *step { ui.ctx().request_repaint(); }
+            if st != *step || el > 3.0 { ui.ctx().data_mut(|d| d.remove::<(f64, usize)>(Id::new("advance"))); }
+            else if el > 0.42 { *step += 1; ui.ctx().data_mut(|d| d.remove::<(f64, usize)>(Id::new("advance"))); }
+            else { ui.ctx().request_repaint(); }
         }
         ui.add_space(14.0);
         let hh = para_height(ui.ctx(), q.why, F::Body, 14.0, w - 40.0, 1.5) + para_height(ui.ctx(), q.source, F::Body, 12.0, w - 40.0, 1.4);

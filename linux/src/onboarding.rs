@@ -118,6 +118,8 @@ pub fn show(app: &mut App, ui: &mut Ui, full: Rect, now: f64) {
             app.s.reviewed_age = life::age(app.ob.date) as i32;
             if app.ob.est.is_some() { app.s.est = app.ob.est.clone(); }
             crate::store::save(&app.s);
+            // the tray and the other helpers start now, not at the next launch
+            if !app.still { crate::system::ensure_background(&app.s); }
         }
     }
     let _ = Color32::BLACK;

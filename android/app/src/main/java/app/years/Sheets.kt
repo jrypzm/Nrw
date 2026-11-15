@@ -51,6 +51,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -129,6 +131,11 @@ fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, 
         val d = draft ?: return@LaunchedEffect
         delay(700)
         if (d != st.s.birth) st.update { it.copy(birth = d, reviewedAge = Life.age(d).toInt()) }
+    }
+    // closing the sheet right after spinning the wheels still keeps the new birthday
+    val latestDraft by rememberUpdatedState(draft)
+    DisposableEffect(Unit) {
+        onDispose { latestDraft?.let { d -> if (d != st.s.birth) st.update { it.copy(birth = d, reviewedAge = Life.age(d).toInt()) } } }
     }
     val scope = rememberCoroutineScope()
     val notifyPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->

@@ -119,7 +119,8 @@ impl Grid {
                 match s.zoom.min(4) {
                     0 => base(LIFETIMES, LIFETIMES as f64 - 1.0 + (a / span).clamp(0.0, 1.0), 75, "lifetime", "Yours is the last one, filling now".into()),
                     2 => base(s.span as usize * 12, (a * 12.0).clamp(0.0, span * 12.0), 36, "month", sub),
-                    3 => base((span * 52.1775).round() as usize, (a * 52.1775).clamp(0.0, span * 52.1775), 52, "week", sub),
+                    // the number of week dots is rounded, so the weeks lived are capped at that same whole number
+                    3 => base((span * 52.1775).round() as usize, (a * 52.1775).clamp(0.0, (span * 52.1775).round()), 52, "week", sub),
                     4 => {
                         let total = (end_of(s) - b).num_days().max(1) as usize;
                         let done = ((today() - b).num_days() as f64 + now().num_seconds_from_midnight() as f64 / 86400.0).clamp(0.0, total as f64);
@@ -376,5 +377,7 @@ pub fn you_facts(s: &Settings) -> Vec<String> {
 pub fn pick(list: &[String], last: &str) -> String {
     use rand::seq::SliceRandom;
     if list.len() < 2 { return list.first().cloned().unwrap_or_default(); }
-    loop { let f = list.choose(&mut rand::thread_rng()).unwrap(); if f != last { return f.clone(); } }
+    // a few tries for a different one; never an endless search if they all read the same
+    for _ in 0..24 { let f = list.choose(&mut rand::thread_rng()).unwrap(); if f != last { return f.clone(); } }
+    list[0].clone()
 }

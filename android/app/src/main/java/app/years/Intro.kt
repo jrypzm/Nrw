@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -51,9 +52,10 @@ fun Intro(target: () -> Pair<Offset, Float>?, lived: Float, yearFill: Float, fro
     val view = LocalView.current
     LaunchedEffect(Unit) {
         if (frozenAt != null) { t.snapTo(frozenAt); return@LaunchedEffect }
+        var ticked = false
         t.animateTo(1f, tween(INTRO_MS, easing = LinearEasing)) {
-            // a soft tick as the dot lands
-            if (value > .62f && value < .64f) view.tick()
+            // one soft tick as the dot lands
+            if (!ticked && value > .82f) { ticked = true; view.tick() }
         }
         onDone()
     }
@@ -61,7 +63,9 @@ fun Intro(target: () -> Pair<Offset, Float>?, lived: Float, yearFill: Float, fro
     val style = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 92.sp, letterSpacing = (-0.065).em, color = C.Fg)
     val word = remember { measurer.measure("yrs", style) }
 
-    Canvas(Modifier.fillMaxSize().graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)) {
+    // touches stop here while the opening plays, so nothing underneath is pressed by accident
+    Canvas(Modifier.fillMaxSize().pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } }
+        .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)) {
         val ms = t.value * INTRO_MS
         val W = size.width; val H = size.height
         // the wordmark, centred

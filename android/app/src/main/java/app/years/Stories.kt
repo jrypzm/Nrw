@@ -163,7 +163,7 @@ fun ColumnScope.EstimateBody(es: EstState, birth: LocalDate, onUse: (Int) -> Uni
         Column(Modifier.fillMaxWidth()) {
             when {
                 k == 0 -> AboutYou(es.ans, { es.ans = it }) { es.go(1) }
-                k < total - 1 -> Question(EST_Q[k - 1], es.ans, { es.ans = it }, onNext = { es.go(k + 1) }, onBack = { es.go(k - 1) })
+                k < total - 1 -> Question(EST_Q[k - 1], es.ans, { es.ans = it }, onNext = { if (es.step == k) es.go(k + 1) }, onBack = { if (es.step == k) es.go(k - 1) })
                 else -> Result(es.ans, est, onUse = { onUse(est.years.roundToInt()) }, onRedo = { es.go(1) })
             }
         }
