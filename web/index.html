@@ -372,6 +372,92 @@
   .pfoot { display: flex; gap: 16px; padding: 10px 18px; border-top: 1px solid #2c2c2e; font-size: 12px; color: var(--faint); }
   .pfoot kbd { margin-right: 4px; }
 
+
+  /* ================= Studio: the desktop app ================= */
+  #studio { background: #000; }
+  .st-top { position: absolute; top: 0; left: 0; right: 0; height: 92px; display: flex; align-items: center; padding: 0 48px; z-index: 5; pointer-events: none; }
+  .st-top > * { pointer-events: auto; }
+  .st-logo { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.06em; }
+  .st-nav { position: absolute; left: 50%; transform: translateX(-50%); display: flex; padding: 4px; border-radius: 999px; background: rgba(28,28,30,.66); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 18px 50px rgba(0,0,0,.45); }
+  .st-nav button { position: relative; z-index: 1; height: 36px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 500; color: var(--mute); transition: color .25s; white-space: nowrap; }
+  .st-nav button:hover, .st-nav button.on { color: #fff; }
+  .st-ind { position: absolute; top: 4px; bottom: 4px; left: 0; width: 0; border-radius: 999px; background: rgba(255,255,255,.13); box-shadow: inset 0 0 0 .5px rgba(255,255,255,.12); transition: transform .55s var(--spring), width .55s var(--spring); }
+  .st-tr { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .st-find, .st-more { height: 40px; border-radius: 999px; background: rgba(28,28,30,.66); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); color: var(--mute); transition: color .2s, box-shadow .2s; }
+  .st-find { display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; font-size: 13px; }
+  .st-find svg { width: 14px; height: 14px; } .st-find kbd { background: rgba(255,255,255,.08); }
+  .st-more { width: 40px; display: grid; place-items: center; }
+  .st-find:hover, .st-more:hover { color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+  .st-page { position: absolute; top: 92px; left: 0; right: 0; bottom: 0; overflow-y: auto; overflow-x: hidden; padding: 8px 64px 56px; scrollbar-width: none; transition: opacity .16s var(--ease), transform .3s var(--ease); }
+  .st-page::-webkit-scrollbar { display: none; }
+  .st-page.out { opacity: 0; transform: translateY(6px); }
+  .st-page.enter [data-a] { animation: stIn .8s var(--ease) both; animation-delay: calc(var(--i, 0) * 55ms); }
+  @keyframes stIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .st-split { display: grid; grid-template-columns: minmax(360px, .95fr) minmax(0, 1.1fr); gap: clamp(40px, 5vw, 96px); max-width: 1400px; margin: 0 auto; min-height: calc(100vh - 160px); align-items: center; }
+  .st-cap { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .st-num { font-family: var(--display); font-weight: 200; font-size: var(--nsz, 230px); line-height: .82; letter-spacing: -0.065em; margin: 22px 0 0 -.04em; cursor: pointer; user-select: none; white-space: nowrap; font-variant-numeric: tabular-nums; transition: font-size .4s var(--ease); }
+  .st-num .fr { color: var(--faint); }
+  .st-word { font-family: var(--display); font-size: clamp(24px, 2.2vw, 34px); font-weight: 500; letter-spacing: -0.03em; margin-top: 18px; }
+  .st-sub { margin-top: 10px; font-size: 17px; color: var(--mute); }
+  .st-units { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 36px; }
+  .st-units button { font-size: 16px; font-weight: 500; color: var(--faint); padding: 4px 0; transition: color .2s; }
+  .st-units button:hover { color: var(--mute); } .st-units button.on { color: #fff; }
+  .st-ctl { display: flex; gap: 10px; align-items: center; margin-top: 26px; }
+  .st-seg { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; padding: 3px; border-radius: 13px; background: #1c1c1e; }
+  .st-seg button { position: relative; z-index: 1; height: 34px; padding: 0 18px; font-size: 14px; font-weight: 500; color: var(--mute); transition: color .25s; }
+  .st-seg button.on { color: #fff; }
+  .st-seg i { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 10px; background: #3a3a3c; box-shadow: 0 2px 8px rgba(0,0,0,.3); transition: transform .45s var(--spring); }
+  .st-seg.r i { transform: translateX(100%); }
+  .st-round { width: 40px; height: 40px; border-radius: 50%; background: #1c1c1e; font-weight: 600; font-size: 15px; transition: background .2s, color .2s; }
+  .st-round:hover { background: #2c2c2e; } .st-round.on { background: #fff; color: #000; }
+  .st-foot { display: flex; gap: 44px; margin-top: 54px; flex-wrap: wrap; }
+  .st-foot div { font-size: 15px; } .st-foot .st-cap { margin-bottom: 7px; }
+  .st-foot span { color: var(--mute); }
+  .st-card { margin-top: 28px; padding: 18px 20px; border-radius: 18px; background: #0f0f10; box-shadow: inset 0 0 0 1px #1c1c1e; cursor: pointer; transition: background .2s, box-shadow .2s; display: block; width: 100%; text-align: left; }
+  .st-card:hover { background: #141416; box-shadow: inset 0 0 0 1px #2a2a2c; }
+  .st-card b { font-weight: 600; font-size: 15px; } .st-card p { margin-top: 5px; color: var(--mute); font-size: 15px; line-height: 1.45; } .st-card p.on { color: #fff; }
+  .st-list { margin-top: 14px; }
+  .st-li { display: flex; align-items: baseline; gap: 12px; padding: 12px 2px; border-bottom: 1px solid #161618; font-size: 15px; cursor: pointer; width: 100%; text-align: left; }
+  .st-li span { flex: 1; } .st-li em { font-style: normal; color: var(--mute); } .st-li:hover span { color: #fff; }
+  .st-add { margin-top: 14px; color: var(--mute); font-size: 14px; font-weight: 500; } .st-add:hover { color: #fff; }
+  .st-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #studio .gridbox { margin: 0; }
+  .st-zoom { margin-top: 34px; width: 100%; max-width: 620px; }
+  .st-zl { display: flex; justify-content: space-between; }
+  .st-zl button { font-size: 14px; color: var(--faint); font-weight: 500; transition: color .2s; padding: 4px 0; }
+  .st-zl button:hover { color: var(--mute); } .st-zl button.on { color: #fff; }
+  .st-track { position: relative; height: 2px; margin-top: 12px; border-radius: 1px; background: #1c1c1e; }
+  .st-track i { position: absolute; top: -5px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 5px rgba(255,255,255,.08); transition: left .55s var(--spring); }
+  .st-beat { animation: pulse 1s var(--ease) infinite; }
+  /* people and ledger */
+  .st-people { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; width: 100%; }
+  .st-person { padding: 22px; border-radius: 22px; background: #0c0c0d; box-shadow: inset 0 0 0 1px #1a1a1c; cursor: pointer; text-align: left; transition: background .2s, box-shadow .2s, transform .4s var(--spring); }
+  .st-person:hover { background: #111113; box-shadow: inset 0 0 0 1px #2a2a2c; transform: translateY(-2px); }
+  .st-person .h { display: flex; justify-content: space-between; align-items: baseline; } .st-person .h b { font-size: 17px; font-weight: 600; } .st-person .h span { font-size: 13px; color: var(--mute); }
+  .st-person .n { font-family: var(--display); font-weight: 200; font-size: 56px; letter-spacing: -0.045em; line-height: 1; margin-top: 12px; }
+  .st-person .u { font-size: 14px; color: var(--mute); margin-top: 4px; }
+  .st-person canvas { display: block; width: 100%; margin-top: 16px; }
+  .st-person .f { font-size: 13px; color: var(--faint); margin-top: 12px; }
+  .st-legend { margin-top: 30px; }
+  .st-legend div { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #161618; font-size: 15px; color: var(--mute); }
+  .st-legend i { width: 10px; height: 10px; border-radius: 50%; } .st-legend b { margin-left: auto; font-weight: 400; color: #fff; font-variant-numeric: tabular-nums; }
+  .st-legend div.y { color: #fff; } .st-legend div.y b { font-weight: 600; }
+  .st-slider { margin-top: 26px; } .st-slider label { display: flex; justify-content: space-between; font-size: 14px; color: var(--mute); }
+  /* overview */
+  .ov { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-rows: minmax(210px, auto); gap: 16px; max-width: 1400px; margin: 0 auto; padding-top: 14px; }
+  .tile { position: relative; padding: 24px 26px; border-radius: 28px; background: #0b0b0c; box-shadow: inset 0 0 0 1px #19191b; cursor: pointer; overflow: hidden; text-align: left; transition: background .25s, box-shadow .25s, transform .45s var(--spring); }
+  .tile:hover { background: #0f0f11; box-shadow: inset 0 0 0 1px #2a2a2c; transform: translateY(-2px); }
+  .tile .go { position: absolute; top: 22px; right: 22px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: var(--faint); opacity: 0; transform: translate(-4px, 4px); transition: opacity .25s, transform .35s var(--spring); }
+  .tile:hover .go { opacity: 1; transform: none; }
+  .tile h3 { font-family: var(--display); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin-top: 10px; }
+  .tile .big { font-family: var(--display); font-weight: 200; font-size: clamp(64px, 6.4vw, 104px); line-height: .9; letter-spacing: -0.055em; margin-top: 16px; }
+  .tile p { color: var(--mute); font-size: 14px; line-height: 1.45; margin-top: 6px; } .tile p b { color: #fff; font-weight: 500; }
+  .tile canvas { display: block; margin-top: 20px; }
+  .tile .bar { margin-top: 18px; height: 5px; border-radius: 3px; background: #1c1c1e; overflow: hidden; } .tile .bar i { display: block; height: 100%; background: #fff; border-radius: 3px; }
+  .tile .rows div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid #161618; font-size: 14px; color: var(--mute); } .tile .rows b { color: #fff; font-weight: 500; }
+  .tile.empty p { color: var(--faint); }
+  @media (max-width: 1180px) { .st-split { grid-template-columns: 1fr; min-height: 0; padding-top: 20px; } .st-stage { margin-top: 20px; } .st-nav button { padding: 0 11px; font-size: 13px; } .st-find { display: none; } .ov { grid-template-columns: repeat(6, minmax(0, 1fr)); } .ov .tile { grid-column: span 3 !important; grid-row: auto !important; } .ov .tile.wide { grid-column: span 6 !important; } }
+
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; } }
   @media (min-width: 600px) { .page, #ob, #home .top { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .controls { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .sheet { max-width: 560px; margin: 0 auto; } }
 </style>
@@ -395,6 +481,17 @@
     <div class="pdots" id="pdots"></div>
     <button class="round r" id="pctBtn" aria-label="Show percentage" style="font-weight:600;font-size:15px">%</button>
   </div>
+</main>
+
+
+<!-- the desktop app: Studio and Overview -->
+<main id="studio" class="scr" hidden>
+  <header class="st-top">
+    <div class="st-logo">yrs.</div>
+    <nav class="st-nav" id="st-nav" aria-label="Pages"></nav>
+    <div class="st-tr"><button class="st-find" id="st-find"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><path d="m11 11 3.5 3.5"/></svg>Search<kbd id="st-kbd">⌘K</kbd></button><button class="st-more" id="st-more" aria-label="Settings"><span class="dots3"><i></i><i></i><i></i></span></button></div>
+  </header>
+  <section class="st-page" id="st-page"></section>
 </main>
 
 <div class="layer" id="layer"><div class="scrim"></div><section class="sheet" id="sheet" role="dialog"><div class="grab"><i></i></div><div class="body" id="sheetBody"></div></section></div>
@@ -467,6 +564,7 @@ const dayOfLife = (t = new Date()) => Math.floor((day0(t) - birth()) / 864e5) + 
 
 const MEASURES = [['year', 'years', 1], ['day', 'days', 365.2425], ['week', 'weeks', 52.1775], ['summer', 'summers', 1], ['weekend', 'weekends', 52.1775], ['full moon', 'full moons', 365.2425 / 29.530589]];
 const ZOOMS = ['History', 'Years', 'Months', 'Weeks', 'Days'];
+const UPY = { year: 1, month: 12, week: 52.1775, day: 365.2425 };
 const LIFETIMES = 3750;
 
 function model(kind, now = new Date()) {
@@ -533,7 +631,7 @@ class Grid {
     this.cv = document.createElement('canvas'); this.now = document.createElement('div'); this.now.className = 'now';
     this.tip = document.createElement('div'); this.tip.className = 'tip';
     box.append(this.cv, this.now, this.tip);
-    this.appear = 1; this.ripple = 1; this.tipI = null; this.sticky = false;
+    this.appear = 1; this.ripple = 1; this.morph = 1; this.tipI = null; this.sticky = false; this.mx = this.my = -1e4;
     this.bind();
   }
   measure() {
@@ -545,13 +643,45 @@ class Grid {
     if (this.tiny) { const d = DPR(); this.cellD = Math.max(2, Math.floor(this.W * d / m.cols)); this.cell = this.cellD / d; this.inset = 0; }
     this.offX = this.tiny ? Math.floor((this.W * DPR() - this.cellD * m.cols) / 2) / DPR() : 0;
     this.H = Math.ceil(m.total / m.cols) * this.cell - 2 * this.inset;
+    this.bx = this.box.getBoundingClientRect().left;
   }
   center(i) { const m = this.m; return [this.offX - this.inset + (i % m.cols + .5) * this.cell, -this.inset + (Math.floor(i / m.cols) + .5) * this.cell]; }
   idxAt(px, py) { const m = this.m, c = Math.floor((px - this.offX + this.inset) / this.cell), r = Math.floor((py + this.inset) / this.cell); if (c < 0 || c >= m.cols || r < 0) return null; const i = r * m.cols + c; return i < m.total ? i : null; }
   update(playIn) {
+    const g = this.m && this.W ? { cols: this.m.cols, cell: this.cell, inset: this.inset, offX: this.offX, upy: UPY[this.m.unit], total: this.m.total, unit: this.m.unit, r: this.tiny ? this.cell * .45 : this.cell * this.ratio / 2, bx: this.bx, W: this.W, H: this.H } : null;
     this.m = model(this.kind); this.measure();
+    // on the desktop, zooming splits each dot into the smaller ones it holds, or gathers them back
+    if (this.morphOK && g && g.unit !== this.m.unit && g.upy && UPY[this.m.unit] && !reduce) { this.prevGeo = g; this.play('morph', 760); return; }
     if (playIn && !reduce && !this.big) this.play('appear', 700 + this.m.total * 9);
     this.draw();
+  }
+  reqDraw() { if (!this._rq) this._rq = requestAnimationFrame(() => { this._rq = 0; this.draw(); }); }
+  drawMorph() {
+    const g = this.prevGeo, m = this.m, done = Math.floor(m.done), L = lit(), dx = g.bx - this.bx;
+    const r1 = this.tiny ? this.cell * .45 : this.cell * this.ratio / 2, left = Math.min(0, dx), W = Math.max(this.W, dx + g.W) - left, H = Math.max(this.H, g.H);
+    this.cv.style.width = W + 'px'; this.cv.style.marginLeft = left + 'px';
+    const x = sizeCanvas(this.cv, W, H); x.clearRect(0, 0, W, H); x.translate(-left, 0);
+    const pc = j => [dx + g.offX - g.inset + (j % g.cols + .5) * g.cell, -g.inset + (Math.floor(j / g.cols) + .5) * g.cell], upy = UPY[m.unit];
+    this.now.style.display = 'none';
+    const gDone = Math.floor(g.total * Math.min(1, m.done / m.total)), out = Math.max(0, 1 - this.morph * 1.8);
+    // the dots you were looking at shrink away where they are
+    if (out > 0) for (const [color, from, to] of [[L, 0, gDone + 1], ['#232323', gDone + 1, g.total]]) {
+      x.fillStyle = color; x.beginPath();
+      for (let j = from; j < to; j++) { const [cx, cy] = pc(j), r = g.r * out; if (r < .3) continue; x.moveTo(cx + r, cy); x.arc(cx, cy, r, 0, 6.2832); }
+      x.fill();
+    }
+    // the new dots grow out of them and travel to their places, settling from the first year to the last
+    for (const [color, from, to] of [[L, 0, done + 1], ['#232323', done + 1, m.total]]) {
+      x.fillStyle = color; x.beginPath();
+      for (let i = from; i < to; i++) {
+        const j = Math.min(g.total - 1, Math.floor((i + .5) / upy * g.upy)), [ax, ay] = pc(j), [bx, by] = this.center(i);
+        const l = Math.max(0, Math.min(1, this.morph * 1.45 - (i / m.total) * .45)), e = 1 - Math.pow(1 - l, 3);
+        const r = r1 * Math.min(1, e * 1.15); if (r < .3) continue;
+        const cx = ax + (bx - ax) * e, cy = ay + (by - ay) * e; x.moveTo(cx + r, cy); x.arc(cx, cy, r, 0, 6.2832);
+      }
+      x.fill();
+    }
+    if (this.morph >= 1) { this.prevGeo = null; this.cv.style.width = ''; this.cv.style.marginLeft = ''; this.draw(); }
   }
   play(key, dur) {
     this[key] = 0; const t0 = performance.now();
@@ -560,6 +690,7 @@ class Grid {
   }
   draw() {
     if (!this.W) { this.measure(); if (!this.W) return; }
+    if (this.prevGeo && this.morph < 1) return this.drawMorph();
     const m = this.m, x = sizeCanvas(this.cv, this.W, this.H), r0 = this.cell * this.ratio / 2, done = Math.floor(m.done), L = lit();
     x.clearRect(0, 0, this.W, this.H);
     const sealed = new Set(S.letters.filter(l => !l.opened).map(l => l.age));
@@ -591,6 +722,7 @@ class Grid {
         let k = .4 + .6 * e;
         if (this.ripple < 1 && i <= done) { const lr = (this.ripple * rD - i * .016) / .9; if (lr > 0 && lr < 1) k *= 1 + .32 * Math.sin(lr * Math.PI); }
         if (i === this.tipI) k *= 1.38;
+        if (this.field) { const fx = cx - this.mx, fy = cy - this.my; k *= 1 + .26 * Math.exp(-(fx * fx + fy * fy) / 6400); }
         x.globalAlpha = e;
         circle(x, cx, cy, r0 * k, i < done ? L : '#232323');
         const yi = m.year ? m.year(i) : null;
@@ -668,10 +800,11 @@ class Grid {
     box.addEventListener('mousemove', e => {
       if (fromTouch() || e.target.closest('.tip')) return;
       const [px, py] = local(e), i = this.idxAt(px, py);
+      if (this.field) { this.mx = px; this.my = py; this.reqDraw(); }
       if (i == null) { if (this.tipI != null) this.hideTip(); return; }
       if (i !== this.tipI) { this.showTip(i, false); SIG.hovers++; seen.add(i); if (seen.size >= 5) { SIG.scrubs++; seen = new Set(); } }
     });
-    box.addEventListener('mouseleave', () => { seen = new Set(); if (this.tipI != null) this.hideTip(); });
+    box.addEventListener('mouseleave', () => { seen = new Set(); if (this.field) { this.mx = this.my = -1e4; this.reqDraw(); } if (this.tipI != null) this.hideTip(); });
     let zAcc = 0, zT = 0;
     box.addEventListener('wheel', e => {
       if (!(e.ctrlKey || e.metaKey) || this.kind !== 'life') return;
@@ -927,6 +1060,13 @@ function buildHome() {
 function setZoom(z) {
   if (z === S.zoom) return; S.zoom = z; save(); thump();
   grids.life.hideTip(); grids.life.update(false); renderHead('life'); renderZoom();
+  if (DESK && studioOn) {
+    if (S.dpage !== 1) { studioGo(1); return; }
+    const g = sgrids.life; g.hideTip(); fitBox('life'); g.update(false); placeThumb();
+    const keep = $('st-page').scrollTop, left = $('st-page').querySelector('.st-left');
+    const fresh = document.createElement('div'); fresh.innerHTML = spreadHTML('life'); left.replaceWith(fresh.querySelector('.st-left'));
+    wireLeftOnly(); $('st-page').scrollTop = keep;
+  }
 }
 function renderZoom() {
   $('zoombar').innerHTML = ZOOMS.map((z, i) => `<button class="${i === S.zoom ? 'sel' : ''}" data-z="${i}">${z}</button>`).join('');
@@ -980,12 +1120,14 @@ function beat(k, on) {
   paint(); el._bt = setInterval(paint, 250);
 }
 function swapHead() {
+  if (DESK && studioOn) studioRefresh();
   PAGES.slice(0, 3).forEach(k => $('head-' + k).classList.add('swap'));
   setTimeout(() => { PAGES.slice(0, 3).forEach(k => { renderHead(k); $('head-' + k).classList.remove('swap'); }); syncControls(); liveLoop(); }, 170);
 }
 function renderAll(playIn) {
   ['life', 'decade', 'year'].forEach(k => { grids[k].update(playIn); renderHead(k); });
   renderZoom(); renderExtras(); syncControls(); liveLoop(); renderSide();
+  if (DESK && studioOn) studioRefresh();
 }
 function renderSide() {
   const a = age(birth());
@@ -1195,18 +1337,18 @@ const SIG = { beats: 0, taps: 0, scrubs: 0, hovers: 0 };
 const nowLine = () => { const m = model('life'), h = headline(m); return `${fmt(h.v)} ${h.noun} ${h.word}`; };
 const TOUR = [
   { t: 'Welcome to yrs.', bd: () => 'A quick tour, under a minute. Try each one with your mouse or keyboard as we go: <b>the tour moves on when you do</b>. Press Esc to skip it.', tryd: '', b: () => "A quick tour, under a minute. Try each gesture as we go: <b>the tour moves on when you do</b>. You can replay it any time from Settings.", ok: '' },
-  { at: 'head-life', t: 'This is your number', bd: () => `Right now it says <b>${nowLine()}</b>. Click it, or press <kbd>U</kbd>, to count another way: days, weeks, summers, weekends or full moons.`, tryd: 'Click the number', b: () => `Right now it says <b>${nowLine()}</b>. Tap it to count another way: days, weeks, summers, weekends or full moons.`, hint: 'tap', try: 'Tap the number', ok: 'That is the same time, counted another way.', done: (a, b) => a.unit !== b.unit },
-  { at: 'head-life', t: 'Feel the seconds', bd: () => `Press and hold the number, or hold <kbd>Space</kbd>. Every beat is one second, out of about <b>${fmt(yearsLeft() * 365.2425 * 86400)}</b> you have left.`, tryd: 'Hold the number or Space', b: () => `Press and hold the number. Every beat is one second, out of about <b>${fmt(yearsLeft() * 365.2425 * 86400)}</b> you have left.`, hint: 'hold', try: 'Hold the number', ok: 'Felt that? Let go whenever you like.', done: (a, b) => b.beats > a.beats },
-  { at: 'grid-life', t: 'One dot, one year', bd: () => (() => { const l = Math.floor(age(birth())); return `You've lived <b>${l} ${l === 1 ? 'dot' : 'dots'}</b>. The one you're in fills a little every day. Point at any dot to see its year. Click a year to name it or seal a letter to it.`; })(), tryd: 'Point at a dot', b: () => { const l = Math.floor(age(birth())); return `You've lived <b>${l} ${l === 1 ? 'dot' : 'dots'}</b>. The one you're in fills a little every day. Tap any dot to see which year it is.`; }, hint: 'tap', try: 'Tap a dot', ok: 'Tap its label any time to name that year or seal a letter to it.', okd: 'Click any year, any time, to name it or seal a letter to it.', done: (a, b) => DESK ? b.hovers > a.hovers : b.taps > a.taps },
-  { at: 'grid-life', t: 'Travel through time', bd: () => 'Now sweep your mouse across the grid. Each year shows its age and date as you pass over it.', tryd: 'Sweep across the dots', b: () => 'Hold a dot, then drag across the grid without letting go. Each year shows its age and date as you pass it.', hint: 'drag', try: 'Hold and drag', ok: 'Your whole life, under one finger.', done: (a, b) => b.scrubs > a.scrubs },
-  { at: 'zoombar', t: 'From history to today', bd: () => `Press <kbd>+</kbd> and <kbd>−</kbd>, hold <kbd>${MOD}</kbd> and scroll, or click a word here. In weeks you have <b>${fmt(yearsLeft() * 52.1775)}</b> left; in days, <b>${fmt(daysLeftExact())}</b>.`, tryd: 'Press + or click Weeks', b: () => `Pinch the grid, or tap a word here. In weeks you have <b>${fmt(yearsLeft() * 52.1775)}</b> left; in days, <b>${fmt(daysLeftExact())}</b>.`, hint: 'pinch', try: 'Pinch or tap Weeks', ok: 'The number always counts what you see.', done: (a, b) => a.zoom !== b.zoom },
-  { at: 'modeBtn', t: 'Left or lived', bd: () => "Switch every number between the time ahead of you and the time you've already lived. Click it, or press <kbd>L</kbd>.", tryd: 'Click Left or press L', b: () => "Switch every number between the time ahead of you and the time you've already lived.", hint: 'tap', try: 'Tap Left', ok: 'Tap it again whenever you want the other view.', done: (a, b) => a.lived !== b.lived },
-  { at: 'pctBtn', t: 'As a percentage', bd: () => `Show it as a share of the whole. You've lived about <b>${Math.floor(Math.min(1, age(birth()) / S.span) * 100)}%</b> of ${S.span} years. Click %, or press <kbd>P</kbd>.`, tryd: 'Press P', b: () => `Show it as a share of the whole. You've lived about <b>${Math.floor(Math.min(1, age(birth()) / S.span) * 100)}%</b> of ${S.span} years.`, hint: 'tap', try: 'Tap %', ok: 'Tap again to go back to the number.', done: (a, b) => a.pct !== b.pct },
-  { at: 'pdots', t: 'Four more pages', bd: () => 'This decade, this year with a line a day and countdowns, the people you love, and where your years go. Click the dots at the bottom, or press <kbd>→</kbd>.', tryd: 'Press →', b: () => 'Swipe sideways: this decade, this year with a line a day and countdowns, the people you love, and where your years go.', hint: 'swipe', try: 'Swipe left', ok: 'Swipe back any time. The dots show where you are.', done: (a, b) => a.page !== b.page },
-  { at: 'moreBtn', t: 'Everything else', bd: () => 'Your birthday, lifespan, number style and lock screen live in Settings, with a guide to every setting. Click ⋯ at the top or press <kbd>S</kbd> to finish. Press <kbd>?</kbd> any time for every shortcut.', tryd: 'Press S', b: () => 'Your birthday, lifespan, number style and lock screen live here, with a guide to every setting. Tap it to finish.', hint: 'tap', try: 'Tap ⋯', ok: '', done: (a, b) => b.sheet === 'settings' },
+  { at: 'head-life', t: 'This is your number', atd: 'st-num', bd: () => `Right now it says <b>${nowLine()}</b>. Click it, or press <kbd>U</kbd>, to count another way: days, weeks, summers, weekends or full moons.`, tryd: 'Click the number', b: () => `Right now it says <b>${nowLine()}</b>. Tap it to count another way: days, weeks, summers, weekends or full moons.`, hint: 'tap', try: 'Tap the number', ok: 'That is the same time, counted another way.', done: (a, b) => a.unit !== b.unit },
+  { at: 'head-life', t: 'Feel the seconds', atd: 'st-num', bd: () => `Press and hold the number, or hold <kbd>Space</kbd>. Every beat is one second, out of about <b>${fmt(yearsLeft() * 365.2425 * 86400)}</b> you have left.`, tryd: 'Hold the number or Space', b: () => `Press and hold the number. Every beat is one second, out of about <b>${fmt(yearsLeft() * 365.2425 * 86400)}</b> you have left.`, hint: 'hold', try: 'Hold the number', ok: 'Felt that? Let go whenever you like.', done: (a, b) => b.beats > a.beats },
+  { at: 'grid-life', t: 'One dot, one year', atd: 'stg-life', bd: () => (() => { const l = Math.floor(age(birth())); return `You've lived <b>${l} ${l === 1 ? 'dot' : 'dots'}</b>. The one you're in fills a little every day. Point at any dot to see its year. Click a year to name it or seal a letter to it.`; })(), tryd: 'Point at a dot', b: () => { const l = Math.floor(age(birth())); return `You've lived <b>${l} ${l === 1 ? 'dot' : 'dots'}</b>. The one you're in fills a little every day. Tap any dot to see which year it is.`; }, hint: 'tap', try: 'Tap a dot', ok: 'Tap its label any time to name that year or seal a letter to it.', okd: 'Click any year, any time, to name it or seal a letter to it.', done: (a, b) => DESK ? b.hovers > a.hovers : b.taps > a.taps },
+  { at: 'grid-life', t: 'Travel through time', atd: 'stg-life', bd: () => 'Now sweep your mouse across the grid. Each year shows its age and date as you pass over it.', tryd: 'Sweep across the dots', b: () => 'Hold a dot, then drag across the grid without letting go. Each year shows its age and date as you pass it.', hint: 'drag', try: 'Hold and drag', ok: 'Your whole life, under one finger.', done: (a, b) => b.scrubs > a.scrubs },
+  { at: 'zoombar', t: 'From history to today', atd: 'st-zoom', bd: () => `Press <kbd>+</kbd> and <kbd>−</kbd>, hold <kbd>${MOD}</kbd> and scroll, or click a word here. In weeks you have <b>${fmt(yearsLeft() * 52.1775)}</b> left; in days, <b>${fmt(daysLeftExact())}</b>.`, tryd: 'Press + or click Weeks', b: () => `Pinch the grid, or tap a word here. In weeks you have <b>${fmt(yearsLeft() * 52.1775)}</b> left; in days, <b>${fmt(daysLeftExact())}</b>.`, hint: 'pinch', try: 'Pinch or tap Weeks', ok: 'The number always counts what you see.', done: (a, b) => a.zoom !== b.zoom },
+  { at: 'modeBtn', t: 'Left or lived', atd: 'st-mode', bd: () => "Switch every number between the time ahead of you and the time you've already lived. Click it, or press <kbd>L</kbd>.", tryd: 'Click Left or press L', b: () => "Switch every number between the time ahead of you and the time you've already lived.", hint: 'tap', try: 'Tap Left', ok: 'Tap it again whenever you want the other view.', done: (a, b) => a.lived !== b.lived },
+  { at: 'pctBtn', t: 'As a percentage', atd: 'st-pct', bd: () => `Show it as a share of the whole. You've lived about <b>${Math.floor(Math.min(1, age(birth()) / S.span) * 100)}%</b> of ${S.span} years. Click %, or press <kbd>P</kbd>.`, tryd: 'Press P', b: () => `Show it as a share of the whole. You've lived about <b>${Math.floor(Math.min(1, age(birth()) / S.span) * 100)}%</b> of ${S.span} years.`, hint: 'tap', try: 'Tap %', ok: 'Tap again to go back to the number.', done: (a, b) => a.pct !== b.pct },
+  { at: 'pdots', t: 'Four more pages', atd: 'st-nav', bd: () => 'Overview shows everything at once; this decade, this year, the people you love and where your years go each have a page. Click one in the bar at the top, or press <kbd>→</kbd>.', tryd: 'Click a page or press →', b: () => 'Swipe sideways: this decade, this year with a line a day and countdowns, the people you love, and where your years go.', hint: 'swipe', try: 'Swipe left', ok: 'Swipe back any time. The dots show where you are.', done: (a, b) => a.page !== b.page || a.dpage !== b.dpage },
+  { at: 'moreBtn', t: 'Everything else', atd: 'st-more', bd: () => 'Your birthday, lifespan, number style and lock screen live in Settings, with a guide to every setting. Click ⋯ at the top or press <kbd>S</kbd> to finish. Press <kbd>?</kbd> any time for every shortcut.', tryd: 'Press S', b: () => 'Your birthday, lifespan, number style and lock screen live here, with a guide to every setting. Tap it to finish.', hint: 'tap', try: 'Tap ⋯', ok: '', done: (a, b) => b.sheet === 'settings' },
 ];
 let tourAt = -1, tourBase = null, tourRAF = 0, tourHold = 0, openKind = null;
-const snap = () => ({ unit: S.unit, zoom: S.zoom, lived: S.lived, pct: S.pct, page: S.page, beats: SIG.beats, taps: SIG.taps, scrubs: SIG.scrubs, hovers: SIG.hovers, sheet: layer.classList.contains('open') ? openKind : null });
+const snap = () => ({ unit: S.unit, zoom: S.zoom, lived: S.lived, pct: S.pct, page: S.page, dpage: S.dpage, beats: SIG.beats, taps: SIG.taps, scrubs: SIG.scrubs, hovers: SIG.hovers, sheet: layer.classList.contains('open') ? openKind : null });
 $('tBar').innerHTML = TOUR.map(() => '<i></i>').join('');
 function tourGo(n) {
   clearTimeout(tourHold); tourHold = 0;
@@ -1218,7 +1360,7 @@ function tourGo(n) {
     offerInstall(finished ? 2600 : 1200);
     return;
   }
-  if (n === 0 && tourAt < 0) { $('pager').scrollTo({ left: 0, behavior: 'smooth' }); if (S.zoom !== 1) setZoom(1); if (S.pct) { S.pct = false; save(); swapHead(); } }
+  if (n === 0 && tourAt < 0) { if (DESK && studioOn) studioGo(1); else $('pager').scrollTo({ left: 0, behavior: 'smooth' }); if (S.zoom !== 1) setZoom(1); if (S.pct) { S.pct = false; save(); swapHead(); } }
   tourAt = n; tourBase = snap();
   const st = TOUR[n];
   $('tCard').classList.remove('ok');
@@ -1251,7 +1393,7 @@ function tourFrame() {
   const step = TOUR[tourAt], hole = $('tHole'), card = $('tCard'), W = innerWidth, H = innerHeight;
   const sheetOpen = layer.classList.contains('open');
   $('tour').classList.toggle('on', !sheetOpen);
-  const el = step.at && $(step.at);
+  const el = (DESK && step.atd && $(step.atd)) || (step.at && $(step.at));
   let r = el && el.getBoundingClientRect();
   if (r && (r.width === 0 || r.right < 0 || r.left > W)) r = null;
   const pad = 10;
@@ -1264,7 +1406,7 @@ function tourFrame() {
     // below the spotlight, else above it; a spotlight too tall for either (the grid) keeps its top free and the card docks low
     card.style.top = (below + ch < H - 24 ? below : y - 16 - ch >= 24 ? y - 16 - ch : H - ch - 24 - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sbm')) || 0)) + 'px';
     // the ghost fingertip, hidden once you've got it
-    const kind = card.classList.contains('ok') ? '' : step.hint, hr = kind === 'pinch' ? $('grid-life').getBoundingClientRect() : r;
+    const kind = card.classList.contains('ok') ? '' : step.hint, hr = kind === 'pinch' ? (DESK ? $('stg-life') : $('grid-life')).getBoundingClientRect() : r;
     const cx = hr.left + hr.width / 2, cy = kind === 'swipe' ? r.top - 150 : hr.top + hr.height / 2;
     [$('tF1'), $('tF2')].forEach((f, k) => { f.className = 'finger' + (kind && (k === 0 || kind === 'pinch') ? ' ' + (k === 1 ? 'pinch2' : kind) : ''); f.style.left = cx + 'px'; f.style.top = cy + 'px'; });
   } else {
@@ -1447,17 +1589,19 @@ function applyDesk() {
   const d = DEMO ? Q.get('desk') === '1' : deskMQ.matches;
   DESK = d; document.documentElement.classList.toggle('desk', d);
   if (!started) return;
+  $('home').hidden = d; $('studio').hidden = !d;
+  if (d) { studioMount(); requestAnimationFrame(() => studioGo(S.dpage ?? 1, true)); return; }
   requestAnimationFrame(() => { renderAll(false); $('pager').scrollTo({ left: S.page * $('pager').clientWidth, behavior: 'instant' }); });
 }
 deskMQ.addEventListener ? deskMQ.addEventListener('change', applyDesk) : deskMQ.addListener(applyDesk);
 applyDesk();
 $('moreBtn').insertAdjacentHTML('beforeend', '<kbd class="dk">S</kbd>');
-function goPage(i) { i = Math.max(0, Math.min(PAGES.length - 1, i)); if (i === S.page) return; tick(); $('pager').scrollTo({ left: i * $('pager').clientWidth, behavior: 'smooth' }); }
+function goPage(i) { if (DESK && studioOn) { studioGo(i + 1); return; } i = Math.max(0, Math.min(PAGES.length - 1, i)); if (i === S.page) return; tick(); $('pager').scrollTo({ left: i * $('pager').clientWidth, behavior: 'smooth' }); }
 $('keysBtn').onclick = () => { tick(); openSheet('keys'); };
 
 const KEYS = [
   [[MOD, 'K'], 'Search or jump to anything'],
-  [['←', '→'], 'Previous or next page'], [['1', '–', '5'], 'Go to a page'],
+  [['←', '→'], 'Previous or next page'], [['1', '–', '5'], 'Go to a page'], [['0'], 'Overview'],
   [['+', '−'], 'Zoom in or out of your life'], [[MOD, 'scroll'], 'Zoom with the mouse or trackpad'],
   [['U'], 'Count another way: days, weeks, summers…'], [['Space'], 'Hold to feel the seconds'],
   [['L'], 'Left or lived'], [['P'], 'Percentage'],
@@ -1532,6 +1676,7 @@ const PAL = () => {
   const z = (i, n) => cmd('Zoom', n, () => { goPageNow(0); setZoom(i); }, [], 'zoom scale level ' + n);
   const unit = (i, n) => cmd('Count in', n, () => { goPageNow(0); if (S.zoom !== 1) setZoom(1); S.unit = i; S.pct = false; save(); swapHead(); }, [], 'count measure unit ' + n);
   return [
+    cmd('Go to', 'Overview', () => studioGo(0), ['0'], 'dashboard everything tiles summary'),
     cmd('Go to', 'Life', () => goPageNow(0), ['1'], 'home grid years'), cmd('Go to', 'This decade', () => goPageNow(1), ['2']), cmd('Go to', 'This year', () => goPageNow(2), ['3'], 'months line countdown'),
     cmd('Go to', 'People', () => goPageNow(3), ['4'], 'family friends parents visits'), cmd('Go to', 'Where your years go', () => goPageNow(4), ['5'], 'ledger sleep work phone'),
     cmd('Create', "Write today's line", () => openSheet('line', iso(day0(new Date()))), [], 'journal diary note today'),
@@ -1555,7 +1700,7 @@ const PAL = () => {
     cmd('Help', 'Install as an app', () => openSheet('install'), [], 'home screen dock'), cmd('Help', 'About yrs.', () => openSheet('about'), [], 'open source mit license'),
   ];
 };
-function goPageNow(i) { $('pager').scrollTo({ left: i * $('pager').clientWidth, behavior: 'smooth' }); }
+function goPageNow(i) { if (DESK && studioOn) { studioGo(i + 1); return; } $('pager').scrollTo({ left: i * $('pager').clientWidth, behavior: 'smooth' }); }
 let palItems = [], palSel = 0, palFocus = null;
 function palScore(c, q) {
   if (!q) return 1;
@@ -1605,6 +1750,237 @@ document.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); $('pal').hidden ? palOpen() : palClose(); }
 }, true);
 
+// ================================================= Studio: the desktop app
+// One page at a time, laid out like a spread: the number on the left, your dots on the right.
+// Overview puts everything on one screen as tiles. Phones never see any of this.
+const SNAMES = ['Overview', 'Life', 'This decade', 'This year', 'People', 'Where it goes'];
+const SKIND = [null, 'life', 'decade', 'year', null, null];
+const sgrids = {};
+let studioOn = false, numShown = 0, numKey = '', numAnim = 0, stBeat = 0, stLive = 0;
+const easeOut = t => 1 - Math.pow(1 - t, 4);
+function studioMount() {
+  if (studioOn) return; studioOn = true;
+  if (S.dpage == null) S.dpage = 1;
+  $('st-nav').innerHTML = '<i class="st-ind" id="st-ind"></i>' + SNAMES.map((n, i) => `<button data-p="${i}">${n}</button>`).join('');
+  $('st-nav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { tick(); studioGo(+b.dataset.p); } });
+  $('st-find').onclick = () => palOpen();
+  $('st-more').onclick = () => { tick(); openSheet('settings'); };
+  $('st-kbd').textContent = MOD === '⌘' ? '⌘K' : 'Ctrl K';
+  ['life', 'decade', 'year'].forEach(k => { const box = document.createElement('div'); box.className = 'gridbox'; box.id = 'stg-' + k; const g = new Grid(box, k); g.field = true; g.morphOK = k === 'life'; sgrids[k] = g; });
+  addEventListener('resize', () => { if (DESK && studioOn) { clearTimeout(studioMount.rz); studioMount.rz = setTimeout(() => { moveInd(); fitAndDraw(); }, 120); } });
+}
+function moveInd() {
+  const b = $('st-nav').querySelector(`button[data-p="${S.dpage}"]`), ind = $('st-ind'); if (!b || !ind) return;
+  ind.style.width = b.offsetWidth + 'px'; ind.style.transform = `translateX(${b.offsetLeft}px)`;
+  $('st-nav').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+}
+function studioGo(i, instant) {
+  i = Math.max(0, Math.min(SNAMES.length - 1, i));
+  const same = i === S.dpage && $('st-page').childElementCount;
+  S.dpage = i; save(); moveInd();
+  if (same && !instant) return;
+  const pg = $('st-page');
+  if (instant) { studioRender(true); return; }
+  pg.classList.add('out');
+  setTimeout(() => { pg.scrollTop = 0; studioRender(true); pg.classList.remove('out'); }, 150);
+}
+// stagger index for entrance motion; merges into an existing style attribute rather than adding a second one
+const A = (i, html) => /^<\w+[^>]*\sstyle="/.test(html) ? html.replace(/^(<\w+)([^>]*?)\sstyle="/, `$1 data-a$2 style="--i:${i};`) : html.replace(/^<(\w+)/, `<$1 data-a style="--i:${i}"`);
+function studioRender(enter) {
+  if (!DESK || !studioOn) return;
+  const pg = $('st-page'), k = SKIND[S.dpage];
+  clearInterval(stLive);
+  if (S.dpage === 0) pg.innerHTML = overviewHTML();
+  else if (k) pg.innerHTML = spreadHTML(k);
+  else if (S.dpage === 4) pg.innerHTML = peopleHTML();
+  else pg.innerHTML = ledgerHTML();
+  pg.classList.toggle('enter', !!enter);
+  if (enter) setTimeout(() => pg.classList.remove('enter'), 1400);
+  wire(k, enter);
+  moveInd();
+}
+function fitBox(k) {
+  const wrap = $('st-gridwrap'), g = sgrids[k]; if (!wrap || !g) return;
+  const m = model(k), rows = Math.ceil(m.total / m.cols), colW = wrap.clientWidth || 600;
+  const availH = Math.max(240, innerHeight - 92 - (k === 'life' ? 210 : 150));
+  g.box.style.width = Math.floor(Math.min(colW, 640, availH * m.cols / rows)) + 'px';
+}
+function fitAndDraw() { const k = SKIND[S.dpage]; if (k && sgrids[k] && sgrids[k].box.isConnected) { fitBox(k); sgrids[k].update(false); } if (S.dpage === 0 || S.dpage >= 4) studioRender(false); }
+
+// ---------- a spread: life, this decade, this year
+function spreadHTML(k) {
+  const m = model(k), hl = headline(m), b = birth(), a = age(b), lived = Math.floor(a);
+  const cap = { life: S.zoom === 0 ? 'All of history' : 'Your life', decade: 'This decade', year: 'This year of your life' }[k];
+  let sub = m.context ? `${m.context} · ${m.sub}` : m.sub;
+  if (k === 'life' && isBirthday(b)) sub = `Happy birthday · you're ${lived} today`;
+  if (k === 'life' && m.unit === 'year') sub += ` · ${Math.floor((a - lived) * 100)}% through this year`;
+  const units = k === 'life' && m.unit === 'year' && !S.pct ? A(4, `<div class="st-units" id="st-units">${MEASURES.map((u, i) => `<button data-u="${i}" class="${i === S.unit % MEASURES.length ? 'on' : ''}">${u[1][0].toUpperCase() + u[1].slice(1)}</button>`).join('')}</div>`) : '';
+  const lb = lastBirthday(b, new Date()), nb = birthdayIn(b, lb.getFullYear() + 1), toNext = Math.round((nb - day0(new Date())) / 864e5), line = LINES[iso(day0(new Date()))];
+  let extra = '';
+  if (k === 'life') extra = A(6, `<div class="st-foot"><div><div class="st-cap">Today</div>Day ${fmt(dayOfLife())}${line ? ` · <span>“${esc(line)}”</span>` : ''}</div><div><div class="st-cap">Next birthday</div>${toNext === 0 ? 'Today' : `in ${fmt(toNext)} ${toNext === 1 ? 'day' : 'days'}`} · <span>turning ${lived + 1}</span></div></div>`);
+  if (k === 'decade') { const st = Math.floor(lived / 10) * 10; extra = A(6, `<div class="st-foot"><div><div class="st-cap">Your ${st ? st + 's' : 'first decade'}</div>${10 - (lived - st)} ${10 - (lived - st) === 1 ? 'year' : 'years'} to go, ending at ${st + 10}</div><div><div class="st-cap">Named years</div>${Object.keys(S.names).filter(y => y >= st && y < st + 10).length || 'None yet'} <span>· click a year to name it</span></div></div>`); }
+  if (k === 'year') {
+    const t = day0(new Date()), up = S.events.map((e, i) => ({ ...e, i })).filter(e => parse(e.date) >= t).sort((p, q) => p.date < q.date ? -1 : 1).slice(0, 4);
+    let mem = null; for (let y = 1; y <= 30 && !mem; y++) { const d = new Date(t); d.setFullYear(d.getFullYear() - y); if (LINES[iso(d)]) mem = [y, LINES[iso(d)]]; }
+    extra = A(6, `<button class="st-card" id="st-today"><b>Today · Day ${fmt(dayOfLife())}</b><p class="${line ? 'on' : ''}">${line ? esc(line) : 'Write one line about today. Years from now it will be the only thing left of it.'}</p></button>`) +
+      (mem ? A(7, `<div class="st-card" style="cursor:default"><b>${mem[0] === 1 ? 'A year ago today' : mem[0] + ' years ago today'}</b><p class="on">“${esc(mem[1])}”</p></div>`) : '') +
+      A(8, `<div class="st-list">${up.map(e => { const d = Math.round((parse(e.date) - t) / 864e5); return `<button class="st-li" data-ev="${e.i}"><span>${esc(e.name)}</span><em>${d === 0 ? 'Today' : `in ${fmt(d)} ${d === 1 ? 'day' : 'days'}`}</em></button>`; }).join('')}<button class="st-add" data-ev="new">+ Add a countdown</button></div>`);
+  }
+  const zoom = k === 'life' ? `<div class="st-zoom" id="st-zoom"><div class="st-zl">${ZOOMS.map((z, i) => `<button data-z="${i}" class="${i === S.zoom ? 'on' : ''}">${z}</button>`).join('')}</div><div class="st-track"><i id="st-zthumb"></i></div></div>` : '';
+  return `<div class="st-split"><div class="st-left">
+    ${A(0, `<div class="st-cap">${cap}</div>`)}
+    ${A(1, `<div class="st-num" id="st-num" title="Click to count another way · hold to feel the seconds"></div>`)}
+    ${A(2, `<div class="st-word" id="st-word">${S.pct ? hl.word : `${hl.noun} ${hl.word}`}</div>`)}
+    ${A(3, `<div class="st-sub">${sub}</div>`)}
+    ${units}
+    ${A(5, `<div class="st-ctl"><div class="st-seg ${S.lived ? 'r' : ''}" id="st-mode"><button class="${S.lived ? '' : 'on'}" data-l="0">Left</button><button class="${S.lived ? 'on' : ''}" data-l="1">Lived</button><i></i></div><button class="st-round ${S.pct ? 'on' : ''}" id="st-pct" aria-label="Percentage">%</button></div>`)}
+    ${extra}
+  </div><div class="st-stage" data-a style="--i:2"><div id="st-gridwrap" style="width:100%;display:flex;justify-content:center"></div>${zoom}</div></div>`;
+}
+function numberFor(k) {
+  const hl = headline(model(k));
+  return { v: S.pct ? hl.pct : hl.v, pct: S.pct, key: k + S.unit + S.lived + S.pct + S.zoom };
+}
+function sizeNum(txt) { const n = txt.length; return n <= 3 ? 'clamp(150px, 16vw, 250px)' : n <= 5 ? 'clamp(110px, 11.5vw, 190px)' : n <= 7 ? 'clamp(84px, 8.6vw, 140px)' : 'clamp(64px, 6.4vw, 104px)'; }
+function paintNum(k, roll) {
+  const el = $('st-num'); if (!el) return;
+  const { v, pct } = numberFor(k), show = x => pct ? Math.floor(x) + '%' : fmt(x);
+  el.style.setProperty('--nsz', sizeNum(show(v)));
+  if (S.style === 'live') {
+    const tickLive = () => { const n = numberFor(k).v, t = pct ? n.toFixed(6) : n.toLocaleString('en-US', { minimumFractionDigits: 7, maximumFractionDigits: 7 }), [i, f] = t.split('.'); el.innerHTML = `${i}<span class="fr">.${f}${pct ? '%' : ''}</span>`; };
+    el.style.setProperty('--nsz', 'clamp(56px, 5.6vw, 92px)'); tickLive(); clearInterval(stLive); stLive = setInterval(tickLive, 60); return;
+  }
+  cancelAnimationFrame(numAnim);
+  const from = roll && !reduce ? numShown : v, t0 = performance.now(), dur = 900;
+  const step = t => { const p = Math.min(1, (t - t0) / dur), x = from + (v - from) * easeOut(p); el.textContent = show(x); numShown = x; if (p < 1) numAnim = requestAnimationFrame(step); };
+  numAnim = requestAnimationFrame(step);
+}
+function studioBeat(on) {
+  const el = $('st-num'), w = $('st-word'), k = SKIND[S.dpage]; if (!el || !k) return;
+  clearInterval(stBeat);
+  if (!on) { el.classList.remove('st-beat'); w.textContent = (() => { const hl = headline(model(k)); return S.pct ? hl.word : `${hl.noun} ${hl.word}`; })(); numShown = numberFor(k).v; paintNum(k, false); return; }
+  SIG.beats++; cancelAnimationFrame(numAnim); clearInterval(stLive);
+  const paint = () => { el.textContent = fmt(yearsLeft() * 365.2425 * 86400); };
+  el.style.setProperty('--nsz', 'clamp(64px, 6.4vw, 104px)'); el.classList.add('st-beat'); w.textContent = 'seconds left · each beat is one of them';
+  paint(); stBeat = setInterval(paint, 250);
+}
+function wire(k, enter) {
+  // people and ledger and overview wire their own bits
+  $('st-page').querySelectorAll('[data-go]').forEach(t => t.addEventListener('click', e => { if (e.target.closest('[data-stop]')) return; tick(); studioGo(+t.dataset.go); }));
+  $('st-page').querySelectorAll('[data-person]').forEach(b => b.onclick = () => { tick(); openSheet('person', b.dataset.person === 'new' ? null : +b.dataset.person); });
+  $('st-page').querySelectorAll('[data-ev]').forEach(b => b.onclick = () => { tick(); openSheet('event', b.dataset.ev === 'new' ? null : +b.dataset.ev); });
+  const today = $('st-today'); if (today) today.onclick = () => { tick(); openSheet('line', iso(day0(new Date()))); };
+  const r = $('st-phone'); if (r) { let rT; r.oninput = () => { S.phoneH = +r.value; $('st-phoneV').textContent = `${S.phoneH} hours a day`; clearTimeout(rT); rT = setTimeout(() => { save(); renderExtras(); studioRender(false); }, 220); }; }
+  drawStudioCanvases();
+  if (!k) return;
+  const g = sgrids[k]; $('st-gridwrap').append(g.box); fitBox(k); g.update(enter);
+  if (k === 'life' && enter && S.ripple && !reduce && S.zoom === 1) setTimeout(() => g.play('ripple', 900 + Math.floor(g.m.done) * 16), 500);
+  wireLeft(k, enter);
+  const z = $('st-zoom'); if (z) { z.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { tick(); setZoom(+b.dataset.z); } }); requestAnimationFrame(placeThumb); }
+}
+function wireLeftOnly() { wireLeft('life', false); }
+/** The left column's controls: the number (click to count another way, hold to feel the seconds), units, Left/Lived, %. */
+function wireLeft(k, enter) {
+  const key = numberFor(k).key, changed = key !== numKey; numKey = key;
+  if (enter) numShown = 0;
+  paintNum(k, enter || changed);
+  const n = $('st-num'); let hold = 0, held = false;
+  n.addEventListener('mousedown', e => { if (e.button) return; held = false; hold = setTimeout(() => { held = true; studioBeat(true); thump(); n._bt = setInterval(thump, 1000); }, 450); });
+  const up = () => { clearTimeout(hold); clearInterval(n._bt); if (held) studioBeat(false); };
+  n.addEventListener('mouseup', up); n.addEventListener('mouseleave', up);
+  n.addEventListener('click', () => { if (held) { held = false; return; } if (k === 'life' && !S.pct && model('life').unit === 'year') { tick(); S.unit = (S.unit + 1) % MEASURES.length; save(); swapHead(); } });
+  $('st-units')?.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tick(); S.unit = +b.dataset.u; save(); swapHead(); });
+  $('st-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || (b.dataset.l === '1') === S.lived) return; $('modeBtn').click(); });
+  $('st-pct').onclick = () => $('pctBtn').click();
+  const today = $('st-today'); if (today) today.onclick = () => { tick(); openSheet('line', iso(day0(new Date()))); };
+  $('st-page').querySelectorAll('.st-left [data-ev]').forEach(b => b.onclick = () => { tick(); openSheet('event', b.dataset.ev === 'new' ? null : +b.dataset.ev); });
+}
+function placeThumb() {
+  const z = $('st-zoom'), th = $('st-zthumb'); if (!z || !th) return;
+  const b = z.querySelector(`button[data-z="${S.zoom}"]`), zr = z.getBoundingClientRect(), br = b.getBoundingClientRect();
+  th.style.left = (br.left + br.width / 2 - zr.left) + 'px';
+  z.querySelectorAll('button').forEach(x => x.classList.toggle('on', +x.dataset.z === S.zoom));
+}
+// after a setting changes, refresh the words and roll the number without rebuilding the page
+function studioRefresh() {
+  if (!DESK || !studioOn) return;
+  const k = SKIND[S.dpage], left = $('st-page').querySelector('.st-left');
+  if (!k || !left) { const keep = $('st-page').scrollTop; studioRender(false); $('st-page').scrollTop = keep; return; }
+  const fresh = document.createElement('div'); fresh.innerHTML = spreadHTML(k); left.replaceWith(fresh.querySelector('.st-left'));
+  wireLeft(k, false); sgrids[k].update(false);
+}
+
+// ---------- people
+function peopleHTML() {
+  const cards = S.people.map((p, i) => { const t = together(p), unit = p.per === 365 ? (t.v === 1 ? 'day' : 'days') : (t.v === 1 ? 'visit' : 'visits');
+    return A(2 + i, `<button class="st-person" data-person="${i}"><div class="h"><b>${esc(p.name)}</b><span>${OFTEN.find(o => o[1] === p.per)?.[0] || ''}</span></div><div class="n">${fmt(t.v)}</div><div class="u">more ${unit} together</div><canvas data-dots="${Math.min(t.v, 100)}"></canvas><div class="f">About ${fmt(t.yrs)} summers left · ${esc(p.name)} is ${t.a}</div></button>`); }).join('');
+  return `<div class="st-split"><div class="st-left">
+    ${A(0, `<div class="st-cap">People</div>`)}
+    ${A(1, `<div class="st-word" style="font-size:clamp(40px,4.4vw,68px);font-weight:600;letter-spacing:-.045em;line-height:1;margin-top:22px">The time you have<br><span style="color:var(--faint)">left together.</span></div>`)}
+    ${A(2, `<div class="st-sub" style="max-width:30em;line-height:1.5;margin-top:22px">Most of the time you'll ever spend with your parents, you've already spent. Add the people you love and see how many more times you'll be together, at the rate you see them now.</div>`)}
+    ${A(3, `<button class="primary" data-person="new" style="width:auto;padding:0 28px;margin-top:30px">Add someone</button>`)}
+  </div><div class="st-stage">${S.people.length ? `<div class="st-people">${cards}</div>` : A(2, `<div class="st-sub" style="color:var(--faint)">No one here yet.</div>`)}</div></div>`;
+}
+// ---------- where your years go
+function ledgerData() {
+  const left = yearsLeft(), a = age(birth()), sleep = left / 3, work = Math.max(0, Math.min(left, 65 - a)) * 1920 / 8766, upkeep = left / 8;
+  const phone = Math.min(left * S.phoneH / 24, Math.max(0, left - sleep - work - upkeep)), free = Math.max(0, left - sleep - work - phone - upkeep);
+  return { left, sl: [['Asleep', sleep, '#2c2c2e'], ['Working', work, '#48484a'], ['On your phone', phone, '#8e8e93'], ['Eating, chores, commuting', upkeep, '#3a3a3c'], ['Truly yours', free, '#ffffff']] };
+}
+function ledgerColors(d) {
+  const total = Math.max(1, Math.round(d.left)), raw = d.sl.map(s => s[1] / Math.max(.01, d.left) * total), ints = raw.map(Math.floor);
+  let rest = total - ints.reduce((p, c) => p + c, 0); raw.map((v, i) => [v - Math.floor(v), i]).sort((p, q) => q[0] - p[0]).forEach(([, i]) => { if (rest > 0) { ints[i]++; rest--; } });
+  return ints.flatMap((n, i) => Array(n).fill(d.sl[i][2]));
+}
+function ledgerHTML() {
+  const d = ledgerData(), free = d.sl[4][1];
+  return `<div class="st-split"><div class="st-left">
+    ${A(0, `<div class="st-cap">Where your years go</div>`)}
+    ${A(1, `<div class="st-num" style="--nsz:${sizeNum(free.toFixed(1))};cursor:default">${free.toFixed(1)}</div>`)}
+    ${A(2, `<div class="st-word">years truly yours</div>`)}
+    ${A(3, `<div class="st-sub">of the ${fmt(d.left)} you have left</div>`)}
+    ${A(4, `<div class="st-legend">${d.sl.map((s, i) => `<div class="${i === 4 ? 'y' : ''}"><i style="background:${s[2]}"></i>${s[0]}<b>${s[1].toFixed(1)} yrs</b></div>`).join('')}</div>`)}
+    ${A(5, `<div class="st-slider"><label><span>Your phone time</span><span id="st-phoneV">${S.phoneH} hours a day</span></label><input class="range" id="st-phone" type="range" min="0" max="12" step="0.25" value="${S.phoneH}"></div>`)}
+  </div><div class="st-stage" data-a style="--i:2"><canvas id="st-ledger" style="display:block;width:min(100%,600px)"></canvas></div></div>`;
+}
+
+// ---------- overview
+const arrow = '<span class="go"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11 11 5M6 5h5v5"/></svg></span>';
+function overviewHTML() {
+  const b = birth(), a = age(b), lived = Math.floor(a), lm = model('life'), lh = headline({ ...lm, kind: 'life', unit: 'year' });
+  const lb = lastBirthday(b, new Date()), nb = birthdayIn(b, lb.getFullYear() + 1), toNext = Math.round((nb - day0(new Date())) / 864e5), pct = Math.floor((a - lived) * 100);
+  const ym = model('year'), yh = headline(ym), dm = model('decade'), line = LINES[iso(day0(new Date()))];
+  const t = day0(new Date()), up = S.events.filter(e => parse(e.date) >= t).sort((p, q) => p.date < q.date ? -1 : 1).slice(0, 3);
+  const led = ledgerData(), sealed = S.letters.filter(l => !l.opened).sort((p, q) => p.age - q.age), lines = Object.keys(LINES).length, named = Object.keys(S.names).length;
+  const left = Math.max(0, S.span - a);
+  const tile = (i, cls, style, go, body) => `<div class="tile ${cls}" data-a style="--i:${i};${style}" data-go="${go}">${arrow}${body}</div>`;
+  return `<div class="ov">
+    ${tile(0, 'wide', 'grid-column:1/6;grid-row:1/3', 1, `<div class="st-cap">Your life</div><h3>${S.lived ? `${lived} years lived` : left <= 0 ? 'Every year is a gift' : `${fmt(left)} years left`}</h3><p>Age ${lived} · ${S.span} year life</p><canvas id="ov-life" style="width:min(100%,430px)"></canvas>`)}
+    ${tile(1, '', 'grid-column:6/10;grid-row:1', 1, `<div class="st-cap">Right now</div><div class="big">${pct}%</div><p>through age ${lived}</p><div class="bar"><i style="width:${pct}%"></i></div><p style="margin-top:14px">Next birthday ${toNext === 0 ? '<b>today</b>' : `in <b>${fmt(toNext)} days</b>`} · turning ${lived + 1}</p>`)}
+    ${tile(2, '', 'grid-column:10/13;grid-row:1', 3, `<div class="st-cap">This year</div><canvas id="ov-year" style="width:100%"></canvas><p style="margin-top:14px"><b>${fmt(yh.v)} ${yh.noun} ${yh.word}</b></p><p>${line ? `“${esc(line)}”` : 'No line yet today'}</p>`)}
+    ${tile(3, '', 'grid-column:6/9;grid-row:2', 2, `<div class="st-cap">This decade</div><canvas id="ov-decade" style="width:100%"></canvas><p style="margin-top:14px"><b>${dm.context}</b> · ${fmt(10 - (dm.done))} to go</p>`)}
+    ${tile(4, up.length ? '' : 'empty', 'grid-column:9/13;grid-row:2', 3, `<div class="st-cap">Ahead</div>${up.length ? `<div class="rows" style="margin-top:12px">${up.map(e => { const d = Math.round((parse(e.date) - t) / 864e5); return `<div><span>${esc(e.name)}</span><b>${d === 0 ? 'Today' : `${fmt(d)} ${d === 1 ? 'day' : 'days'}`}</b></div>`; }).join('')}</div>` : `<h3>Nothing yet</h3><p>Add a trip, a wedding or a birthday on This year.</p>`}`)}
+    ${tile(5, S.people.length ? '' : 'empty', 'grid-column:1/5;grid-row:3', 4, `<div class="st-cap">People</div>${S.people.length ? S.people.slice(0, 2).map(p => { const tg = together(p); return `<div style="margin-top:14px;display:flex;align-items:baseline;gap:10px"><span style="font-family:var(--display);font-weight:200;font-size:44px;letter-spacing:-.04em">${fmt(tg.v)}</span><span style="color:var(--mute);font-size:14px">more ${p.per === 365 ? 'days' : 'visits'} with <b style="color:#fff;font-weight:500">${esc(p.name)}</b></span></div>`; }).join('') : `<h3>Add someone you love</h3><p>See how many more times you'll be together.</p>`}`)}
+    ${tile(6, '', 'grid-column:5/9;grid-row:3', 5, `<div class="st-cap">Where your years go</div><div style="display:flex;gap:22px;align-items:center;margin-top:14px"><canvas id="ov-ledger" style="width:150px;flex:0 0 auto"></canvas><div><div class="big" style="margin:0;font-size:clamp(48px,4.4vw,72px)">${led.sl[4][1].toFixed(1)}</div><p>years truly yours</p></div></div>`)}
+    ${tile(7, '', 'grid-column:9/13;grid-row:3', 1, `<div class="st-cap">Moments</div><div class="rows" style="margin-top:12px"><div><span>Lines written</span><b>${fmt(lines)}</b></div><div><span>Years named</span><b>${fmt(named)}</b></div><div><span>Letters sealed</span><b>${fmt(sealed.length)}</b></div></div><p style="margin-top:10px">${sealed.length ? `The next one opens at <b>${sealed[0].age}</b>, on ${birthdayIn(b, b.getFullYear() + sealed[0].age).getFullYear()}'s birthday.` : 'Click a year on Life to name it or write to it.'}</p>`)}
+  </div>`;
+}
+function dots(cv, n, cols, colorAt, ratio = .6) {
+  if (!cv) return; const W = cv.clientWidth || 300, cell = W / cols, H = Math.ceil(n / cols) * cell, x = sizeCanvas(cv, W, H);
+  for (let i = 0; i < n; i++) { const c = colorAt(i), cx = (i % cols + .5) * cell, cy = (Math.floor(i / cols) + .5) * cell; if (Array.isArray(c)) circle(x, cx, cy, cell * ratio / 2, c[0], c[1]); else circle(x, cx, cy, cell * ratio / 2, c); }
+}
+function drawStudioCanvases() {
+  const L = lit(), a = age(birth());
+  const filled = (done) => i => i < Math.floor(done) ? L : i === Math.floor(done) ? [L, done - Math.floor(done)] : '#232323';
+  dots($('ov-life'), S.span, 10, filled(Math.min(S.span, a)));
+  const ym = model('year'); dots($('ov-year'), 12, 6, filled(ym.done), .58);
+  const dm = model('decade'); dots($('ov-decade'), 10, 5, filled(dm.done), .5);
+  const d = ledgerData(), cols = ledgerColors(d);
+  dots($('ov-ledger'), cols.length, 10, i => cols[i]);
+  dots($('st-ledger'), cols.length, 10, i => cols[i]);
+  document.querySelectorAll('#st-page canvas[data-dots]').forEach(cv => dots(cv, +cv.dataset.dots, 20, () => '#fff', .56));
+}
+
 let spaceDown = false;
 document.addEventListener('keydown', e => {
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '') || document.activeElement?.isContentEditable;
@@ -1616,7 +1992,7 @@ document.addEventListener('keydown', e => {
     else if (e.key === 'Escape' && !$('obBack').hidden) $('obBack').click();
     return;
   }
-  if (!started || $('home').hidden) return;
+  if (!started || ($('home').hidden && !(DESK && studioOn))) return;
   if (layer.classList.contains('open')) { if (e.key === 'Escape') { e.preventDefault(); closeSheet(); } return; }
   if (typing) return;
   if (tourAt >= 0) {
@@ -1624,25 +2000,26 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); $('tNext').click(); return; }
   }
   const k = e.key;
-  if (k === 'ArrowRight' || k === ']') { e.preventDefault(); goPage(S.page + 1); }
-  else if (k === 'ArrowLeft' || k === '[') { e.preventDefault(); goPage(S.page - 1); }
+  if (k === 'ArrowRight' || k === ']') { e.preventDefault(); DESK && studioOn ? studioGo(S.dpage + 1) : goPage(S.page + 1); }
+  else if (k === 'ArrowLeft' || k === '[') { e.preventDefault(); DESK && studioOn ? studioGo(S.dpage - 1) : goPage(S.page - 1); }
+  else if ((k === '0' || k === 'o' || k === 'O') && DESK && studioOn) studioGo(0);
   else if (/^[1-5]$/.test(k)) goPage(+k - 1);
-  else if ((k === '+' || k === '=') && S.page === 0) { if (S.zoom < 4) setZoom(S.zoom + 1); }
-  else if ((k === '-' || k === '_') && S.page === 0) { if (S.zoom > 0) setZoom(S.zoom - 1); }
+  else if ((k === '+' || k === '=') && (DESK ? S.dpage === 1 : S.page === 0)) { if (S.zoom < 4) setZoom(S.zoom + 1); }
+  else if ((k === '-' || k === '_') && (DESK ? S.dpage === 1 : S.page === 0)) { if (S.zoom > 0) setZoom(S.zoom - 1); }
   else if (k === 'l' || k === 'L') { if (S.page < 3) $('modeBtn').click(); }
   else if (k === 'p' || k === 'P' || k === '%') { if (S.page < 3) $('pctBtn').click(); }
-  else if (k === 'u' || k === 'U') { if (S.page === 0) $('head-life').click(); }
+  else if (k === 'u' || k === 'U') { if (DESK && studioOn) { if (S.dpage === 1) $('st-num')?.click(); } else if (S.page === 0) $('head-life').click(); }
   else if (k === 's' || k === 'S' || k === ',') { tick(); openSheet('settings'); }
   else if (k === 'g' || k === 'G') { tick(); openSheet('guide'); }
   else if (k === '?' || k === '/') { tick(); openSheet('keys'); }
-  else if (k === ' ' && S.page < 3) {
+  else if (k === ' ' && (DESK && studioOn ? SKIND[S.dpage] : S.page < 3)) {
     e.preventDefault();
-    if (!e.repeat && !spaceDown) { spaceDown = true; beat(PAGES[S.page], true); thump(); clearInterval(spaceBeat); spaceBeat = setInterval(() => thump(), 1000); }
+    if (!e.repeat && !spaceDown) { spaceDown = true; DESK && studioOn ? studioBeat(true) : beat(PAGES[S.page], true); thump(); clearInterval(spaceBeat); spaceBeat = setInterval(() => thump(), 1000); }
   }
 });
 let spaceBeat = 0;
-document.addEventListener('keyup', e => { if (e.key === ' ' && spaceDown) { spaceDown = false; clearInterval(spaceBeat); beat(PAGES[S.page], false); } });
-addEventListener('blur', () => { if (spaceDown) { spaceDown = false; clearInterval(spaceBeat); beat(PAGES[S.page], false); } });
+document.addEventListener('keyup', e => { if (e.key === ' ' && spaceDown) { spaceDown = false; clearInterval(spaceBeat); DESK && studioOn ? studioBeat(false) : beat(PAGES[S.page], false); } });
+addEventListener('blur', () => { if (spaceDown) { spaceDown = false; clearInterval(spaceBeat); DESK && studioOn ? studioBeat(false) : beat(PAGES[S.page], false); } });
 
 // ================================================= lifecycle
 document.addEventListener('gesturestart', e => e.preventDefault());
@@ -1658,7 +2035,8 @@ if (DEMO) addEventListener('message', e => {
   const d = e.data || {}; if (!started || typeof d !== 'object') return;
   if (d.close) closeSheet();
   if (typeof d.zoom === 'number' && d.zoom >= 0 && d.zoom <= 4) setZoom(d.zoom);
-  if (typeof d.page === 'number') $('pager').scrollTo({ left: Math.max(0, Math.min(4, d.page)) * $('pager').clientWidth, behavior: 'smooth' });
+  if (typeof d.page === 'number' && DESK && studioOn) studioGo(d.page + 1);
+  else if (typeof d.page === 'number') $('pager').scrollTo({ left: Math.max(0, Math.min(4, d.page)) * $('pager').clientWidth, behavior: 'smooth' });
   if (d.style && ['classic', 'hero', 'live'].includes(d.style)) { S.style = d.style; swapHead(); }
   if (typeof d.lived === 'boolean' && d.lived !== S.lived) { S.lived = d.lived; swapHead(); }
   if (d.sheet === 'milestone') openSheet('milestone', Math.floor(age(birth())) + 6);
