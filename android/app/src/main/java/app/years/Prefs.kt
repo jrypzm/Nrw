@@ -45,6 +45,8 @@ data class Settings(
     val voices: Set<Int> = emptySet(),
     val lasts: List<LastTime> = emptyList(),
     val guard: Set<String> = emptySet(),
+    /** The first-run tour has been finished or skipped. */
+    val tourDone: Boolean = false,
 )
 
 object Prefs {
@@ -82,6 +84,7 @@ object Prefs {
             voices = p.getStringSet("voices", emptySet())?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet(),
             lasts = arr(p.getString("lasts", null)) { o -> LastTime(o.getString("t"), LocalDate.parse(o.getString("d"))) },
             guard = p.getStringSet("guard", emptySet())?.toSet() ?: emptySet(),
+            tourDone = p.getBoolean("tourDone", false),
         )
     }
 
@@ -113,6 +116,7 @@ object Prefs {
             .putStringSet("voices", s.voices.map { it.toString() }.toSet())
             .putString("lasts", JSONArray(s.lasts.map { JSONObject().put("t", it.text).put("d", it.added.toString()) }).toString())
             .putStringSet("guard", s.guard)
+            .putBoolean("tourDone", s.tourDone)
             .apply()
     }
 

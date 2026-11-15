@@ -196,6 +196,42 @@
   .toast { position: fixed; left: 50%; bottom: calc(var(--sbm) + 92px); z-index: 30; padding: 10px 16px; border-radius: 20px; background: var(--surface2); font-size: 14px; font-weight: 500; white-space: nowrap; opacity: 0; transform: translate3d(-50%, 12px, 0); transition: opacity .25s, transform .45s var(--spring); pointer-events: none; }
   .toast.show { opacity: 1; transform: translate3d(-50%, 0, 0); }
 
+
+  /* ---------- the tour: a spotlight that never blocks your fingers ---------- */
+  .tour { position: fixed; inset: 0; z-index: 15; pointer-events: none; opacity: 0; transition: opacity .4s var(--ease); }
+  .tour.on { opacity: 1; }
+  .tour .hole { position: absolute; border-radius: 22px; box-shadow: 0 0 0 200vmax rgba(0,0,0,.74); transition: left .55s var(--spring), top .55s var(--spring), width .55s var(--spring), height .55s var(--spring), border-radius .55s var(--spring); }
+  .tour .hole::after { content: ""; position: absolute; inset: -6px; border-radius: inherit; border: 1.2px solid rgba(255,255,255,.3); animation: ring 1.8s ease-in-out infinite; }
+  .tour .hole.none::after { display: none; }
+  @keyframes ring { 0%, 100% { transform: scale(1); opacity: .9; } 50% { transform: scale(1.03); opacity: .35; } }
+  .tour .finger { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: rgba(255,255,255,.9); box-shadow: 0 0 0 10px rgba(255,255,255,.18); opacity: 0; }
+  .tour .finger.tap { opacity: 1; animation: ftap 1.2s ease-out infinite; }
+  @keyframes ftap { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.5); } 100% { box-shadow: 0 0 0 30px rgba(255,255,255,0); } }
+  .tour .finger.hold { opacity: 1; animation: fhold 1.8s ease-in-out infinite; }
+  @keyframes fhold { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.35); } 70%, 100% { box-shadow: 0 0 0 22px rgba(255,255,255,.12); } }
+  .tour .finger.drag { animation: fdrag 2s cubic-bezier(.45,0,.25,1) infinite; }
+  @keyframes fdrag { 0% { opacity: 0; transform: translateX(-90px); } 12% { opacity: 1; } 75% { opacity: 1; transform: translateX(90px); } 100% { opacity: 0; transform: translateX(90px); } }
+  .tour .finger.pinch, .tour .finger.pinch2 { animation: fpinch 1.8s cubic-bezier(.45,0,.25,1) infinite; }
+  .tour .finger.pinch2 { animation-name: fpinch2; }
+  @keyframes fpinch { 0% { opacity: 0; transform: translate(-12px, 12px); } 15% { opacity: 1; } 75% { opacity: 1; transform: translate(-46px, 46px); } 100% { opacity: 0; transform: translate(-46px, 46px); } }
+  @keyframes fpinch2 { 0% { opacity: 0; transform: translate(12px, -12px); } 15% { opacity: 1; } 75% { opacity: 1; transform: translate(46px, -46px); } 100% { opacity: 0; transform: translate(46px, -46px); } }
+  .tour .finger.swipe { animation: fswipe 1.8s cubic-bezier(.45,0,.25,1) infinite; }
+  @keyframes fswipe { 0% { opacity: 0; transform: translateX(90px); } 15% { opacity: 1; } 75% { opacity: 1; transform: translateX(-90px); } 100% { opacity: 0; transform: translateX(-90px); } }
+  .tour .tcard { position: absolute; left: calc(20px + var(--sl)); right: calc(20px + var(--sr)); padding: 20px; border-radius: 22px; background: var(--surface2); pointer-events: auto; transition: top .55s var(--spring), opacity .3s; }
+  .tour .tcard h3 { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
+  .tour .tcard p { margin-top: 6px; font-size: 15px; line-height: 1.42; color: var(--mute); }
+  .tour .tcard .tb { display: flex; align-items: center; margin-top: 16px; }
+  .tour .tcard .n { font-size: 13px; color: var(--faint); letter-spacing: .02em; margin-right: auto; }
+  .tour .tcard .skip { padding: 8px 14px; font-size: 15px; font-weight: 500; color: var(--mute); }
+  .tour .tcard .next { height: 36px; padding: 0 18px; border-radius: 18px; background: var(--fg); color: #000; font-size: 15px; font-weight: 600; }
+  .tour .tcard .next:active { background: #d1d1d6; }
+  .tour .tcard .swap { animation: swap .45s var(--ease); }
+  @keyframes swap { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .guide .gi { padding: 13px 16px; position: relative; }
+  .guide .gi + .gi::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--sep); }
+  .guide .gi b { display: block; font-size: 17px; font-weight: 500; }
+  .guide .gi span { display: block; margin-top: 3px; font-size: 14px; line-height: 1.42; color: var(--mute); }
+
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; } }
   @media (min-width: 600px) { .page, #ob, #home .top { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .controls { padding-left: calc(50% - 260px); padding-right: calc(50% - 260px); } .sheet { max-width: 560px; margin: 0 auto; } }
 </style>
@@ -221,6 +257,7 @@
 </main>
 
 <div class="layer" id="layer"><div class="scrim"></div><section class="sheet" id="sheet" role="dialog"><div class="grab"><i></i></div><div class="body" id="sheetBody"></div></section></div>
+<div class="tour" id="tour"><div class="hole none" id="tHole"></div><i class="finger" id="tF1"></i><i class="finger" id="tF2"></i><div class="tcard" id="tCard"><div id="tText"></div><div class="tb"><span class="n" id="tN"></span><button class="skip" id="tSkip">Skip</button><button class="next" id="tNext">Next</button></div></div></div>
 <div class="toast" id="toast"></div>
 <label id="hapt" hidden><input type="checkbox" switch></label>
 
@@ -243,7 +280,7 @@ function thump() { try { if (navigator.vibrate) navigator.vibrate(14); else { ha
 
 // ================================================= storage
 const KEY = 'yrs.v2', LKEY = 'yrs.lines';
-const DEF = { birth: null, span: 80, lived: false, pct: false, style: 'classic', sun: false, ripple: true, names: {}, wall: 'daylight', unit: 0, page: 0, zoom: 1, people: [], events: [], letters: [], reviewedAge: -1, habits: [], phoneH: 3 };
+const DEF = { birth: null, span: 80, lived: false, pct: false, style: 'classic', sun: false, ripple: true, names: {}, wall: 'daylight', unit: 0, page: 0, zoom: 1, people: [], events: [], letters: [], reviewedAge: -1, habits: [], phoneH: 3, tourDone: false };
 const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 let S = Object.assign({}, DEF, read(KEY, {}));
 // carry over a birthday from the first web version
@@ -674,6 +711,7 @@ function startHome() {
   requestAnimationFrame(() => { $('pager').scrollTo({ left: S.page * $('pager').clientWidth, behavior: 'instant' }); });
   setTimeout(rippleNow, 700);
   setTimeout(checkMoments, 900);
+  if (!S.tourDone && !DEMO && tourAt < 0) setTimeout(() => { if (!layer.classList.contains('open')) tourGo(0); }, 1100);
 }
 function buildHome() {
   const pg = $('pager');
@@ -841,7 +879,7 @@ layer.querySelector('.scrim').onclick = closeSheet;
   sheet.addEventListener('touchend', () => { sheet.classList.remove('drag'); if (y0 != null && dy > 110) closeSheet(); else sheet.style.transform = ''; y0 = null; });
 })();
 function openSheet(kind, arg) {
-  body.innerHTML = ''; onClose = null;
+  body.innerHTML = ''; onClose = null; openKind = kind;
   SHEETS[kind](arg);
   requestAnimationFrame(() => { layer.classList.add('open'); body.scrollTop = 0; });
 }
@@ -859,7 +897,7 @@ function refresh() { save(); renderAll(false); }
 const SHEETS = {
   settings() {
     const b = birth();
-    body.innerHTML = H2('Settings') + `<div class="caps">You</div><div class="group">
+    body.innerHTML = H2('Settings') + `<div style="height:10px"></div><div class="group"><button class="row" id="sGuide"><span class="t">How to use yrs.<small>Every gesture and setting, and the tour</small></span><span class="chev">›</span></button></div><div class="caps">You</div><div class="group">
       <button class="row" id="sBday"><span class="t">Birthday</span><span class="v" id="sBdayV">${b.getDate()} ${MON[b.getMonth()]} ${b.getFullYear()}</span></button><div id="sBdayW" hidden style="padding:8px"></div>
       <div class="row"><span class="t">Lifespan</span><div class="stepper"><button data-s="-1">−</button><output id="sSpan">${S.span}</output><button data-s="1">+</button></div></div>
       <button class="row" id="sEst"><span class="t">Estimate my lifespan<small>Five honest questions</small></span><span class="chev">›</span></button></div>
@@ -869,11 +907,12 @@ const SHEETS = {
       <div class="group"><button class="row" id="sSave"><span class="t">Save as lock screen<small>Then in Photos: Share → Use as Wallpaper</small></span><span class="chev">›</span></button><button class="row" id="sShare"><span class="t">Share your grid</span><span class="chev">›</span></button></div>
       <div class="caps">On your iPhone</div><div class="group"><div class="row"><span class="t">${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'yrs. is on your Home Screen' : 'Add to Home Screen'}<small>${matchMedia('(display-mode: standalone)').matches || navigator.standalone ? 'Opens full screen and works offline.' : 'In Safari: Share → Add to Home Screen. It opens full screen and works offline.'}</small></span></div></div>
       <div class="caps">Support</div><div class="group"><a class="row" href="https://github.com/jrypzm/yrs" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="t">Star yrs. on GitHub<small>Free, no ads, no tracking. A star says thanks and helps others find it.</small></span><span class="chev">›</span></a></div>
-      <p class="small" style="margin:20px 4px 0">Swipe for your decade, this year, the people you love and where your years go. Pinch the life grid to zoom from all of history to single days. Hold a dot and drag to travel through time. Tap a year to name it, or seal a letter to a future one. Tap the number to count in days, weeks, summers, weekends or full moons. Hold it to feel the seconds.<br><br>Everything stays on this phone. Nothing is ever sent anywhere.</p>
+      <p class="small" style="margin:20px 4px 0">Everything stays on this phone. Nothing is ever sent anywhere.</p>
       <div style="height:20px"></div><button class="primary" id="sDone">Done</button>`;
     $('sBday').onclick = () => { tick(); const w = $('sBdayW'); w.hidden = !w.hidden; if (!w.hidden && !w.firstChild) w.append(dateWheels(birth(), d => { S.birth = iso(d); $('sBdayV').textContent = `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; refresh(); })); };
     body.querySelectorAll('[data-s]').forEach(x => x.onclick = () => { tick(); S.span = Math.min(120, Math.max(40, S.span + +x.dataset.s)); $('sSpan').textContent = S.span; refresh(); });
     $('sEst').onclick = () => { tick(); openSheet('lifespan'); };
+    $('sGuide').onclick = () => { tick(); openSheet('guide'); };
     $('sStyle').append(seg([['classic', 'Classic'], ['hero', 'Large'], ['live', 'Live']], S.style, v => { S.style = v; save(); swapHead(); }));
     $('rSun').append(sw(S.sun, v => { S.sun = v; refresh(); paintWalls(); }));
     $('rRip').append(sw(S.ripple, v => { S.ripple = v; save(); }));
@@ -955,6 +994,134 @@ const SHEETS = {
   },
 };
 
+
+// ================================================= the tour
+// Each step lights up one real control. The dim layer never takes touches, so you learn by doing:
+// a step moves on by itself once you've tried it, and Next always works.
+const TOUR = [
+  [null, 'A quick tour', 'Under a minute to learn every gesture. Try each one as we go, or tap Next. You can replay this any time from Settings.', ''],
+  ['head-life', 'This is your number', 'Tap it to count another way: years, days, weeks, summers, weekends or full moons.', 'tap', (a, b) => a.unit !== b.unit],
+  ['head-life', 'Feel the seconds', 'Now hold the number. Every beat is one second of your life going by.', 'hold'],
+  ['grid-life', 'One dot, one year', "White dots are behind you, dark ones are ahead. The one you're in fills a little every day. Tap any year, then tap its label to name it or seal a letter to it.", 'tap'],
+  ['grid-life', 'Travel through time', 'Hold a dot, then drag across the grid without letting go. Each year shows its age and date as you pass.', 'drag'],
+  ['zoombar', 'Zoom from history to today', 'Pinch the grid, or tap here: all of history, years, months, weeks, days. The number always counts what you see.', 'pinch', (a, b) => a.zoom !== b.zoom],
+  ['modeBtn', 'Left or lived', "Switch between the time still ahead of you and the time you've already lived.", 'tap', (a, b) => a.lived !== b.lived],
+  ['pctBtn', 'As a percentage', 'Show any page as a share of the whole. Tap again to go back.', 'tap', (a, b) => a.pct !== b.pct],
+  ['pdots', 'Four more pages', 'Swipe sideways: this decade, this year with a line a day and countdowns, the people you love, and where your years go.', 'swipe', (a, b) => a.page !== b.page],
+  ['moreBtn', 'Everything else', 'Your birthday, lifespan, number style and lock screen live here, with a guide to every setting. Tap to finish.', 'tap', (a, b, sheet) => sheet === 'settings'],
+];
+let tourAt = -1, tourBase = null, tourRAF = 0, tourHold = 0, openKind = null;
+const snap = () => ({ unit: S.unit, zoom: S.zoom, lived: S.lived, pct: S.pct, page: S.page });
+function tourGo(n) {
+  clearTimeout(tourHold);
+  if (n < 0 || n >= TOUR.length) {
+    tourAt = -1; S.tourDone = true; save();
+    $('tour').classList.remove('on'); cancelAnimationFrame(tourRAF); return;
+  }
+  if (n === 0) { $('pager').scrollTo({ left: 0, behavior: 'smooth' }); if (S.zoom !== 1) setZoom(1); if (S.pct) { S.pct = false; save(); swapHead(); } }
+  tourAt = n; tourBase = snap();
+  const [, title, text] = TOUR[n];
+  $('tText').innerHTML = `<div class="swap"><h3></h3><p></p></div>`;
+  $('tText').querySelector('h3').textContent = title; $('tText').querySelector('p').textContent = text;
+  $('tN').textContent = `${n + 1} of ${TOUR.length}`;
+  $('tNext').textContent = n === 0 ? 'Start' : n === TOUR.length - 1 ? 'Finish' : 'Next';
+  $('tSkip').hidden = n === TOUR.length - 1;
+  $('tour').classList.add('on');
+  cancelAnimationFrame(tourRAF); tourRAF = requestAnimationFrame(tourFrame);
+}
+function tourFrame() {
+  if (tourAt < 0) return;
+  const step = TOUR[tourAt], hole = $('tHole'), card = $('tCard'), W = innerWidth, H = innerHeight;
+  const sheetOpen = layer.classList.contains('open');
+  $('tour').classList.toggle('on', !sheetOpen);
+  const el = step[0] && $(step[0]);
+  let r = el && el.getBoundingClientRect();
+  if (r && (r.width === 0 || r.right < 0 || r.left > W)) r = null;
+  const pad = 10;
+  if (r) {
+    const x = r.left - pad, y = r.top - pad, w = r.width + 2 * pad, h = r.height + 2 * pad;
+    Object.assign(hole.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px', borderRadius: Math.min(h / 2, 22) + 'px' });
+    hole.classList.remove('none');
+    const ch = card.offsetHeight, below = y + h + 18;
+    card.style.top = (below + ch < H - 40 ? below : Math.max(40, y - 18 - ch)) + 'px';
+    // the ghost fingertip
+    const kind = step[3], hr = kind === 'pinch' ? $('grid-life').getBoundingClientRect() : r;
+    const cx = hr.left + hr.width / 2, cy = kind === 'swipe' ? r.top - 150 : hr.top + hr.height / 2;
+    [$('tF1'), $('tF2')].forEach((f, k) => { f.className = 'finger' + (kind && (k === 0 || kind === 'pinch') ? ' ' + (k === 1 ? 'pinch2' : kind) : ''); f.style.left = cx + 'px'; f.style.top = cy + 'px'; });
+  } else {
+    Object.assign(hole.style, { left: W / 2 + 'px', top: H * .42 + 'px', width: '0px', height: '0px' });
+    hole.classList.add('none');
+    card.style.top = Math.max(40, (H - card.offsetHeight) / 2) + 'px';
+    $('tF1').className = $('tF2').className = 'finger';
+  }
+  // moves on by itself once you've done it
+  if (step[4] && !tourHold && step[4](tourBase, snap(), sheetOpen ? openKind : null)) {
+    const n = tourAt; tourHold = setTimeout(() => { tourHold = 0; if (tourAt === n) { thump(); tourGo(n + 1); } }, n === TOUR.length - 1 ? 0 : 850);
+  }
+  tourRAF = requestAnimationFrame(tourFrame);
+}
+$('tNext').onclick = () => { tick(); tourGo(tourAt + 1); };
+$('tSkip').onclick = () => { tick(); tourGo(-1); };
+
+const GUIDE = [
+  ['Gestures', [
+    ['Swipe sideways', 'Move between your five pages: Life, This decade, This year, People and Where your years go. The dots at the bottom show where you are; tap one to jump.'],
+    ['Tap the number', 'On the Life page in Years, count in years, days, weeks, summers, weekends or full moons.'],
+    ['Hold the number', 'Watch the seconds you have left tick by, one beat at a time.'],
+    ['Tap a dot', 'Shows that year, month, week or day. Tap the label to name a year or seal a letter to it.'],
+    ['Hold and drag', 'Hold any dot, then slide across the grid to travel through your life. Let go to keep the label.'],
+    ['Pinch', 'Pinch the Life grid in or out to zoom between History, Years, Months, Weeks and Days. You can also tap the names under the grid.'],
+    ['Left or Lived', 'The button at bottom left switches every number between the time ahead of you and the time behind you.'],
+    ['%', 'The button at bottom right shows any page as a percentage of the whole.'],
+  ]],
+  ['Your pages', [
+    ['Life', "Every year of your life as one dot. White years are lived, dark years are ahead, and the year you're in fills from the bottom as it passes. Named years and sealed letters get a thin ring."],
+    ['History', 'Zoom all the way out: about 3,750 lifetimes since the first cities, end to end. Yours is the last dot, still filling.'],
+    ['This decade', "The ten years of the decade you're in, so the next few feel close."],
+    ['This year', "Twelve dots from your last birthday to your next. Below: today's line, what you wrote on this day in past years, and your countdowns."],
+    ['A line a day', 'Tap Today on the This year page and write one sentence. Years later, on this day brings it back. In Days zoom, tap a day to read its line.'],
+    ['Countdowns', 'On This year, tap Add a countdown for a trip, a wedding or a birthday. Your next one can also appear as the line on your lock screen.'],
+    ['People', "Add someone, the year they were born and how often you see them. yrs. shows how many more visits you'll likely have, as dots. Tap a person to edit or remove them."],
+    ['Where your years go', "Your remaining years, minus sleep, work, eating and chores, and time on your phone. Set your daily phone hours with the slider; find them in Settings → Screen Time on your iPhone. What's left is truly yours."],
+  ]],
+  ['Moments', [
+    ['Name a year', "Tap a year's label to give it a name: the year you moved, or the one you'll travel. Named years get a ring."],
+    ['Letters to your future self', 'When you name a year ahead, you can also write a letter to it. It stays sealed until that birthday, then opens on its own.'],
+    ['Your birthday review', 'In the month after each birthday, yrs. shows the year you just finished: days lived, lines written, and your first and last line.'],
+    ['Happy birthday', 'On your birthday, the Life page says so.'],
+  ]],
+  ['Settings · You', [
+    ['Birthday', 'Tap to change it on the wheels. Everything recalculates at once.'],
+    ['Lifespan', 'How many years your grid holds. 80 is a fair average; use − and + to change it from 40 to 120.'],
+    ['Estimate my lifespan', 'Five questions about habits with the clearest evidence, starting from 80. A rough estimate to reflect on, not medical advice.'],
+  ]],
+  ['Settings · Number', [
+    ['Classic', 'A clear headline, like 48 years left.'],
+    ['Large', 'One big, thin number on its own.'],
+    ['Live', 'Counts down to eight decimal places, so you can watch it move.'],
+  ]],
+  ['Settings · Feel', [
+    ['Daylight', 'Your dots glow bright by day and dim at night, following the sun. It also changes the Grid lock screen.'],
+    ['Ripple', 'A wave runs through your years each time you open yrs. Turn it off for a still grid.'],
+  ]],
+  ['Settings · Lock screen', [
+    ['Grid, Daylight, Hourglass, Stars', 'Tap a style to choose it. Grid is your years as dots. Daylight dims with the sun. Hourglass drops one grain each birthday. Stars scatter your years like a night sky.'],
+    ['Save as lock screen', 'Makes the image at your screen size. Choose Save Image, then in Photos tap Share → Use as Wallpaper. Save a new one now and then so it stays true.'],
+    ['Share your grid', 'Makes an image of your years to share anywhere you like.'],
+  ]],
+  ['On your iPhone', [
+    ['Add to Home Screen', 'In Safari, tap Share → Add to Home Screen. yrs. then opens full screen with its own icon and works offline.'],
+    ['Nothing leaves your phone', 'There is no account and no server. Everything is stored only in Safari on this iPhone.'],
+  ]],
+];
+SHEETS.guide = () => {
+  body.innerHTML = `<h2 style="font-size:30px;font-weight:700;letter-spacing:-.025em;margin-top:4px">How to use yrs.</h2><p class="lead" style="margin-top:6px">Every gesture, page and setting, in one place.</p>
+    <button class="primary" id="gTour">Replay the tour</button><div class="guide">` +
+    GUIDE.map(([sec, items]) => `<div class="caps">${sec}</div><div class="group">${items.map(([t, d]) => `<div class="gi"><b>${t}</b><span>${d}</span></div>`).join('')}</div>`).join('') +
+    `</div><div style="height:24px"></div><button class="primary" id="gDone">Done</button>`;
+  $('gTour').onclick = () => { tick(); closeSheet(); setTimeout(() => tourGo(0), 450); };
+  $('gDone').onclick = () => { tick(); closeSheet(); };
+};
 
 // ================================================= lifecycle
 document.addEventListener('gesturestart', e => e.preventDefault());

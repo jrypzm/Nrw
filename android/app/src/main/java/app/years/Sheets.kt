@@ -110,7 +110,7 @@ fun Field(value: String, onChange: (String) -> Unit, placeholder: String, max: I
 // ------------------------------------------------------------------ settings
 
 @Composable
-fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, openLifespan: () -> Unit) {
+fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, openLifespan: () -> Unit, openGuide: () -> Unit) {
     val ctx = LocalContext.current
     val s = st.s
     var editBirth by remember { mutableStateOf(false) }
@@ -120,6 +120,9 @@ fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, 
     }
     YrsSheet(onDismiss) {
         Text("Settings", style = T.h2, modifier = Modifier.padding(top = 6.dp, bottom = 6.dp))
+
+        Spacer(Modifier.height(10.dp))
+        Group { SettingRow("How to use yrs.", "Every gesture and setting, and the tour", onClick = openGuide) { Chevron() } }
 
         Caps("You")
         Group {
@@ -204,7 +207,7 @@ fun SettingsSheet(st: AppState, onDismiss: () -> Unit, toast: (String) -> Unit, 
         }
 
         Text(
-            "Swipe for your decade, this year, the people you love and where your years go. Pinch the life grid to zoom from years to days. Hold a dot and drag to travel through time. Tap a year to name it, or seal a letter to a future one. Tap the number to count in days, weeks, summers, weekends or full moons. Hold it to feel your heartbeat.\n\nyrs. has no internet permission. Everything stays on this phone.",
+            "yrs. has no internet permission. Everything stays on this phone.",
             style = T.small, modifier = Modifier.padding(top = 20.dp, start = 4.dp, end = 4.dp),
         )
         Spacer(Modifier.height(20.dp))

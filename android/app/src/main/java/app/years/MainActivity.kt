@@ -141,6 +141,7 @@ sealed interface Sheet {
     data class LetterRead(val index: Int) : Sheet
     data object Review : Sheet
     data object Lifespan : Sheet
+    data object Guide : Sheet
 }
 
 @Composable
@@ -160,7 +161,7 @@ fun App(open: String?, consumed: () -> Unit) {
 const val PAGES = 5
 
 @Composable
-fun Home(st: AppState, open: String?, consumed: () -> Unit) {
+fun Home(st: AppState, open: String?, tourAt: Int? = null, consumed: () -> Unit) {
     val s = st.s
     val ctx = LocalContext.current
     val view = LocalView.current
@@ -179,6 +180,25 @@ fun Home(st: AppState, open: String?, consumed: () -> Unit) {
     }
 
     var sheet by remember { mutableStateOf<Sheet?>(null) }
+
+    // The first-run tour: each step lights up one real control and moves on once you've tried it.
+    val targets = remember { TourTargets() }
+    var tourStep by remember { mutableIntStateOf(tourAt ?: if (st.s.tourDone) -1 else 0) }
+    var tourBase by remember { mutableStateOf(st.s) }
+    fun tourGo(n: Int) {
+        if (n !in TOUR.indices) { tourStep = -1; st.update(refresh = false) { it.copy(tourDone = true) }; return }
+        if (n == 0) {
+            scope.launch { pager.animateScrollToPage(0) }
+            st.update(refresh = false) { it.copy(zoom = Life.ZOOM_YEARS, pct = false) }
+        }
+        tourBase = st.s
+        tourStep = n
+    }
+    LaunchedEffect(Unit) { if (tourAt == null && tourStep == 0) { delay(700); tourGo(0) } }
+    LaunchedEffect(tourStep, st.s, sheet) {
+        val step = TOUR.getOrNull(tourStep) ?: return@LaunchedEffect
+        if (step.done(tourBase, st.s, sheet)) { delay(if (tourStep == TOUR.size - 1) 0 else 850); view.confirm(); tourGo(tourStep + 1) }
+    }
     var toast by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(toast) { if (toast != null) { delay(2200); toast = null } }
 
@@ -235,7 +255,7 @@ fun Home(st: AppState, open: String?, consumed: () -> Unit) {
             Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("yrs.", style = TextStyle(fontFamily = Display, fontWeight = FontWeight.Bold, fontSize = 17.sp, letterSpacing = (-0.05).em, color = C.Faint))
                 Spacer(Modifier.weight(1f))
-                RoundButton({ sheet = Sheet.Settings }, size = 32.dp) { MoreDots() }
+                Box(Modifier.tourTarget(targets, "settings")) { RoundButton({ sheet = Sheet.Settings }, size = 32.dp) { MoreDots() } }
             }
             Spacer(Modifier.height(26.dp))
             HorizontalPager(state = pager, modifier = Modifier.fillMaxWidth().weight(1f), verticalAlignment = Alignment.Top, beyondViewportPageCount = 1) { page ->
@@ -244,10 +264,13 @@ fun Home(st: AppState, open: String?, consumed: () -> Unit) {
                         0, 1, 2 -> {
                             val kind = ViewKind.entries[page]
                             val m = Life.model(s, kind, now)
-                            Header(st, m)
+                            val life = kind == ViewKind.LIFE
+                            Box(if (life) Modifier.tourTarget(targets, "number") else Modifier) { Header(st, m) }
                             Spacer(Modifier.height(if (s.style == NumberStyle.HERO) 40.dp else 32.dp))
-                            DotGrid(st, m, if (kind == ViewKind.LIFE && s.zoom == Life.ZOOM_YEARS) ripple.value else 1f) { y -> sheet = Sheet.Milestone(y) }
-                            if (kind == ViewKind.LIFE) ZoomBar(st)
+                            Box(if (life) Modifier.tourTarget(targets, "grid") else Modifier) {
+                                DotGrid(st, m, if (life && s.zoom == Life.ZOOM_YEARS) ripple.value else 1f) { y -> sheet = Sheet.Milestone(y) }
+                            }
+                            if (life) Box(Modifier.tourTarget(targets, "zoom")) { ZoomBar(st) }
                             if (kind == ViewKind.YEAR) YearExtras(st, onLine = { sheet = Sheet.Line(it) }, onEvent = { sheet = Sheet.EventEdit(it) })
                         }
                         3 -> PeoplePage(st) { sheet = Sheet.PersonEdit(it) }
@@ -264,11 +287,15 @@ fun Home(st: AppState, open: String?, consumed: () -> Unit) {
                 .navigationBarsPadding().padding(start = 24.dp, end = 24.dp, bottom = 20.dp, top = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(Modifier.weight(1f).alpha(toggleAlpha)) { if (showToggles) Pill(if (s.lived) "Lived" else "Left") { st.update { it.copy(lived = !it.lived) } } }
-            PagerDots(pager.currentPage) { scope.launch { pager.animateScrollToPage(it) } }
+            Box(Modifier.weight(1f).alpha(toggleAlpha)) {
+                if (showToggles) Box(Modifier.tourTarget(targets, "lived")) { Pill(if (s.lived) "Lived" else "Left") { st.update { it.copy(lived = !it.lived) } } }
+            }
+            Box(Modifier.tourTarget(targets, "pages")) { PagerDots(pager.currentPage) { scope.launch { pager.animateScrollToPage(it) } } }
             Box(Modifier.weight(1f).alpha(toggleAlpha), contentAlignment = Alignment.CenterEnd) {
-                if (showToggles) RoundButton({ st.update { it.copy(pct = !it.pct) } }, on = s.pct) {
-                    Text("%", style = T.label.copy(fontWeight = FontWeight.SemiBold, color = if (s.pct) Color.Black else C.Fg))
+                if (showToggles) Box(Modifier.tourTarget(targets, "pct")) {
+                    RoundButton({ st.update { it.copy(pct = !it.pct) } }, on = s.pct) {
+                        Text("%", style = T.label.copy(fontWeight = FontWeight.SemiBold, color = if (s.pct) Color.Black else C.Fg))
+                    }
                 }
             }
         }
@@ -279,11 +306,16 @@ fun Home(st: AppState, open: String?, consumed: () -> Unit) {
         ) {
             Text(toast ?: "", style = T.label.copy(fontSize = 14.sp), modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(C.Surface2).padding(horizontal = 16.dp, vertical = 10.dp))
         }
+
+        if (tourStep in TOUR.indices && sheet == null) {
+            TourOverlay(targets, tourStep, onNext = { view.tap(); tourGo(tourStep + 1) }, onSkip = { tourGo(-1) })
+        }
     }
 
     val close = { sheet = null }
     when (val sh = sheet) {
-        Sheet.Settings -> SettingsSheet(st, close, { toast = it }, { sheet = Sheet.Lifespan })
+        Sheet.Settings -> SettingsSheet(st, close, { toast = it }, { sheet = Sheet.Lifespan }, { sheet = Sheet.Guide })
+        Sheet.Guide -> GuideSheet(close) { sheet = null; tourGo(0) }
         is Sheet.Milestone -> MilestoneSheet(st, sh.year, close)
         is Sheet.PersonEdit -> PersonSheet(st, sh.index, close)
         is Sheet.EventEdit -> EventSheet(st, sh.index, close)

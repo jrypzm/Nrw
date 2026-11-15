@@ -39,6 +39,7 @@ class ScreensTest {
         names = mapOf(12 to "Moved to Dubai"),
         people = listOf(Person("Mum", 1976, Often.DAILY), Person("Grandpa", 1946, Often.SEASONAL)),
         events = listOf(Event("Trip to Japan", LocalDate.now().plusDays(43))),
+        tourDone = true,
     )
 
     @Composable
@@ -52,8 +53,8 @@ class ScreensTest {
         Frame { Onboarding(AppState(LocalContext.current, Settings(), persist = false), step, LocalDate.of(2010, 1, 2), animate = false) }
     }
 
-    private fun home(s: Settings) = paparazzi.snapshot {
-        Frame { Home(AppState(LocalContext.current, s, persist = false), null) {} }
+    private fun home(s: Settings, tourAt: Int? = null) = paparazzi.snapshot {
+        Frame { Home(AppState(LocalContext.current, s, persist = false), null, tourAt) {} }
     }
 
     @Test fun onboarding0_welcome() = onboarding(0)
@@ -71,6 +72,17 @@ class ScreensTest {
     @Test fun home2_year() = home(me.copy(page = 2))
     @Test fun home3_people() = home(me.copy(page = 3))
     @Test fun home4_ledger() = home(me.copy(page = 4))
+
+    @Test fun tour0_welcome() = home(me.copy(page = 0, tourDone = false), 0)
+    @Test fun tour1_number() = home(me.copy(page = 0, tourDone = false), 1)
+    @Test fun tour3_grid() = home(me.copy(page = 0, tourDone = false), 3)
+    @Test fun tour5_zoom() = home(me.copy(page = 0, tourDone = false), 5)
+    @Test fun tour6_lived() = home(me.copy(page = 0, tourDone = false), 6)
+    @Test fun tour8_pages() = home(me.copy(page = 0, tourDone = false), 8)
+    @Test fun tour9_settings() = home(me.copy(page = 0, tourDone = false), 9)
+    @Test fun guide() = paparazzi.snapshot {
+        Frame { Column(Modifier.padding(horizontal = 24.dp).background(C.Surface)) { GuideContent({}, {}) } }
+    }
 
     @Test fun widgets() = paparazzi.snapshot {
         Frame {
