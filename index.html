@@ -165,7 +165,8 @@ nav .links a:not(.btn) { transition: color .2s; } nav .links a:not(.btn):hover {
 .facts p { color: var(--mute); font-size: 16px; line-height: 1.5; }
 
 /* ---------- get it ---------- */
-.get { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-top: clamp(56px, 7vw, 96px); }
+.get { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: clamp(56px, 7vw, 96px); }
+@media (min-width: 900px) and (max-width: 1179px) { .get { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .get .plat:last-child { grid-column: 1 / -1; min-height: 0; } }
 .plat { position: relative; border-radius: 32px; padding: clamp(28px, 3.4vw, 48px); background: var(--panel); display: flex; flex-direction: column; min-height: 400px; overflow: hidden; }
 .plat h3 { font-family: var(--display); font-size: clamp(30px, 3vw, 44px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; }
 .plat .sub { margin-top: 10px; color: var(--mute); font-size: 16px; }
@@ -331,7 +332,7 @@ footer .row a:hover { color: var(--fg); }
     <h1><span class="ln"><span>Your life,</span></span><span class="ln"><span>in dots.</span></span></h1>
     <p class="lede fade-in d1">Born in <span class="yr"><span id="yrLabel">1995</span><select id="yrSel" aria-label="Year you were born"></select></span>? Then about <b class="num" id="heroLeft">49 years</b> are still ahead of you. yrs. puts every one of them on your screen, so you spend them on purpose.</p>
     <div class="cta fade-in d2">
-      <a class="btn big dl" href="https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 7.5 8 11.5 12 7.5M2.5 14h11"/></svg>Download for Android</a>
+      <a class="btn big dl" id="heroDl" href="https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 7.5 8 11.5 12 7.5M2.5 14h11"/></svg><span>Download for Android</span></a>
       <a class="btn big ghost" href="web/">Try it free, no install</a>
     </div>
     <p class="ticker fade-in d3"><b class="num" id="ticker">0</b> seconds left, give or take</p>
@@ -475,6 +476,11 @@ footer .row a:hover { color: var(--fg); }
         <div class="go"><a class="btn big dl" href="https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 7.5 8 11.5 12 7.5M2.5 14h11"/></svg>Download</a><span class="ver" id="ver">Android 10 or newer</span></div>
       </div>
       <div class="plat soft">
+        <h3>Linux</h3><p class="sub">A fast native app for your desktop. On KDE Plasma it keeps your wallpaper and lock screen up to date.</p>
+        <ol><li><span>Download <b>yrs-x86_64.AppImage</b>. One file, about 5 MB.</span></li><li><span>Make it executable: right-click, <b>Properties</b>, Permissions, <b>Is executable</b>. Or <b>chmod +x</b> it.</span></li><li><span>Open it. yrs. adds itself to your app launcher, ready to pin to the taskbar.</span></li></ol>
+        <div class="go"><a class="btn big dl" href="https://github.com/jrypzm/yrs/releases/download/linux/yrs-x86_64.AppImage"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4 7.5 8 11.5 12 7.5M2.5 14h11"/></svg>Download</a><span class="ver" id="verLinux">Fedora, Ubuntu, Arch · Wayland or X11</span></div>
+      </div>
+      <div class="plat soft">
         <h3>In your browser</h3><p class="sub">Try yrs. right now, free, with nothing to install. On any phone, tablet or computer.</p>
         <ol><li><span>Open <b>jrypzm.github.io/yrs/web</b>.</span></li><li><span>Enter your birthday. That's it: there's your life.</span></li><li><span>Like it? Install it as an app. <b>On iPhone:</b> in Safari, tap Share, then Add to Home Screen. <b>On Android or a computer:</b> tap Install. yrs. shows you how when you open it.</span></li></ol>
         <div class="go"><a class="btn big ghost" href="web/">Try it now</a><span class="ver">Any modern browser</span></div>
@@ -491,7 +497,7 @@ footer .row a:hover { color: var(--fg); }
       <div><b>See your life in seconds</b><p>No download, no account, no sign-up. Open the link on any phone, tablet or computer, enter your birthday, and you're looking at your life.</p></div>
       <div><b>An app on iPhone, too</b><p>Add it to your Home Screen from Safari's Share button and yrs. becomes an app: its own icon, full screen, offline, in the iPhone's own SF Pro. No App Store needed.</p></div>
       <div><b>Private by design</b><p>Everything stays in your browser, on your device. No account, no server, nothing uploaded. Updates arrive the moment they're published.</p></div>
-      <div><b>What a browser can't do</b><p>Browsers can't add widgets or change your wallpaper on their own, so you save the lock screen once from Settings. For widgets and a lock screen that updates itself, get the Android app.</p></div>
+      <div><b>What a browser can't do</b><p>Browsers can't add widgets or change your wallpaper on their own, so you save the lock screen once from Settings. For widgets and a lock screen that updates itself, get the Android app, or the Linux app for your computer.</p></div>
     </div>
   </div>
 </section>
@@ -970,6 +976,15 @@ fetch('https://api.github.com/repos/jrypzm/yrs/releases/latest').then(r => r.ok 
   const a = (rel.assets || []).find(x => x.name === 'yrs.apk') || (rel.assets || [])[0];
   const v = (rel.tag_name || '').replace(/^years-/, ''), mb = a ? (a.size / 1048576).toFixed(1) + ' MB' : '';
   $('ver').textContent = `Version ${v}${mb ? ' · ' + mb : ''} · Android 10+`;
+}).catch(() => {});
+
+// Linux visitors are offered the Linux app first; Android phones also say "Linux" in their user agent, so skip those
+if (/Linux/.test(navigator.userAgent) && !/Android|CrOS/.test(navigator.userAgent)) {
+  const h = $('heroDl'); h.href = 'https://github.com/jrypzm/yrs/releases/download/linux/yrs-x86_64.AppImage'; h.querySelector('span').textContent = 'Download for Linux';
+}
+fetch('https://api.github.com/repos/jrypzm/yrs/releases/tags/linux').then(r => r.ok ? r.json() : null).then(rel => {
+  const a = rel && (rel.assets || []).find(x => x.name === 'yrs-x86_64.AppImage');
+  if (a) $('verLinux').textContent = `${(a.size / 1048576).toFixed(1)} MB · Fedora, Ubuntu, Arch · Wayland or X11`;
 }).catch(() => {});
 
 // ================================================= loop
