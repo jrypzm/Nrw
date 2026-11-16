@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "app.years.home"
-        minSdk = 29
+        minSdk = 30
         targetSdk = 35
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
         versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")

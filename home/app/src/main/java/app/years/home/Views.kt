@@ -61,7 +61,8 @@ class RailView(c: Context, private val onActive: (Boolean) -> Unit, private val 
             if (i != letter) {
                 letter = i
                 val l = letters[i]
-                apps = Apps.visible.filter { it.letter == l }.take(9)
+                // as many as there's room for on this screen
+                apps = Apps.visible.filter { it.letter == l }.take(((botY - topY + dp(40f)) / rowH()).toInt().coerceIn(3, 9))
                 if (l in favLetters) Feel.knock(this) else Feel.tick(this)
             }
             pick = -1
@@ -86,7 +87,8 @@ class RailView(c: Context, private val onActive: (Boolean) -> Unit, private val 
     private fun listTop(): Float {
         val n = max(1, apps.size)
         val centre = topY + (letter + .5f) / letters.size * (botY - topY)
-        return (centre - n * rowH() / 2).coerceIn(topY - dp(40f), botY - n * rowH())
+        val lo = topY - dp(40f)
+        return (centre - n * rowH() / 2).coerceIn(lo, max(lo, botY - n * rowH()))
     }
     private fun appIndexAt(y: Float): Int {
         val i = ((y - listTop()) / rowH()).toInt()
@@ -103,7 +105,7 @@ class RailView(c: Context, private val onActive: (Boolean) -> Unit, private val 
             if (i == letter && pick < 0) {
                 canvas.drawCircle(railX, y, dp(13f), bubble)
                 letterPaint.color = K.BG
-            } else letterPaint.color = if (abs(i - letter) == 1) K.MUTE else K.FAINT
+            } else letterPaint.color = if (i == letter) K.FG else if (abs(i - letter) == 1) K.MUTE else K.FAINT
             canvas.drawText(l.toString(), railX, y + dp(4f), letterPaint)
             if (l in favLetters && !(i == letter && pick < 0)) canvas.drawCircle(railX + (if (left) dp(10f) else -dp(10f)), y, dp(1.6f), mark)
         }
@@ -174,7 +176,8 @@ class AlphaStrip(c: Context, private val onLetter: (Char) -> Unit) : View(c) {
         }
         if (pressing && cur >= 0) {
             // the bubble sits to the left of the strip, beside your thumb
-            val cy = py.coerceIn(paddingTop + dp(32f), height - paddingBottom - dp(32f))
+            val lo = paddingTop + dp(32f)
+            val cy = py.coerceIn(lo, max(lo, height - paddingBottom - dp(32f)))
             val cx = -dp(44f)
             canvas.drawCircle(cx, cy, dp(32f), dot)
             big.typeface = Type.display; big.textSize = dp(30f)

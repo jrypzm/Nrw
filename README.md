@@ -42,7 +42,7 @@ It's **open source under the MIT license**. Use it, read it, build it yourself, 
 
 ## Get yrs.
 
-**Android** &nbsp;·&nbsp; Android 10 or newer
+**Android** &nbsp;·&nbsp; Android 11 or newer
 
 1. Tap **[Download yrs.apk](https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk)**. You always get the latest build.
 2. Open it from your notifications. If asked, allow installs from your browser.
@@ -54,7 +54,7 @@ It's **open source under the MIT license**. Use it, read it, build it yourself, 
 2. Make it executable: right-click it, Properties, Permissions, **Is executable**. Or `chmod +x yrs-x86_64.AppImage`.
 3. Open it. yrs. adds itself to your app launcher with its icon, so you can pin it to the taskbar. On KDE Plasma it can also set your wallpaper and lock screen, sit in the tray and start at login.
 
-**yrs. home** &nbsp;·&nbsp; a launcher for Android 10 or newer
+**yrs. home** &nbsp;·&nbsp; a launcher for Android 11 or newer
 
 A black, quiet home screen: the time, your favourite apps as words, and everything else one swipe or one thumb away. About 200 KB, no internet permission.
 

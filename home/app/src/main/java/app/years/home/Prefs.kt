@@ -66,6 +66,14 @@ class Prefs private constructor(private val sp: SharedPreferences) {
     fun moment(name: String): List<String> = sp.getString("m_$name", null)?.split('\n')?.filter { it.isNotEmpty() } ?: emptyList()
     fun setMoment(name: String, v: List<String>) = sp.edit().putString("m_$name", v.joinToString("\n")).apply()
 
+    /** Takes apps off home and out of every part of the day (they were hidden or uninstalled). */
+    fun dropFromHome(keys: Set<String>) {
+        favorites = favorites.filter { it !in keys }
+        for (m in listOf("morning", "work", "evening", "night")) moment(m).let { l -> if (l.any { it in keys }) setMoment(m, l.filter { it !in keys }) }
+    }
+    /** Writes everything to disk now (before the app restarts itself). */
+    fun flush() { sp.edit().commit() }
+
     /** When yrs. home first ran: nothing counts as "quiet" until it has watched for a month. */
     val firstRun: Long get() = sp.getLong("firstRun", 0L).takeIf { it > 0 } ?: System.currentTimeMillis().also { sp.edit().putLong("firstRun", it).apply() }
     /** The last time each app was opened from here. */

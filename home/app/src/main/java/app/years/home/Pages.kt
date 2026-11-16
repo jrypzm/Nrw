@@ -152,11 +152,16 @@ class PauseActivity : Page() {
 
 /** Settings: what's on home, what's hidden, what pauses first, how it looks, and what it can see. */
 class SettingsActivity : Page() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        render()
-    }
     override fun onResume() { super.onResume(); render() }
+
+    /** Opens one of Android's own settings screens; on a phone that doesn't have that screen, the main one. */
+    private fun go(action: String) { if (runCatching { startActivity(Intent(action)) }.isFailure) runCatching { startActivity(Intent(Settings.ACTION_SETTINGS)) } }
+    /** Asks for a permission; if Android won't ask any more (denied for good), opens the app's page where it can be switched on. */
+    private fun ask(permission: String, code: Int) {
+        asked = permission; requestPermissions(arrayOf(permission), code)
+    }
+    private var asked: String? = null
+    private var memory = -1
 
     private fun render() {
         col.removeAllViews()
@@ -169,7 +174,7 @@ class SettingsActivity : Page() {
         section("Home")
         group().also { g ->
             row(g, "Home app", if (home) "yrs. home is your home screen. Tap to switch to another" else "Make yrs. home your home screen", if (home) "On" else null) { chooseHome() }
-            row(g, "Apps on home", "${p.favorites.size} of up to 8, in the order you pick them") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "home")) }
+            row(g, "Apps on home", "${p.favorites.count { it != HomeActivity.LIGHT }} of up to 8, together in one box") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "home")) }
             row(g, "Hidden apps", if (p.hidden.isEmpty()) "None" else "${p.hidden.size} hidden from the list and search") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "hidden")) }
             row(g, "Pause first", if (p.paused.isEmpty()) "A breath before the apps you choose" else "${p.paused.size} ${if (p.paused.size == 1) "app" else "apps"} ask first") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "pause")) }
         }
@@ -203,9 +208,9 @@ class SettingsActivity : Page() {
         group().also { g ->
             val listening = Live.enabled(this)
             row(g, "Notifications on your schedule", if (!listening) "Needs notification access first. People always get through." else "People reach you straight away. Shops, social and news wait and arrive together.", if (p.hourOn && listening) "On" else "Off") {
-                if (!listening) startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) else { p.hourOn = !p.hourOn; render() }
+                if (!listening) go(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS) else { p.hourOn = !p.hourOn; render() }
             }
-            if (p.hourOn) {
+            if (p.hourOn && listening) {
                 val h24 = android.text.format.DateFormat.is24HourFormat(this)
                 val presets = listOf(listOf(780, 1140), listOf(540, 780, 1080), listOf(720), listOf(1080), listOf(480, 720, 1020, 1260))
                 val cur = presets.indexOf(p.hourTimes).let { if (it < 0) 0 else it }
@@ -223,22 +228,22 @@ class SettingsActivity : Page() {
         section("What it can see")
         group().also { g ->
             row(g, "Notification dots and previews", if (Live.enabled(this)) "On. Read only to show a dot and the latest message when you hold an app" else "Off", if (Live.enabled(this)) "On" else null) {
-                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                go(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
             }
             row(g, "Double-tap to lock", if (LockService.on()) "On" else "Switch on yrs. home in Accessibility, under Installed apps", if (LockService.on()) "On" else null) {
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                go(Settings.ACTION_ACCESSIBILITY_SETTINGS)
             }
             val people = checkSelfPermission(Manifest.permission.READ_CONTACTS) == android.content.pm.PackageManager.PERMISSION_GRANTED && p.people
             row(g, "People in search", if (people) "On" else "Off", if (people) "On" else null) {
-                if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != android.content.pm.PackageManager.PERMISSION_GRANTED) requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), 1) else { p.people = !p.people; render() }
+                if (checkSelfPermission(Manifest.permission.READ_CONTACTS) != android.content.pm.PackageManager.PERMISSION_GRANTED) ask(Manifest.permission.READ_CONTACTS, 1) else { p.people = !p.people; render() }
             }
             val usage = Usage.allowed(this)
             row(g, "Usage access", if (usage) "On. Shows minutes today when an app pauses, and finds apps you never open" else "Optional. For minutes today and the quiet shelf", if (usage) "On" else null) {
-                startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                go(Settings.ACTION_USAGE_ACCESS_SETTINGS)
             }
             val cal = checkSelfPermission(Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED && p.calendar
             row(g, "Next event on home", if (cal) "On. Shown under the clock when it's today" else "Off", if (cal) "On" else null) {
-                if (checkSelfPermission(Manifest.permission.READ_CALENDAR) != android.content.pm.PackageManager.PERMISSION_GRANTED) requestPermissions(arrayOf(Manifest.permission.READ_CALENDAR), 2) else { p.calendar = !p.calendar; render() }
+                if (checkSelfPermission(Manifest.permission.READ_CALENDAR) != android.content.pm.PackageManager.PERMISSION_GRANTED) ask(Manifest.permission.READ_CALENDAR, 2) else { p.calendar = !p.calendar; render() }
             }
         }
 
@@ -247,15 +252,16 @@ class SettingsActivity : Page() {
             val custom = p.fontPath?.let { File(it).name }
             row(g, "Typeface", if (custom != null) "Your own font file" else "The one yrs. home comes with", if (custom != null) "Yours" else "Inter")
             row(g, "Use my own font", "Pick a .ttf or .otf file already on your phone") {
-                startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*").putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("font/ttf", "font/otf", "application/x-font-ttf", "application/octet-stream")), 9)
+                runCatching { startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*").putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("font/ttf", "font/otf", "application/x-font-ttf", "application/octet-stream")), 9) }
             }
             if (custom != null) row(g, "Back to Inter") { File(p.fontPath!!).delete(); p.fontPath = null; Type.load(this); restartHome() }
         }
 
         section("Performance")
         group().also { g ->
-            val mi = Debug.MemoryInfo().also { Debug.getMemoryInfo(it) }
-            row(g, "Memory in use", "What yrs. home takes right now", "${mi.totalPss / 1024} MB")
+            // measured once, off the main thread, and filled in when it's ready
+            val mem = row(g, "Memory in use", "What yrs. home takes right now", if (memory >= 0) "$memory MB" else "…")
+            if (memory < 0) Thread { val mi = Debug.MemoryInfo().also { Debug.getMemoryInfo(it) }; memory = mi.totalPss / 1024; runOnUiThread { if (!isDestroyed) mem.text = "$memory MB" } }.start()
             row(g, "Apps", "Read and sorted in ${Apps.buildMs} ms", "${Apps.all.size}")
         }
 
@@ -271,16 +277,24 @@ class SettingsActivity : Page() {
         if (req != 9 || res != RESULT_OK) return
         val uri = data?.data ?: return
         val out = File(filesDir, "font-" + System.currentTimeMillis() + ".ttf")
-        val ok = runCatching { contentResolver.openInputStream(uri)!!.use { i -> out.outputStream().use { i.copyTo(it) } }; android.graphics.Typeface.createFromFile(out) }.isSuccess
+        // copied in, then checked: a file that isn't really a font is refused rather than quietly ignored
+        val ok = runCatching { contentResolver.openInputStream(uri)!!.use { i -> out.outputStream().use { i.copyTo(it) } }; android.graphics.fonts.Font.Builder(out).build(); android.graphics.Typeface.createFromFile(out) }.isSuccess
         if (!ok) { out.delete(); return }
         Prefs.get(this).fontPath?.let { File(it).delete() }
         Prefs.get(this).fontPath = out.absolutePath
         Type.load(this); restartHome()
     }
 
-    @Deprecated("Permissions") override fun onRequestPermissionsResult(r: Int, p: Array<out String>, g: IntArray) { super.onRequestPermissionsResult(r, p, g); render() }
+    @Deprecated("Permissions") override fun onRequestPermissionsResult(r: Int, p: Array<out String>, g: IntArray) {
+        super.onRequestPermissionsResult(r, p, g)
+        val perm = asked; asked = null
+        // denied, and Android won't show its question again: take them to where it can be switched on
+        if (perm != null && g.firstOrNull() != android.content.pm.PackageManager.PERMISSION_GRANTED && !shouldShowRequestPermissionRationale(perm))
+            runCatching { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))) }
+        render()
+    }
 
-    private fun restartHome() { startActivity(Intent(this, HomeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)); Runtime.getRuntime().exit(0) }
+    private fun restartHome() { Prefs.get(this).flush(); startActivity(Intent(this, HomeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)); Runtime.getRuntime().exit(0) }
 }
 
 /**
@@ -348,7 +362,7 @@ class PickActivity : Page() {
         when {
             moment != null -> p.setMoment(moment!!, chosen)
             mode == "home" -> { p.favorites = chosen; p.favoritesSet = true }
-            mode == "hidden" -> { p.hidden = chosen.toSet(); Apps.refresh(this) }
+            mode == "hidden" -> { p.hidden = chosen.toSet(); p.dropFromHome(chosen.toSet()); Apps.refresh(this) }
             mode == "always" -> p.hourAlways = chosen.toSet()
             else -> p.paused = chosen.toSet()
         }

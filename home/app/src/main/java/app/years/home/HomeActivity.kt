@@ -86,11 +86,12 @@ class HomeActivity : Activity() {
         super.onCreate(savedInstanceState)
         Type.load(this)
         window.setDecorFitsSystemWindows(false)
+        lastDensity = resources.configuration.densityDpi; lastScale = resources.configuration.fontScale
 
         root = Root(this)
         home = FrameLayout(this)
         date = caption("")
-        clock = text("", 112f, Type.thin, K.FG, -0.055f).apply { setLineSpacing(0f, .92f); fontFeatureSettings = "tnum" }
+        clock = text("", 112f, Type.thin, K.FG, -0.055f).apply { setLineSpacing(0f, .92f); fontFeatureSettings = "tnum"; maxLines = 1 }
         smart = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val top = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -99,7 +100,8 @@ class HomeActivity : Activity() {
         // top: the time and what's happening; middle: people, only as many as fit; bottom: your apps
         peopleCol = FitColumn(this)
         favs = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; clipChildren = false; clipToPadding = false }
-        val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; clipChildren = false }
+        home.clipChildren = false
         column.addView(top, lp(-1, -2)); column.addView(peopleCol, LinearLayout.LayoutParams(-1, 0, 1f)); column.addView(favs, lp(-1, -2))
         nudge = text("Make yrs. home your home screen  ›", 14f, Type.medium, K.MUTE).apply { visibility = View.GONE; setPadding(0, dpi(12f), 0, dpi(12f)); setOnClickListener { tap(); askToBeHome() } }
         topBox = top
@@ -118,7 +120,7 @@ class HomeActivity : Activity() {
         buildDrawer()
         root.addView(drawer, FrameLayout.LayoutParams(-1, -1))
         flashView = text("", 14f, Type.medium, K.BG).apply { background = rounded(K.FG, dp(20f)); setPadding(dpi(18f), dpi(10f), dpi(18f), dpi(10f)); alpha = 0f; visibility = View.GONE }
-        root.addView(flashView, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL))
+        root.addView(flashView, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply { leftMargin = dpi(24f); rightMargin = dpi(24f) })
         setContentView(root)
         // white status bar icons on black; only possible once the window has its content
         window.insetsController?.setSystemBarsAppearance(0, android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS)
@@ -129,8 +131,9 @@ class HomeActivity : Activity() {
             val side = dpi(32f)
             top.setPadding(side, b.top + dpi(64f), side, 0)
             peopleCol.setPadding(side, dpi(18f), side, dpi(12f))
-            favs.setPadding(side, 0, side + dpi(30f), b.bottom + dpi(64f))
-            (flashView.layoutParams as FrameLayout.LayoutParams).bottomMargin = b.bottom + dpi(28f)
+            // only the sides here: how much room the apps leave at the bottom is arrange()'s decision
+            favs.setPadding(side, 0, side + dpi(30f), if (favs.paddingBottom > 0) favs.paddingBottom else b.bottom + dpi(64f))
+            (flashView.layoutParams as FrameLayout.LayoutParams).let { it.bottomMargin = max(b.bottom, ime.bottom) + dpi(28f); flashView.layoutParams = it }
             (nudge.layoutParams as FrameLayout.LayoutParams).apply { leftMargin = side; bottomMargin = b.bottom + dpi(16f) }
             rail.insetTop = b.top; rail.insetBottom = b.bottom
             drawer.setPadding(0, b.top, 0, max(b.bottom, ime.bottom))
@@ -177,6 +180,13 @@ class HomeActivity : Activity() {
 
     private fun onApps() {
         val p = Prefs.get(this)
+        labels.clear()
+        // apps that were uninstalled leave home (and stop counting toward its eight)
+        if (Apps.all.isNotEmpty()) {
+            val mine = "#" + getSystemService(android.os.UserManager::class.java).getSerialNumberForUser(android.os.Process.myUserHandle())
+            val gone = (p.favorites + listOf("morning", "work", "evening", "night").flatMap { p.moment(it) }).filter { it != LIGHT && it.endsWith(mine) && Apps.byKey(it) == null }.toSet()
+            if (gone.isNotEmpty()) p.dropFromHome(gone)
+        }
         if (!p.favoritesSet && Apps.all.isNotEmpty()) { p.favorites = Apps.defaultFavorites(); p.favoritesSet = true }
         renderFavs(); refreshList()
     }
@@ -289,12 +299,13 @@ class HomeActivity : Activity() {
     /** Everything that decides how home looks. If none of it changed, nothing is rebuilt: no flicker, no lost touches. */
     private fun signature(): String {
         val p = Prefs.get(this); val notes = Live.notes; val sb = StringBuilder()
-        sb.append(home.width).append('x').append(home.height).append('|').append(insetBottom).append('|').append(nudge.visibility).append('|').append(resources.configuration.fontScale).append('|').append(p.glow).append(p.live).append(Torch.on).append(Torch.available).append(Apps.all.size)
+        sb.append(home.width).append('x').append(home.height).append('|').append(insetBottom).append(insetTop).append(clock.text.length).append(date.text).append(DateFormat.is24HourFormat(this)).append(p.hourTimes).append('|').append(nudge.visibility).append('|').append(resources.configuration.fontScale).append('|').append(p.glow).append(p.live).append(Torch.on).append(Torch.available).append(Apps.all.size)
         val (m, keys) = homeList(); sb.append('|').append(m)
         for (k in keys) { val a = Apps.byKey(k); val n = a?.let { notes[it.pkg] }; sb.append(';').append(k).append(a?.label).append(n?.let { it.time > p.seen(a.pkg) }).append(n?.count).append(n?.title) }
         sb.append('|').append(awayView != null).append('|').append(Live.hour.size).append(Live.hour.maxOfOrNull { it.until })
-        for (n in Live.now.take(2)) sb.append(';').append(n.key).append(n.title).append(n.text).append(n.max > 0).append(n.chrono)
-        val mc = Live.media(); if (mc != null) { val md = Live.metaOf(mc); sb.append("|m").append(mc.packageName).append(md?.getString(android.media.MediaMetadata.METADATA_KEY_TITLE)).append(md?.getString(android.media.MediaMetadata.METADATA_KEY_ARTIST)) }
+        // only what changes the layout: the words inside a live line or the song are refreshed in place
+        for (n in Live.now.take(2)) sb.append(';').append(n.key).append(n.max > 0 && !n.indeterminate).append(n.chrono)
+        val mc = Live.media(); if (mc != null) { val md = Live.metaOf(mc); sb.append("|m").append(mc.packageName).append(md?.getString(android.media.MediaMetadata.METADATA_KEY_ARTIST).isNullOrEmpty() && md?.getString(android.media.MediaMetadata.METADATA_KEY_ALBUM_ARTIST).isNullOrEmpty() && md?.getString(android.media.MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE).isNullOrEmpty()) }
         else sb.append("|q").append(p.headphones && Ears.connected).append(nextThing()).append(if (p.hourOn) Live.holding else 0)
         return sb.toString()
     }
@@ -319,6 +330,9 @@ class HomeActivity : Activity() {
         var best: Pair<Int, Int>? = null
         search@ for (t in 0..5) {
             topLevel = t; clock.setTextSize(TypedValue.COMPLEX_UNIT_SP, CLOCK[t]); buildSmart()
+            // the time must fit on one line: on a narrow screen with large text, step the clock down until it does
+            clock.measure(free, free)
+            if (clock.measuredWidth > w - 2 * dpi(32f) + dpi(5f) && t < 5) continue
             topBox.measure(ws, free)
             val avail = h - topBox.measuredHeight
             for (f in sizes.indices) {
@@ -432,11 +446,17 @@ class HomeActivity : Activity() {
     }
 
     /** People waiting for you, as many as fit between the clock and your apps. */
+    private var peopleSig = ""
+    private var pendingPeople = false
     private fun renderPeople() {
         val p = Prefs.get(this)
+        val people = if (p.peopleHome) Live.people.filter { it.time > seenPeople[it.name] ?: 0L }.take(4) else emptyList()
+        // rebuilt only when what they show changes, and never under a finger that's swiping or tapping a card
+        val sig = people.joinToString(";") { "${it.name}|${it.time}|${it.count}|${it.text}|${it.pkg}|${PersonCard.ago(it.time)}|${it.reply != null}" }
+        if (sig == peopleSig) return
+        if (touching) { pendingPeople = true; return }
+        peopleSig = sig
         peopleCol.removeAllViews()
-        if (!p.peopleHome) return
-        val people = Live.people.filter { it.time > seenPeople[it.name] ?: 0L }.take(4)
         if (people.isEmpty()) return
         peopleCol.addView(caption("Waiting for you"))
         for (person in people) peopleCol.addView(PersonCard(this, person, label(person.pkg), { seen -> seen(seen) }) { replyTo(it) })
@@ -466,7 +486,7 @@ class HomeActivity : Activity() {
                 setOnEditorActionListener { _, _, _ -> send(); true }
             }
             row.addView(field, LinearLayout.LayoutParams(0, dpi(48f), 1f))
-            row.addView(text("↑", 17f, Type.semi, K.BG).apply { gravity = Gravity.CENTER; background = rounded(K.FG, dp(18f)); setOnClickListener { it.confirm(); send() } }, LinearLayout.LayoutParams(dpi(36f), dpi(36f)))
+            row.addView(text("↑", 17f, Type.semi, K.BG).apply { gravity = Gravity.CENTER; background = rounded(K.FG, dp(20f)); contentDescription = "Send"; setOnClickListener { it.confirm(); send() } }, LinearLayout.LayoutParams(dpi(40f), dpi(40f)))
             addView(row, lp(-1, -2).apply { topMargin = dpi(20f) })
             addView(text("Open the chat", 14f, Type.medium, K.MUTE).apply { setPadding(0, dpi(14f), 0, dpi(4f)); setOnClickListener { it.tap(); closeSheet(); seen(person); person.open?.go(this@HomeActivity) } })
         }
@@ -511,7 +531,7 @@ class HomeActivity : Activity() {
                 battery = if (lvl >= 0) lvl * 100 / max(1, sc) else -1
                 charging = i.getIntExtra(BatteryManager.EXTRA_STATUS, -1).let { it == BatteryManager.BATTERY_STATUS_CHARGING || it == BatteryManager.BATTERY_STATUS_FULL }
             } else readCalendar()
-            renderClock(); renderSmart()
+            renderClock(); renderSmart(); renderPeople()
         }
     }
 
@@ -523,7 +543,7 @@ class HomeActivity : Activity() {
         Away.pending(this)?.let { ms ->
             Prefs.get(this).awayShown = System.currentTimeMillis()
             val v = AwayView(this, ms, Away.week(this)).apply { setOnClickListener { dismissAway() } }
-            awayView = v; v.postDelayed({ dismissAway() }, 7000)
+            awayView = v; home.postDelayed({ if (awayView === v) dismissAway() }, 7000)
         }
         Ears.start(this) { renderSmart() }
         renderClock(); renderSmart(); renderFavs(); renderPeople()
@@ -537,6 +557,14 @@ class HomeActivity : Activity() {
         if (System.currentTimeMillis() - lastRefresh > 60_000) { lastRefresh = System.currentTimeMillis(); Apps.refresh(this) }
     }
 
+    private var lastDensity = 0; private var lastScale = 0f
+    /** Display size or text size changed in Settings: build home again at the new size. */
+    override fun onConfigurationChanged(c: android.content.res.Configuration) {
+        super.onConfigurationChanged(c)
+        if (lastDensity != 0 && (c.densityDpi != lastDensity || c.fontScale != lastScale)) recreate()
+        lastDensity = c.densityDpi; lastScale = c.fontScale
+    }
+
     /** Leaving home (an app opened, the screen went off): put the list and any sheet away, so coming back is a clean home. */
     override fun onStop() {
         super.onStop()
@@ -546,6 +574,7 @@ class HomeActivity : Activity() {
             drawer.animate().cancel(); hideKeyboard(); search.setText("")
             drawer.translationY = drawer.height.toFloat(); drawer.visibility = View.INVISIBLE; home.alpha = 1f; home.translationY = 0f; list.setSelection(0)
         }
+        root.exclusion()
     }
 
     private var lastRefresh = 0L
@@ -601,7 +630,7 @@ class HomeActivity : Activity() {
                 override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
                 override fun afterTextChanged(s: Editable?) { refreshList() }
             })
-            setOnEditorActionListener { _, id, _ -> if (id == EditorInfo.IME_ACTION_GO) { adapter.first()?.let { adapter.act(it, this) }; true } else false }
+            setOnEditorActionListener { _, id, _ -> if (id == EditorInfo.IME_ACTION_GO) { if (!text.isNullOrBlank()) adapter.first()?.let { adapter.act(it, this) }; true } else false }
         }
         col.addView(search, LinearLayout.LayoutParams(-1, dpi(50f)).apply { setMargins(dpi(24f), dpi(14f), dpi(24f), dpi(6f)) })
         val body = FrameLayout(this).apply { clipChildren = false }
@@ -681,7 +710,7 @@ class HomeActivity : Activity() {
     fun isDrawerOpen() = drawer.visibility == View.VISIBLE && drawer.translationY < drawer.height * .5f
 
     private fun setDrawer(y: Float) {
-        drawer.visibility = View.VISIBLE
+        if (drawer.visibility != View.VISIBLE) { drawer.visibility = View.VISIBLE; root.exclusion() }
         drawer.translationY = y.coerceIn(0f, drawer.height.toFloat())
         // the home screen eases back and fades as the list rises
         val f = 1f - drawer.translationY / max(1, drawer.height)
@@ -690,7 +719,7 @@ class HomeActivity : Activity() {
 
     fun openDrawer() {
         loadShortcuts(); refreshList()
-        drawer.animate().cancel(); drawer.visibility = View.VISIBLE
+        drawer.animate().cancel(); drawer.visibility = View.VISIBLE; root.exclusion()
         drawer.animate().translationY(0f).setDuration(380).setInterpolator(K.EASE).setUpdateListener { setDrawer(drawer.translationY) }.start()
     }
 
@@ -698,7 +727,7 @@ class HomeActivity : Activity() {
         hideKeyboard(); search.setText("")
         drawer.animate().cancel()
         drawer.animate().translationY(drawer.height.toFloat()).setDuration(320).setInterpolator(K.EASE).setUpdateListener { setDrawer(drawer.translationY) }
-            .withEndAction { drawer.visibility = View.INVISIBLE; list.setSelection(0) }.start()
+            .withEndAction { drawer.visibility = View.INVISIBLE; list.setSelection(0); root.exclusion() }.start()
     }
 
     private fun hideKeyboard() { getSystemService(InputMethodManager::class.java)?.hideSoftInputFromWindow(search.windowToken, 0); search.clearFocus() }
@@ -708,7 +737,7 @@ class HomeActivity : Activity() {
     private fun showSheet(app: App) {
         closeSheet(); hideKeyboard()
         val p = Prefs.get(this)
-        val scrim = FrameLayout(this).apply { setBackgroundColor(0xB3000000.toInt()); alpha = 0f; setOnClickListener { closeSheet() } }
+        val scrim = Scrim(this).apply { setBackgroundColor(0xB3000000.toInt()); alpha = 0f; setOnClickListener { closeSheet() } }
         val col = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL; background = android.graphics.drawable.GradientDrawable().apply { setColor(K.SHEET); cornerRadii = floatArrayOf(dp(30f), dp(30f), dp(30f), dp(30f), 0f, 0f, 0f, 0f) }
             setPadding(dpi(26f), dpi(14f), dpi(26f), insetBottom + dpi(28f)); isClickable = true
@@ -750,21 +779,21 @@ class HomeActivity : Activity() {
             },
             "Rename" to { rename(app) },
             (if (app.key in p.paused) "Don't pause" else "Pause first") to { p.paused = if (app.key in p.paused) p.paused - app.key else p.paused + app.key; closeSheet() },
-            "Hide" to { p.hidden = p.hidden + app.key; p.favorites = p.favorites - app.key; Apps.refresh(this); closeSheet(); flash("${app.label} hidden. Find it in Settings") },
+            "Hide" to { p.hidden = p.hidden + app.key; p.dropFromHome(setOf(app.key)); Apps.refresh(this); closeSheet(); flash("${app.label} hidden. Find it in Settings") },
             "App info" to { closeSheet(); runCatching { getSystemService(LauncherApps::class.java).startAppDetailsActivity(app.component, app.user, null, null) } },
-            "Uninstall" to { closeSheet(); runCatching { startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:${app.pkg}"))) } },
+            "Uninstall" to { closeSheet(); runCatching { startActivity(Intent(Intent.ACTION_DELETE, Uri.parse("package:${app.pkg}")).putExtra(Intent.EXTRA_USER, app.user)) } },
         )
         // Private Space apps stay inside Private Space
         if (app.profile == 2) chips.removeAt(0)
         val wrap = FlowRow(this)
         for ((label, f) in chips) wrap.addView(text(label, 13.5f, Type.medium, K.MUTE).apply {
-            background = rounded(0, dp(16f), dpi(1f), K.HAIR2); setPadding(dpi(14f), dpi(8f), dpi(14f), dpi(8f)); setOnClickListener { tap(); f() }
+            background = rounded(0, dp(19f), dpi(1f), K.HAIR2); setPadding(dpi(15f), dpi(11f), dpi(15f), dpi(11f)); setOnClickListener { tap(); f() }
         })
         col.addView(wrap, lp(-1, -2).apply { topMargin = dpi(16f) })
         val scroll = android.widget.ScrollView(this).apply { isVerticalScrollBarEnabled = false; overScrollMode = View.OVER_SCROLL_NEVER; addView(col) }
         scrim.addView(scroll, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply { topMargin = insetTop + dpi(40f) })
         root.addView(scrim, FrameLayout.LayoutParams(-1, -1))
-        sheet = scrim
+        sheet = scrim; root.exclusion()
         col.translationY = dp(300f)
         scrim.animate().alpha(1f).setDuration(200).start()
         col.animate().translationY(0f).setDuration(420).setInterpolator(K.EASE).start()
@@ -773,7 +802,7 @@ class HomeActivity : Activity() {
     /** A sheet rising from the bottom, over a dim home. */
     private fun panel(build: LinearLayout.() -> Unit) {
         closeSheet()
-        val scrim = FrameLayout(this).apply { setBackgroundColor(0xB3000000.toInt()); alpha = 0f; setOnClickListener { closeSheet() } }
+        val scrim = Scrim(this).apply { setBackgroundColor(0xB3000000.toInt()); alpha = 0f; setOnClickListener { closeSheet() } }
         val col = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL; background = android.graphics.drawable.GradientDrawable().apply { setColor(K.SHEET); cornerRadii = floatArrayOf(dp(30f), dp(30f), dp(30f), dp(30f), 0f, 0f, 0f, 0f) }
             setPadding(dpi(26f), dpi(14f), dpi(26f), insetBottom + dpi(28f)); isClickable = true
@@ -783,7 +812,7 @@ class HomeActivity : Activity() {
         val scroll = android.widget.ScrollView(this).apply { isVerticalScrollBarEnabled = false; overScrollMode = View.OVER_SCROLL_NEVER; isFillViewport = false; addView(col) }
         scrim.addView(scroll, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply { topMargin = insetTop + dpi(40f) })
         scrim.setPadding(0, 0, 0, max(0, imeBottom - insetBottom))
-        root.addView(scrim, FrameLayout.LayoutParams(-1, -1)); sheet = scrim
+        root.addView(scrim, FrameLayout.LayoutParams(-1, -1)); sheet = scrim; root.exclusion()
         scroll.translationY = dp(300f)
         scrim.animate().alpha(1f).setDuration(200).start()
         scroll.animate().translationY(0f).setDuration(420).setInterpolator(K.EASE).start()
@@ -837,7 +866,7 @@ class HomeActivity : Activity() {
             setText(app.label); setSelectAllOnFocus(true); highlightColor = 0x40FFFFFF; setTextColor(K.FG); typeface = Type.display; textSize = 24f; isSingleLine = true
             background = rounded(K.GLASS, dp(16f), dpi(1f), K.HAIR); setPadding(dpi(18f), dpi(14f), dpi(18f), dpi(14f)); imeOptions = EditorInfo.IME_ACTION_DONE
         }
-        val scrim = FrameLayout(this).apply { setBackgroundColor(K.BG); setOnClickListener { closeSheet() } }
+        val scrim = Scrim(this).apply { setBackgroundColor(K.BG); setOnClickListener { closeSheet() } }
         val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dpi(28f), 0, dpi(28f), 0); isClickable = true }
         col.addView(caption("Rename"))
         col.addView(field, lp(-1, -2).apply { topMargin = dpi(12f) })
@@ -849,13 +878,16 @@ class HomeActivity : Activity() {
         }
         field.setOnEditorActionListener { _, _, _ -> done(); true }
         scrim.addView(col, FrameLayout.LayoutParams(-1, -2, Gravity.CENTER_VERTICAL))
-        root.addView(scrim, FrameLayout.LayoutParams(-1, -1)); sheet = scrim
+        root.addView(scrim, FrameLayout.LayoutParams(-1, -1)); sheet = scrim; root.exclusion()
         field.requestFocus(); field.post { getSystemService(InputMethodManager::class.java)?.showSoftInput(field, 0) }
     }
 
     private fun closeSheet() {
         val s = sheet ?: return; sheet = null
+        // while it fades it takes no more taps: a quick double tap can't act twice
+        (s as? Scrim)?.closing = true
         s.animate().alpha(0f).setDuration(180).withEndAction { root.removeView(s) }.start()
+        root.exclusion()
     }
 
     // ================================================================== touch
@@ -878,18 +910,24 @@ class HomeActivity : Activity() {
         })
         init { clipChildren = false }
 
-        // keep Android's back swipe off the stretch of edge where the thumb starts the rail (Android allows 200dp)
-        override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-            super.onLayout(changed, l, t, r, b)
-            val w = r - l; val h = b - t; val band = dpi(200f); val top = (h * .42f).toInt()
-            val edge = dpi(26f)
-            systemGestureExclusionRects = listOf(if (Prefs.get(context).railLeft) android.graphics.Rect(0, top, edge, top + band) else android.graphics.Rect(w - edge, top, w, top + band))
+        override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) { super.onLayout(changed, l, t, r, b); exclusion() }
+
+        /**
+         * Keeps Android's back swipe off the stretch of edge where the thumb starts the rail (Android allows 200dp),
+         * but only on bare home: with the list or a sheet open, a back swipe from that edge must close it.
+         */
+        fun exclusion() {
+            val covered = sheet != null || drawer.visibility == View.VISIBLE
+            val w = width; val h = height; val band = dpi(200f); val top = (h * .42f).toInt(); val edge = dpi(26f)
+            systemGestureExclusionRects = if (covered || w == 0) emptyList() else listOf(if (Prefs.get(context).railLeft) android.graphics.Rect(0, top, edge, top + band) else android.graphics.Rect(w - edge, top, w, top + band))
+            // a screen reader shouldn't wander onto home while something is in front of it
+            home.importantForAccessibility = if (covered) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
         }
 
         override fun dispatchTouchEvent(e: MotionEvent): Boolean {
             when (e.actionMasked) {
                 MotionEvent.ACTION_DOWN -> touching = true
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { touching = false; if (pendingArrange) { pendingArrange = false; renderFavs() } }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { touching = false; if (pendingArrange) { pendingArrange = false; renderFavs() }; if (pendingPeople) { pendingPeople = false; post { renderPeople() } } }
             }
             return super.dispatchTouchEvent(e)
         }
@@ -899,8 +937,9 @@ class HomeActivity : Activity() {
             when (e.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     downX = e.x; downY = e.y; mode = 0; vt?.recycle(); vt = VelocityTracker.obtain(); vt?.addMovement(e)
+                    rail.left = Prefs.get(context).railLeft
                     if (!isDrawerOpen() && drawer.visibility != View.VISIBLE && rail.inZone(e.x) && e.y > insetTop + dp(60f)) {
-                        mode = 1; rail.left = Prefs.get(context).railLeft
+                        mode = 1
                         rail.favLetters = homeList().second.mapNotNull { Apps.byKey(it)?.letter }.toSet()
                         rail.begin(e); return true
                     }
@@ -917,7 +956,7 @@ class HomeActivity : Activity() {
             if (abs(dy) > slop && abs(dy) > abs(dx) * 1.2f) {
                 if (isDrawerOpen()) {
                     // pulling the list down from its very top closes it
-                    if (dy > 0 && !list.canScrollVertically(-1) && e.y > search.bottom + insetTop) { mode = 4; startT = drawer.translationY; downY = e.y; return true }
+                    if (dy > 0 && !list.canScrollVertically(-1) && e.y > search.bottom + insetTop) { mode = 4; drawer.animate().cancel(); startT = drawer.translationY; downY = e.y; return true }
                 } else if (drawer.visibility != View.VISIBLE) {
                     mode = if (dy < 0) 2 else 3; downY = e.y
                     if (mode == 2) { drawer.animate().cancel(); startT = drawer.height.toFloat(); setDrawer(startT) }
@@ -1029,7 +1068,8 @@ class HomeActivity : Activity() {
                 is Row.AppRow -> {
                     val v = (convert as? LinearLayout) ?: LinearLayout(ctx).apply {
                         orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(dpi(30f), dpi(10f), dpi(12f), dpi(10f))
-                        addView(ctx.text("", 21f, Type.medium, K.FG, -0.015f).apply { isSingleLine = true; ellipsize = TextUtils.TruncateAt.END }, LinearLayout.LayoutParams(-2, -2).apply { weight = 0f })
+                        // the name takes the room that's left, so a long one can't push its tag and dot off the row
+                        addView(ctx.text("", 21f, Type.medium, K.FG, -0.015f).apply { isSingleLine = true; ellipsize = TextUtils.TruncateAt.END }, LinearLayout.LayoutParams(-2, -2).apply { weight = 1f; width = -2 })
                         addView(ctx.text("", 10.5f, Type.semi, K.DIM, 0.1f), LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dpi(10f) })
                         addView(Dot(ctx), LinearLayout.LayoutParams(dpi(6f), dpi(6f)).apply { leftMargin = dpi(10f) })
                     }
@@ -1192,7 +1232,6 @@ class HomeActivity : Activity() {
                 else -> null
             },
             Intent(Intent.ACTION_SEARCH).setPackage(pkg).putExtra(android.app.SearchManager.QUERY, q).putExtra("query", q),
-            Intent(Intent.ACTION_SEND).setPackage(pkg).setType("text/plain").putExtra(Intent.EXTRA_TEXT, q),
         ).filterNotNull()
         for (i in tries) if (runCatching { startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess) return
         packageManager.getLaunchIntentForPackage(pkg)?.let { startActivity(it); flash("Opened it. Search there for “$q”") }
@@ -1232,6 +1271,14 @@ class HomeActivity : Activity() {
                 .onFailure { runCatching { a.startActivity(a.packageManager.getLaunchIntentForPackage(app.pkg)) } }
         }
     }
+}
+
+/** The dim layer behind a sheet. Once it starts closing it swallows every touch. */
+class Scrim(c: Context) : FrameLayout(c) {
+    var closing = false
+    override fun onInterceptTouchEvent(e: MotionEvent) = closing
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(e: MotionEvent) = if (closing) true else super.onTouchEvent(e)
 }
 
 /** Chips that wrap onto as many lines as they need. */

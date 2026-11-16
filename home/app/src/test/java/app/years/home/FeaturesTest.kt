@@ -213,6 +213,47 @@ class FeaturesTest {
         assertTrue(bar.isShown && !bar.seekable)
     }
 
+    /** From the independent review of the screens. */
+    @Test @Config(qualifiers = "w360dp-h560dp-xhdpi") fun review_regressions() {
+        val c = Robolectric.buildActivity(HomeActivity::class.java).setup(); val a = c.get(); idle()
+        // nine apps under one letter on a short screen used to crash the rail while drawing
+        val s9 = listOf("Safari", "Samsung", "Settings", "Signal", "Skype", "Slack", "Snapchat", "Spotify", "Strava")
+        Apps.setForTest((names.filter { !it.startsWith("S") } + s9).map { app(it) })
+        val p = Prefs.get(a); p.favoritesSet = true; p.favorites = listOf("Phone", "Messages", "Camera").map { key(it) }
+        c.pause().resume(); idle(500)
+        val root = a.window.decorView; val w = root.width.toFloat(); val h = root.height.toFloat()
+        var t = 1000L; var down = 1000L
+        fun ev(act: Int, x: Float, y: Float) { t += 16; if (act == android.view.MotionEvent.ACTION_DOWN) down = t; android.view.MotionEvent.obtain(down, t, act, x, y, 0).also { root.dispatchTouchEvent(it); it.recycle() } }
+        fun railShown() = root.findViewsOfType(RailView::class.java).first().alpha > 0f || root.findViewsOfType(RailView::class.java).first().animation != null
+        ev(android.view.MotionEvent.ACTION_DOWN, w - 6f, h * .3f)
+        for (k in 0..40) { ev(android.view.MotionEvent.ACTION_MOVE, w - 6f, h * (.3f + k * .012f)); idle(); shot(root, "44-rail-short-screen") }
+        ev(android.view.MotionEvent.ACTION_MOVE, w * .4f, h * .6f); idle(); shot(root, "44-rail-short-screen")
+        ev(android.view.MotionEvent.ACTION_CANCEL, w * .4f, h * .6f); idle(400)
+        // switching the rail's side takes effect at once: the old edge is dead, the new one works
+        p.railLeft = true
+        val rail = root.findViewsOfType(RailView::class.java).first()
+        ev(android.view.MotionEvent.ACTION_DOWN, 6f, h * .5f); ev(android.view.MotionEvent.ACTION_MOVE, 6f, h * .52f); idle()
+        assertTrue("left edge starts the rail", rail.left)
+        ev(android.view.MotionEvent.ACTION_CANCEL, 6f, h * .52f); idle(400)
+        p.railLeft = false
+        // hiding an app takes it off home, and out of every part of the day
+        p.setMoment("evening", listOf("Phone", "Camera").map { key(it) })
+        p.dropFromHome(setOf(key("Camera")))
+        assertEquals(listOf("Phone", "Messages").map { key(it) }, p.favorites); assertEquals(listOf(key("Phone")), p.moment("evening"))
+        // an uninstalled app leaves home and stops counting toward the eight
+        val serial = a.getSystemService(android.os.UserManager::class.java).getSerialNumberForUser(Process.myUserHandle())
+        val gone = "p.Gone/.Main#$serial"
+        p.favorites = p.favorites + gone
+        Apps.setForTest(names.map { app(it) }); idle(300)
+        assertTrue("uninstalled app pruned", gone !in p.favorites)
+        // Go on an empty search opens nothing
+        a.openDrawer(); idle(800)
+        val search = root.findViewsOfType(EditText::class.java).first()
+        search.onEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_GO); idle()
+        assertTrue(shadowOf(a).nextStartedActivity == null)
+        p.setMoment("evening", emptyList())
+    }
+
     @Test fun smart_search() {
         val (_, a) = home()
         a.openDrawer(); idle(800)

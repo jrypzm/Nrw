@@ -58,9 +58,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SettingsActivity" android:exported="false" android:theme="@style/Page" android:excludeFromRecents="true" />
-        <activity android:name=".PickActivity" android:exported="false" android:theme="@style/Page" android:excludeFromRecents="true" />
-        <activity android:name=".PauseActivity" android:exported="false" android:theme="@style/Page" android:excludeFromRecents="true" android:noHistory="true" />
+        <activity android:name=".SettingsActivity" android:exported="false" android:screenOrientation="nosensor" android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" android:theme="@style/Page" android:excludeFromRecents="true" />
+        <activity android:name=".PickActivity" android:exported="false" android:screenOrientation="nosensor" android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" android:theme="@style/Page" android:excludeFromRecents="true" />
+        <activity android:name=".PauseActivity" android:exported="false" android:screenOrientation="nosensor" android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" android:theme="@style/Page" android:excludeFromRecents="true" android:noHistory="true" />
 
         <service
             android:name=".NotifService"

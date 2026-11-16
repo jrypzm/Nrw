@@ -73,7 +73,7 @@ class PersonCard(c: Context, val p: Live.Person, private val appName: String, pr
     }
 
     private fun chip(t: String, f: () -> Unit) = context.text(t, 13f, Type.medium, K.FG).apply {
-        background = rounded(0, dp(14f), dpi(1f), K.HAIR2); setPadding(dpi(12f), dpi(5f), dpi(12f), dpi(5f)); setOnClickListener { it.tap(); f() }
+        background = rounded(0, dp(17f), dpi(1f), K.HAIR2); setPadding(dpi(14f), dpi(9f), dpi(14f), dpi(9f)); setOnClickListener { it.tap(); f() }
         layoutParams = LayoutParams(-2, -2).apply { leftMargin = dpi(10f) }
     }
 

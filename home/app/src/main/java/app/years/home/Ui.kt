@@ -89,8 +89,8 @@ class GlowText(c: Context) : TextView(c) {
     override fun onDraw(canvas: android.graphics.Canvas) {
         val l = layout
         if (glowColor != 0 && glowRadius > 0 && l != null && l.lineCount > 0) {
-            blur.set(paint); blur.color = glowColor; blur.maskFilter = android.graphics.BlurMaskFilter(glowRadius, android.graphics.BlurMaskFilter.Blur.NORMAL)
-            val t = text.toString()
+            val f = blur.maskFilter; blur.set(paint); blur.color = glowColor; blur.maskFilter = f
+            val t = text
             val x = totalPaddingLeft + l.getLineLeft(0); val y = (totalPaddingTop + l.getLineBaseline(0)).toFloat()
             canvas.drawText(t, 0, l.getLineEnd(0), x, y, blur)
             canvas.drawText(t, 0, l.getLineEnd(0), x, y, blur)
