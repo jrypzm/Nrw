@@ -245,7 +245,7 @@ class SettingsActivity : Page() {
         section("Font")
         group().also { g ->
             val custom = p.fontPath?.let { File(it).name }
-            row(g, "Typeface", if (custom != null) "Your own: $custom" else "Inter", null) {}
+            row(g, "Typeface", if (custom != null) "Your own font file" else "The one yrs. home comes with", if (custom != null) "Yours" else "Inter")
             row(g, "Use my own font", "Pick a .ttf or .otf file already on your phone") {
                 startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*").putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("font/ttf", "font/otf", "application/x-font-ttf", "application/octet-stream")), 9)
             }

@@ -34,6 +34,7 @@ class RailView(c: Context, private val onActive: (Boolean) -> Unit, private val 
     /** Letters that hold one of your home apps: they knock instead of tick, and carry a small mark. */
     var favLetters: Set<Char> = emptySet()
     private val mark = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = K.FG }
+    private val textPaint = android.text.TextPaint(Paint.ANTI_ALIAS_FLAG)
 
     init { isClickable = false; alpha = 0f }
 
@@ -124,7 +125,10 @@ class RailView(c: Context, private val onActive: (Boolean) -> Unit, private val 
             appPaint.textSize = dp(if (on) 32f else 28f)
             appPaint.letterSpacing = -.03f
             appPaint.color = if (on) K.FG else if (pick < 0) K.MUTE else K.FAINT
-            canvas.drawText(a.label, x, t + (i + .72f) * rowH(), appPaint)
+            // a long name is shortened to the room there is, never drawn off the far edge
+            val room = (if (left) width - x else x) - dp(20f)
+            val label = if (appPaint.measureText(a.label) <= room) a.label else android.text.TextUtils.ellipsize(a.label, textPaint.also { it.set(appPaint) }, room, android.text.TextUtils.TruncateAt.END).toString()
+            canvas.drawText(label, x, t + (i + .72f) * rowH(), appPaint)
         }
         // a soft light under the thumb
         glow.shader = android.graphics.RadialGradient(fx, fy, dp(46f), intArrayOf(0x33FFFFFF, 0x00FFFFFF), null, android.graphics.Shader.TileMode.CLAMP)
