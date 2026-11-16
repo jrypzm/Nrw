@@ -283,51 +283,150 @@ class SettingsActivity : Page() {
     private fun restartHome() { startActivity(Intent(this, HomeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)); Runtime.getRuntime().exit(0) }
 }
 
-/** Choosing apps: for home (in order), a moment of the day, to hide, to pause first, or to get through The Hour. */
+/**
+ * Choosing apps: for home (in order), a moment of the day, to hide, to pause first, or to get through The Hour.
+ * What you've chosen sits together in its own box at the top; everything else is listed below. Tap an app below and
+ * it moves up into the box; tap one in the box and it goes back.
+ */
 class PickActivity : Page() {
     private var waiting: (() -> Unit)? = null
     override fun onDestroy() { waiting?.let { Apps.off(it) }; super.onDestroy() }
+
+    private lateinit var mode: String
+    private var moment: String? = null
+    private var ordered = false
+    private val chosen = ArrayList<String>()
+    private lateinit var boxCap: TextView
+    private lateinit var box: Card
+    private lateinit var restCap: TextView
+    private lateinit var rest: Card
+    private lateinit var note: TextView
+    /** The row that just moved, so it can arrive with a soft fade. */
+    private var moved: String? = null
+    private val max = 8
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // opened fresh after Android restarted the app: load the apps, then draw again
         if (Apps.all.isEmpty()) { Apps.onChange { if (!isDestroyed) recreate() }.let { f -> waiting = f }; Apps.start(this) }
-        val mode = intent.getStringExtra("mode") ?: "home"
-        val moment = mode.removePrefix("moment:").takeIf { mode.startsWith("moment:") }
+        mode = intent.getStringExtra("mode") ?: "home"
+        moment = mode.removePrefix("moment:").takeIf { mode.startsWith("moment:") }
+        ordered = mode == "home" || moment != null
         val p = Prefs.get(this)
-        val ordered = mode == "home" || moment != null
         title(
-            when { moment != null -> moment.replaceFirstChar { it.uppercase() }; mode == "home" -> "Apps on home"; mode == "hidden" -> "Hidden apps"; mode == "always" -> "Always let through"; else -> "Pause first" },
+            when { moment != null -> moment!!.replaceFirstChar { it.uppercase() }; mode == "home" -> "Apps on home"; mode == "hidden" -> "Hidden apps"; mode == "always" -> "Always let through"; else -> "Pause first" },
             when {
-                moment != null -> "Home during this part of the day. Tap in order, up to 8. Leave it empty to use your usual home."
-                mode == "home" -> "Tap apps in the order you want them, up to 8."
+                moment != null -> "Home during this part of the day. Leave it empty to use your usual home."
+                mode == "home" -> "The apps in the box are on your home screen, in this order."
                 mode == "hidden" -> "Hidden apps leave the list and search. They stay installed."
                 mode == "always" -> "These apps' notifications never wait for The Hour."
                 else -> "These apps show a breathing moment and today's count before they open."
             },
         )
-        val g = Card(this); col.addView(g, lp(top = 20f))
-        val chosen: MutableList<String> = when { moment != null -> p.moment(moment).toMutableList(); mode == "home" -> p.favorites.toMutableList(); mode == "hidden" -> p.hidden.toMutableList(); mode == "always" -> p.hourAlways.toMutableList(); else -> p.paused.toMutableList() }
-        fun save() {
-            when {
-                moment != null -> p.setMoment(moment, chosen)
-                mode == "home" -> { p.favorites = chosen; p.favoritesSet = true }
-                mode == "hidden" -> { p.hidden = chosen.toSet(); Apps.refresh(this) }
-                mode == "always" -> p.hourAlways = chosen.toSet()
-                else -> p.paused = chosen.toSet()
+        chosen += when { moment != null -> p.moment(moment!!); mode == "home" -> p.favorites; mode == "hidden" -> p.hidden.sortedBy { labelOf(it) }; mode == "always" -> p.hourAlways.sortedBy { labelOf(it) }; else -> p.paused.sortedBy { labelOf(it) } }
+        boxCap = caption("").apply { setPadding(dpi(4f), 0, 0, 0) }
+        col.addView(boxCap, lp(top = 26f).apply { bottomMargin = dpi(10f) })
+        // the box of what you've chosen: a brighter edge, so it reads as one group
+        box = Card(this).apply { background = rounded(K.CARD, dp(22f), dpi(1f), K.HAIR2) }
+        col.addView(box, lp())
+        note = text("", 13f, Type.body, K.DIM).apply { setLineSpacing(0f, 1.3f); setPadding(dpi(4f), 0, dpi(4f), 0) }
+        col.addView(note, lp(top = 10f))
+        restCap = caption("").apply { setPadding(dpi(4f), 0, 0, 0) }
+        col.addView(restCap, lp(top = 26f).apply { bottomMargin = dpi(10f) })
+        rest = Card(this); col.addView(rest, lp())
+        render()
+    }
+
+    private fun idOf(a: App) = if (mode == "always") a.pkg else a.key
+    private fun appOf(id: String): App? = if (mode == "always") Apps.all.firstOrNull { it.pkg == id } else Apps.byKey(id)
+    private fun labelOf(id: String): String = if (id == HomeActivity.LIGHT) "Light" else appOf(id)?.label ?: ""
+    private fun count() = chosen.count { it != HomeActivity.LIGHT }
+    private fun full() = ordered && count() >= max
+
+    private fun save() {
+        val p = Prefs.get(this)
+        when {
+            moment != null -> p.setMoment(moment!!, chosen)
+            mode == "home" -> { p.favorites = chosen; p.favoritesSet = true }
+            mode == "hidden" -> { p.hidden = chosen.toSet(); Apps.refresh(this) }
+            mode == "always" -> p.hourAlways = chosen.toSet()
+            else -> p.paused = chosen.toSet()
+        }
+    }
+
+    private fun divider(g: LinearLayout) { if (g.childCount > 0) g.addView(View(this).apply { setBackgroundColor(K.HAIR) }, LinearLayout.LayoutParams(-1, dpi(1f)).apply { leftMargin = dpi(20f) }) }
+
+    private fun render() {
+        val what = when { ordered -> "On home"; mode == "hidden" -> "Hidden"; mode == "always" -> "Always through"; else -> "Pause first" }
+        // only what can be shown is listed; a chosen app that's switched off for now (a paused work profile) is kept, quietly
+        val shown = chosen.filter { labelOf(it).isNotEmpty() }
+        boxCap.text = (if (ordered) "$what · ${count()} of $max" else "$what · ${shown.size}").uppercase()
+
+        box.removeAllViews()
+        if (shown.isEmpty()) box.addView(text(if (ordered) "Nothing here yet. Tap an app below to put it on home." else "Nothing here yet. Tap an app below to add it.", 15f, Type.body, K.DIM).apply { setLineSpacing(0f, 1.3f); setPadding(dpi(20f), dpi(18f), dpi(20f), dpi(18f)) })
+        for ((n, id) in shown.withIndex()) {
+            divider(box)
+            val r = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(dpi(20f), 0, dpi(8f), 0); minimumHeight = dpi(54f) }
+            if (ordered) r.addView(text("${n + 1}", 13f, Type.semi, K.DIM).apply { fontFeatureSettings = "tnum" }, LinearLayout.LayoutParams(dpi(24f), -2))
+            val a = appOf(id)
+            r.addView(text(labelOf(id), 17f, Type.medium, K.FG).apply { isSingleLine = true; ellipsize = android.text.TextUtils.TruncateAt.END }, LinearLayout.LayoutParams(0, -2, 1f))
+            if (a?.work == true) r.addView(text("WORK", 10.5f, Type.semi, K.DIM, 0.1f), LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dpi(8f) })
+            // move it up one place
+            if (ordered && n > 0) r.addView(Mark(this, Mark.UP).apply { contentDescription = "Move ${labelOf(id)} up"; setOnClickListener { v -> v.tap(); val i = chosen.indexOf(id); val j = chosen.indexOf(shown[n - 1]); if (i > 0 && j >= 0) { chosen[i] = chosen[j]; chosen[j] = id; moved = id; save(); render() } } }, LinearLayout.LayoutParams(dpi(44f), dpi(54f)))
+            r.addView(Mark(this, Mark.REMOVE), LinearLayout.LayoutParams(dpi(44f), dpi(54f)))
+            r.contentDescription = "${labelOf(id)}, tap to remove"
+            r.setOnClickListener { it.tap(); chosen.remove(id); moved = id; save(); render() }
+            if (moved == id) { r.alpha = 0f; r.animate().alpha(1f).setDuration(260).start() }
+            box.addView(r)
+        }
+        note.text = when {
+            full() -> "Home holds $max apps. Tap one in the box to make room."
+            ordered && shown.size > 1 -> "Tap an app to take it off home. The arrow moves it up."
+            shown.isNotEmpty() -> "Tap an app in the box to take it out."
+            else -> ""
+        }
+        note.visibility = if (note.text.isEmpty()) View.GONE else View.VISIBLE
+
+        // everything else, A to Z. The Hour works by app, so each app appears once there.
+        val apps = (if (mode == "always") Apps.all.distinctBy { it.pkg } else Apps.all).filter { idOf(it) !in chosen }
+        val light = mode == "home" && HomeActivity.LIGHT !in chosen && Torch.also { it.init(this) }.available
+        restCap.text = (if (shown.isEmpty()) "All apps" else "Other apps").uppercase()
+        rest.removeAllViews()
+        val dim = full()
+        fun add(id: String, label: String, work: Boolean) {
+            divider(rest)
+            val r = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(dpi(20f), 0, dpi(8f), 0); minimumHeight = dpi(54f) }
+            r.addView(text(label, 17f, Type.body, if (dim && id != HomeActivity.LIGHT) K.DIM else K.FG).apply { isSingleLine = true; ellipsize = android.text.TextUtils.TruncateAt.END }, LinearLayout.LayoutParams(0, -2, 1f))
+            if (work) r.addView(text("WORK", 10.5f, Type.semi, K.DIM, 0.1f), LinearLayout.LayoutParams(-2, -2).apply { leftMargin = dpi(8f) })
+            val can = !dim || id == HomeActivity.LIGHT
+            r.addView(Mark(this, Mark.ADD).apply { alpha = if (can) 1f else .3f }, LinearLayout.LayoutParams(dpi(44f), dpi(54f)))
+            r.contentDescription = "$label, tap to add"
+            r.setOnClickListener {
+                it.tap()
+                if (!can) { note.animate().cancel(); note.alpha = .3f; note.animate().alpha(1f).setDuration(500).start(); (col.parent as? ScrollView)?.smoothScrollTo(0, 0); return@setOnClickListener }
+                chosen += id; moved = id; save(); render()
+            }
+            if (moved == id) { r.alpha = 0f; r.animate().alpha(1f).setDuration(260).start() }
+            rest.addView(r)
+        }
+        if (light) add(HomeActivity.LIGHT, "Light (the torch, as a word)", false)
+        for (a in apps) add(idOf(a), a.label, a.work)
+        if (rest.childCount == 0) rest.addView(text("Every app is in the box.", 15f, Type.body, K.DIM).apply { setPadding(dpi(20f), dpi(18f), dpi(20f), dpi(18f)) })
+        moved = null
+    }
+
+    /** The small signs at the end of a row: add, remove, move up. Drawn, so they're crisp on every phone. */
+    class Mark(c: android.content.Context, private val kind: Int) : View(c) {
+        companion object { const val ADD = 0; const val REMOVE = 1; const val UP = 2 }
+        private val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = c.dp(1.8f); strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
+        private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = c.dp(1f); color = K.HAIR2 }
+        override fun onDraw(canvas: Canvas) {
+            val x = width / 2f; val y = height / 2f; val s = dp(5f)
+            when (kind) {
+                ADD -> { p.color = K.FG; canvas.drawCircle(x, y, dp(13f), ring); canvas.drawLine(x - s, y, x + s, y, p); canvas.drawLine(x, y - s, x, y + s, p) }
+                REMOVE -> { p.color = K.MUTE; canvas.drawLine(x - s, y, x + s, y, p) }
+                else -> { p.color = K.MUTE; canvas.drawLine(x, y + s, x, y - s, p); canvas.drawLine(x - s * .8f, y - s * .2f, x, y - s, p); canvas.drawLine(x + s * .8f, y - s * .2f, x, y - s, p) }
             }
         }
-        val marks = HashMap<String, TextView>()
-        fun paint() { for ((k, v) in marks) { val i = chosen.indexOf(k); v.text = if (i < 0) "" else if (ordered) "${chosen.filter { it != HomeActivity.LIGHT }.indexOf(k) + 1}" else "✓"; v.setTextColor(K.FG) } }
-        // The Hour works by app, so each app appears once there
-        val apps = if (mode == "always") Apps.all.distinctBy { it.pkg } else Apps.all
-        for (a in apps) {
-            val id = if (mode == "always") a.pkg else a.key
-            val v = row(g, a.label, if (a.work) "Work" else null, "") {
-                if (id in chosen) chosen.remove(id) else if (!ordered || chosen.count { it != HomeActivity.LIGHT } < 8) chosen += id
-                save(); paint()
-            }
-            marks[id] = v
-        }
-        paint()
     }
 }

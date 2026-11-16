@@ -136,6 +136,83 @@ class FeaturesTest {
         assertTrue("list closed", !a.isDrawerOpen()); assertEquals("", search.text.toString())
     }
 
+    @Test fun picker_box() {
+        Apps.setForTest(names.map { app(it) })
+        val ctx = androidx_test_context(); val p = Prefs.get(ctx)
+        p.favorites = listOf("Phone", "Messages", "Camera").map { key(it) }
+        val act = Robolectric.buildActivity(PickActivity::class.java, Intent(ctx, PickActivity::class.java).putExtra("mode", "home")).setup().get(); idle()
+        val root = act.window.decorView
+        fun cards() = root.findViewsOfType(Card::class.java)
+        fun rows(c: Card) = (0 until c.childCount).map { c.getChildAt(it) }.filterIsInstance<android.widget.LinearLayout>()
+        fun names(c: Card) = rows(c).map { r -> r.findViewsOfType(android.widget.TextView::class.java).first { it.textSize > 15 * ctx.resources.displayMetrics.scaledDensity }.text.toString() }
+        fun tap(c: Card, n: String) { rows(c)[names(c).indexOf(n)].performClick(); idle(300) }
+        fun caps() = root.findViewsOfType(android.widget.TextView::class.java).map { it.text.toString() }
+        // the box holds exactly what's on home, in order; the list below holds everything else
+        assertEquals(listOf("Phone", "Messages", "Camera"), names(cards()[0]))
+        assertTrue("Phone" !in names(cards()[1])); assertTrue("WhatsApp" in names(cards()[1]))
+        assertTrue(caps().contains("ON HOME · 3 OF 8"))
+        shot(root, "40-picker")
+        // tap one below: it moves into the box, at the end, and is saved
+        tap(cards()[1], "Spotify")
+        assertEquals(listOf("Phone", "Messages", "Camera", "Spotify"), names(cards()[0])); assertTrue("Spotify" !in names(cards()[1]))
+        assertEquals(listOf("Phone", "Messages", "Camera", "Spotify").map { key(it) }, p.favorites)
+        // tap one in the box: it goes back to the list, in its A to Z place
+        tap(cards()[0], "Messages")
+        assertEquals(listOf("Phone", "Camera", "Spotify"), names(cards()[0])); assertTrue("Messages" in names(cards()[1]))
+        assertEquals(names(cards()[1]).sortedBy { it.lowercase() }, names(cards()[1]))
+        // the arrow moves an app up one place
+        rows(cards()[0])[2].findViewsOfType(PickActivity.Mark::class.java).first { it.hasOnClickListeners() }.performClick(); idle(300)
+        assertEquals(listOf("Phone", "Spotify", "Camera"), names(cards()[0])); assertEquals(listOf("Phone", "Spotify", "Camera").map { key(it) }, p.favorites)
+        // eight is full: a ninth isn't added, and the page says why
+        for (n in listOf("Maps", "Calculator", "Calendar", "Chrome", "Clock")) tap(cards()[1], n)
+        assertEquals(8, names(cards()[0]).size); assertTrue(caps().contains("ON HOME · 8 OF 8"))
+        tap(cards()[1], "Gallery")
+        assertEquals(8, p.favorites.size); assertTrue(caps().any { it.startsWith("Home holds 8 apps") })
+        shot(root, "41-picker-full")
+        // emptied: a line says what to do
+        for (n in names(cards()[0]).toList()) tap(cards()[0], n)
+        assertTrue(p.favorites.isEmpty()); assertTrue(caps().any { it.startsWith("Nothing here yet") })
+        // the other pages use the same box
+        p.paused = setOf(key("Instagram"))
+        val pa = Robolectric.buildActivity(PickActivity::class.java, Intent(ctx, PickActivity::class.java).putExtra("mode", "pause")).setup().get(); idle()
+        assertEquals(listOf("Instagram"), pa.window.decorView.findViewsOfType(Card::class.java)[0].let { names(it) })
+    }
+
+    @Test fun timeline() {
+        val (c, a) = home()
+        val root = a.window.decorView
+        val ms = android.media.session.MediaSession(a, "t"); val mc = android.media.session.MediaController(a, ms.sessionToken); val sh = shadowOf(mc); sh.setPackageName("p.spotify")
+        sh.setMetadata(android.media.MediaMetadata.Builder().putString(android.media.MediaMetadata.METADATA_KEY_TITLE, "her eyes").putString(android.media.MediaMetadata.METADATA_KEY_ARTIST, "øneheart").putLong(android.media.MediaMetadata.METADATA_KEY_DURATION, 120_000).build())
+        fun state(actions: Long) = sh.setPlaybackState(android.media.session.PlaybackState.Builder().setActions(actions).setState(android.media.session.PlaybackState.STATE_PAUSED, 30_000, 0f, android.os.SystemClock.elapsedRealtime()).build())
+        state(android.media.session.PlaybackState.ACTION_SEEK_TO)
+        fun show(n: Int) { Prefs.get(a).favorites = names.take(n).map { key(it) }; Live.meta.clear(); Live.state.clear(); Live.sessions = listOf(mc); Live.played("p.spotify", mc.playbackState); Live.changed(); Live.mediaChanged(); c.pause().resume(); idle(700); idle(300) }
+        for ((n, name) in listOf(3 to "42-timeline-full", 8 to "43-timeline-8-apps")) {
+            show(n)
+            val card = root.findViewsOfType(MediaCard::class.java).first { it.isShown }
+            card.compact = false
+            val bar = card.findViewsOfType(MediaCard.Progress::class.java).first()
+            // the timeline is there in both sizes of the card, a quarter of the way along, with a handle to drag
+            assertTrue("$n apps: timeline shown", bar.isShown && bar.width > 0 && bar.height > 0)
+            assertEquals(.25f, bar.f, .01f); assertTrue(bar.seekable)
+            // fold the card as a small screen would: the timeline must still be there
+            if (n == 8) { card.compact = true; idle(300); assertTrue("folded card keeps its timeline", bar.isShown && bar.width > 0 && bar.height > 0) }
+            shot(root, name)
+            // drag it to three quarters: the line follows the finger and stays there
+            val t = android.os.SystemClock.uptimeMillis(); val y = bar.height / 2f
+            fun ev(act: Int, x: Float) = android.view.MotionEvent.obtain(t, t, act, x, y, 0).also { bar.dispatchTouchEvent(it); it.recycle() }
+            ev(android.view.MotionEvent.ACTION_DOWN, bar.width * .3f); assertTrue(bar.dragging)
+            ev(android.view.MotionEvent.ACTION_MOVE, bar.width * .75f); ev(android.view.MotionEvent.ACTION_UP, bar.width * .75f)
+            assertTrue(!bar.dragging); assertEquals(.75f, bar.f, .03f)
+            idle(600); assertEquals("stays where you put it", .75f, bar.f, .03f)
+            if (n == 3) assertTrue(card.findViewsOfType(android.widget.TextView::class.java).any { it.text.toString() == "1:30" || it.text.toString() == "1:29" || it.text.toString() == "1:31" })
+            shadowOf(android.os.Looper.getMainLooper()).idleFor(Duration.ofMillis(2000))
+        }
+        // a player that doesn't allow seeking: the line is there, without a handle, and can't be dragged
+        state(0L); show(3)
+        val bar = root.findViewsOfType(MediaCard::class.java).first { it.isShown }.findViewsOfType(MediaCard.Progress::class.java).first()
+        assertTrue(bar.isShown && !bar.seekable)
+    }
+
     @Test fun smart_search() {
         val (_, a) = home()
         a.openDrawer(); idle(800)
