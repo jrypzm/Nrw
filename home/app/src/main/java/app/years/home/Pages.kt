@@ -161,6 +161,8 @@ class SettingsActivity : Page() {
         asked = permission; requestPermissions(arrayOf(permission), code)
     }
     private var asked: String? = null
+    /** What the last save or restore did, shown on its row. */
+    private var note: String? = null
     private var memory = -1
 
     private fun render() {
@@ -188,6 +190,8 @@ class SettingsActivity : Page() {
             sw("Away time", "How long you were off your phone, when you come back", p.away) { p.away = it }
             sw("Headphones", "Your music app, when headphones connect", p.headphones) { p.headphones = it }
             sw("New and quiet", "New apps at the top of the list; apps you never open move to a quiet shelf", p.tidy) { p.tidy = it }
+            sw("Recent apps", "The last few you opened, at the top of the list", p.recent) { p.recent = it }
+            sw("Keyboard with the list", "Swipe up and start typing straight away", p.keyboard) { p.keyboard = it }
             if (Torch.also { it.init(this) }.available) {
                 val lit = HomeActivity.LIGHT in p.favorites
                 sw("Light", "A torch on home, as a word" + if (Torch.dimmable) ". Slide to dim it" else "", lit) { p.favorites = if (it) p.favorites + HomeActivity.LIGHT else p.favorites - HomeActivity.LIGHT }
@@ -265,6 +269,17 @@ class SettingsActivity : Page() {
             row(g, "Apps", "Read and sorted in ${Apps.buildMs} ms", "${Apps.all.size}")
         }
 
+        section("Your setup")
+        group().also { g ->
+            row(g, "How it works", "Every gesture, on one page") { startActivity(Intent(this, WelcomeActivity::class.java)) }
+            row(g, "Save my setup", "Home apps, hidden apps, names and settings, in a file you keep") {
+                runCatching { startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json").putExtra(Intent.EXTRA_TITLE, "yrs-home-setup.json"), 10) }
+            }
+            row(g, "Restore a setup", note ?: "From a file you saved here or on another phone") {
+                runCatching { startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"), 11) }
+            }
+        }
+
         section("About")
         group().also { g ->
             row(g, "yrs. home", "A one-person, open source project. No internet permission: nothing leaves your phone.", runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull())
@@ -274,8 +289,18 @@ class SettingsActivity : Page() {
 
     @Deprecated("Activity results, for the font file") override fun onActivityResult(req: Int, res: Int, data: Intent?) {
         super.onActivityResult(req, res, data)
-        if (req != 9 || res != RESULT_OK) return
+        if (res != RESULT_OK) return
         val uri = data?.data ?: return
+        if (req == 10) {
+            val ok = runCatching { contentResolver.openOutputStream(uri)!!.use { it.write(Prefs.get(this).export().toByteArray()) } }.isSuccess
+            note = if (ok) "Saved. Keep the file somewhere safe" else "Couldn't write that file"; render(); return
+        }
+        if (req == 11) {
+            val text = runCatching { contentResolver.openInputStream(uri)!!.use { it.readBytes().takeIf { b -> b.size < 2_000_000 }!!.toString(Charsets.UTF_8) } }.getOrNull()
+            if (text != null && Prefs.get(this).import(text)) { restartHome(); return }
+            note = "That file isn't a yrs. home setup. Nothing was changed"; render(); return
+        }
+        if (req != 9) return
         val out = File(filesDir, "font-" + System.currentTimeMillis() + ".ttf")
         // copied in, then checked: a file that isn't really a font is refused rather than quietly ignored
         val ok = runCatching { contentResolver.openInputStream(uri)!!.use { i -> out.outputStream().use { i.copyTo(it) } }; android.graphics.fonts.Font.Builder(out).build(); android.graphics.Typeface.createFromFile(out) }.isSuccess
@@ -442,5 +467,38 @@ class PickActivity : Page() {
                 else -> { p.color = K.MUTE; canvas.drawLine(x, y + s, x, y - s, p); canvas.drawLine(x - s * .8f, y - s * .2f, x, y - s, p); canvas.drawLine(x + s * .8f, y - s * .2f, x, y - s, p) }
             }
         }
+    }
+}
+
+/** How everything works, on one page. Shown once when yrs. home first opens, and kept in settings. */
+class WelcomeActivity : Page() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        title("Welcome to\nyrs. home", "A quiet home screen. Everything is a word, and everything is one gesture away.")
+        section("The gestures")
+        group().also { g ->
+            row(g, "Swipe up", "All your apps, and search")
+            row(g, "Slide down the right edge", "Any app by its first letter, without opening the list")
+            row(g, "Hold an app", "Put it on home, rename it, hide it, or make it pause first")
+            row(g, "Swipe down", "Notifications")
+            row(g, "Tap the time or the date", "Alarms, and your calendar")
+            row(g, "Double-tap empty space", "Lock the phone (switch it on in settings first)")
+            row(g, "Hold empty space", "Settings")
+        }
+        section("Search does things")
+        group().also { g ->
+            row(g, "7:30", "Sets an alarm")
+            row(g, "10 min", "Starts a timer")
+            row(g, ".yt lofi", "Searches inside YouTube; works with any app's name")
+            row(g, "12 × 8.5   ·   5 km   ·   days to 25 dec", "Sums, conversions and dates")
+        }
+        section("Start here")
+        group().also { g ->
+            val home = getSystemService(RoleManager::class.java)?.isRoleHeld(RoleManager.ROLE_HOME) == true
+            if (!home) row(g, "Make it my home screen", "So the Home button comes here") { chooseHome() }
+            row(g, "Choose my home apps", "Up to eight, in the order you like") { startActivity(Intent(this, PickActivity::class.java).putExtra("mode", "home")) }
+            row(g, "Switch on the extras", "Glowing names, people, music and The Hour need notification access") { startActivity(Intent(this, SettingsActivity::class.java)) }
+        }
+        col.addView(text("Done", 16f, Type.semi, android.graphics.Color.BLACK).apply { gravity = Gravity.CENTER; background = rounded(K.FG, dp(27f)); setOnClickListener { it.tap(); finish() } }, lp(h = dpi(54f), top = 28f))
     }
 }

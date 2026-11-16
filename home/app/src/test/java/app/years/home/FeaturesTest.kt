@@ -249,9 +249,48 @@ class FeaturesTest {
         // Go on an empty search opens nothing
         a.openDrawer(); idle(800)
         val search = root.findViewsOfType(EditText::class.java).first()
+        shadowOf(a).clearNextStartedActivities()
         search.onEditorAction(android.view.inputmethod.EditorInfo.IME_ACTION_GO); idle()
         assertTrue(shadowOf(a).nextStartedActivity == null)
         p.setMoment("evening", emptyList())
+    }
+
+    @Test fun easy_to_use() {
+        val ctx = androidx_test_context(); val p = Prefs.get(ctx)
+        // the welcome page opens the first time, and only the first time
+        p.welcomed = false
+        val c = Robolectric.buildActivity(HomeActivity::class.java).setup(); val a = c.get(); idle()
+        assertEquals(WelcomeActivity::class.java.name, shadowOf(a).nextStartedActivity?.component?.className)
+        c.pause().resume(); idle()
+        assertTrue(shadowOf(a).nextStartedActivity == null)
+        val w = Robolectric.buildActivity(WelcomeActivity::class.java).setup().get(); idle(); shot(w.window.decorView, "45-welcome")
+        Apps.setForTest(names.map { app(it) }); p.favoritesSet = true; p.favorites = listOf("Phone", "Messages").map { key(it) }
+        c.pause().resume(); idle(500)
+        val root = a.window.decorView
+        // tap the time: alarms. tap the date: the calendar
+        val texts = root.findViewsOfType(GlowText::class.java)
+        texts.first { it.textSize > 60 * ctx.resources.displayMetrics.scaledDensity }.performClick()
+        assertEquals(android.provider.AlarmClock.ACTION_SHOW_ALARMS, shadowOf(a).nextStartedActivity?.action)
+        texts.first { it.contentDescription == "Open calendar" }.performClick()
+        assertEquals(Intent.ACTION_VIEW, shadowOf(a).nextStartedActivity?.action)
+        // recent: the last apps opened that aren't on home lead the list, newest first
+        p.countOpen(key("Maps")); Thread.sleep(3); p.countOpen(key("Phone")); Thread.sleep(3); p.countOpen(key("Netflix"))
+        a.openDrawer(); idle(800)
+        val list = root.findViewsOfType(android.widget.ListView::class.java).first()
+        fun rowText(i: Int) = (list.adapter.getView(i, null, list)).findViewsOfType(android.widget.TextView::class.java).first().text.toString()
+        assertEquals("RECENT", rowText(0)); assertEquals("Netflix", rowText(1)); assertEquals("Maps", rowText(2))
+        assertTrue("Phone is on home already, so not in recent", rowText(3) != "Phone")
+        shot(root, "46-recent")
+        // a saved setup comes back exactly, and a file that isn't one changes nothing
+        p.renames = mapOf(key("Maps") to "Where"); p.hidden = setOf(key("Bank")); p.railLeft = true; p.hourTimes = listOf(540, 780)
+        val saved = p.export()
+        p.favorites = emptyList(); p.renames = emptyMap(); p.hidden = emptySet(); p.railLeft = false; p.hourTimes = listOf(720)
+        assertTrue(!p.import("not a setup")); assertTrue(!p.import("{}")); assertTrue(p.favorites.isEmpty())
+        assertTrue(p.import(saved))
+        assertEquals(listOf("Phone", "Messages").map { key(it) }, p.favorites); assertEquals("Where", p.renames[key("Maps")]); assertEquals(setOf(key("Bank")), p.hidden)
+        assertTrue(p.railLeft); assertEquals(listOf(540, 780), p.hourTimes)
+        assertTrue("held notifications never go into a saved setup", !saved.contains("hourHeld"))
+        p.railLeft = false; p.hidden = emptySet(); p.renames = emptyMap()
     }
 
     @Test fun smart_search() {

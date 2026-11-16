@@ -193,6 +193,19 @@ class AwayView(c: Context, ms: Long, week: List<Pair<java.time.LocalDate, Int>>)
 /** A wide pill you slide: the torch brightness. */
 class Slider(c: Context, private val onSet: (Float) -> Unit) : View(c) {
     var f = 1f; set(v) { field = v.coerceIn(0f, 1f); invalidate() }
+    // a screen reader can step it up and down
+    init { isFocusable = true; contentDescription = "Brightness" }
+    override fun onInitializeAccessibilityNodeInfo(info: android.view.accessibility.AccessibilityNodeInfo) {
+        super.onInitializeAccessibilityNodeInfo(info)
+        info.className = android.widget.SeekBar::class.java.name
+        info.rangeInfo = android.view.accessibility.AccessibilityNodeInfo.RangeInfo.obtain(android.view.accessibility.AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_PERCENT, 0f, 100f, f * 100)
+        info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD); info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD)
+    }
+    override fun performAccessibilityAction(action: Int, args: android.os.Bundle?): Boolean = when (action) {
+        android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD -> { f = (f + .1f).coerceIn(.05f, 1f); onSet(f); true }
+        android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD -> { f = (f - .1f).coerceIn(.05f, 1f); onSet(f); true }
+        else -> super.performAccessibilityAction(action, args)
+    }
     private val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = K.GLASS }
     private val edge = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = K.HAIR2; style = Paint.Style.STROKE; strokeWidth = c.dp(1f) }
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = K.FG }

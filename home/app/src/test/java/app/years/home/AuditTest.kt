@@ -166,6 +166,7 @@ class AuditTest {
         val pa = Robolectric.buildActivity(PauseActivity::class.java, Intent(a, PauseActivity::class.java).putExtra("key", key("Google Play Services for AR"))).setup().get(); idle(300)
         audit(pa.window.decorView, page(pa.window.decorView), "pause")
         val pk = Robolectric.buildActivity(PickActivity::class.java, Intent(a, PickActivity::class.java).putExtra("mode", "home")).setup().get(); idle(); audit(pk.window.decorView, page(pk.window.decorView), "pick")
+        val we = Robolectric.buildActivity(WelcomeActivity::class.java).setup().get(); idle(); audit(we.window.decorView, page(we.window.decorView), "welcome")
         c.pause().stop().destroy()
     }
 

@@ -90,12 +90,18 @@ class HomeActivity : Activity() {
 
         root = Root(this)
         home = FrameLayout(this)
-        date = caption("")
-        clock = text("", 112f, Type.thin, K.FG, -0.055f).apply { setLineSpacing(0f, .92f); fontFeatureSettings = "tnum"; maxLines = 1 }
+        // tap the date for your calendar, the time for your alarms
+        date = caption("").apply {
+            setPadding(0, dpi(8f), dpi(16f), dpi(8f)); contentDescription = "Open calendar"
+            setOnClickListener { it.tap(); if (runCatching { startActivity(Intent(Intent.ACTION_VIEW, CalendarContract.CONTENT_URI.buildUpon().appendPath("time").also { b -> ContentUris.appendId(b, System.currentTimeMillis()) }.build())) }.isFailure) flash("No calendar app found") }
+        }
+        clock = text("", 112f, Type.thin, K.FG, -0.055f).apply { setLineSpacing(0f, .92f); fontFeatureSettings = "tnum"; maxLines = 1
+            setOnClickListener { it.tap(); if (runCatching { startActivity(Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS)) }.isFailure) flash("No clock app found") }
+        }
         smart = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val top = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            addView(date); addView(clock, lp(-2, -2).apply { topMargin = dpi(8f); leftMargin = -dpi(5f) }); addView(smart, lp(-1, -2).apply { topMargin = dpi(16f) })
+            addView(date); addView(clock, lp(-2, -2).apply { leftMargin = -dpi(5f) }); addView(smart, lp(-1, -2).apply { topMargin = dpi(16f) })
         }
         // top: the time and what's happening; middle: people, only as many as fit; bottom: your apps
         peopleCol = FitColumn(this)
@@ -129,7 +135,7 @@ class HomeActivity : Activity() {
             val b = ins.getInsets(WindowInsets.Type.systemBars()); val ime = ins.getInsets(WindowInsets.Type.ime())
             insetTop = b.top; insetBottom = b.bottom
             val side = dpi(32f)
-            top.setPadding(side, b.top + dpi(64f), side, 0)
+            top.setPadding(side, b.top + dpi(56f), side, 0)
             peopleCol.setPadding(side, dpi(18f), side, dpi(12f))
             // only the sides here: how much room the apps leave at the bottom is arrange()'s decision
             favs.setPadding(side, 0, side + dpi(30f), if (favs.paddingBottom > 0) favs.paddingBottom else b.bottom + dpi(64f))
@@ -550,6 +556,8 @@ class HomeActivity : Activity() {
         // nothing ticks while you're not looking: the clock listens only while home is on screen
         registerReceiver(ticks, IntentFilter().apply { addAction(Intent.ACTION_TIME_TICK); addAction(Intent.ACTION_TIME_CHANGED); addAction(Intent.ACTION_TIMEZONE_CHANGED); addAction(Intent.ACTION_BATTERY_CHANGED); addAction(AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED) }, Context.RECEIVER_NOT_EXPORTED)
         nudge.visibility = if (isHome()) View.GONE else View.VISIBLE
+        // the first time: a short page that says how everything works
+        if (!Prefs.get(this).welcomed) { Prefs.get(this).welcomed = true; startActivity(Intent(this, WelcomeActivity::class.java)) }
         // after an update Android sometimes forgets to reconnect the listener; ask it to
         if (!Live.connected && Live.enabled(this)) runCatching { android.service.notification.NotificationListenerService.requestRebind(android.content.ComponentName(this, NotifService::class.java)) }
         readCalendar()
@@ -721,6 +729,7 @@ class HomeActivity : Activity() {
         loadShortcuts(); refreshList()
         drawer.animate().cancel(); drawer.visibility = View.VISIBLE; root.exclusion()
         drawer.animate().translationY(0f).setDuration(380).setInterpolator(K.EASE).setUpdateListener { setDrawer(drawer.translationY) }.start()
+        if (Prefs.get(this).keyboard && sheet == null) { search.requestFocus(); search.postDelayed({ if (isDrawerOpen()) getSystemService(InputMethodManager::class.java)?.showSoftInput(search, 0) }, 200) }
     }
 
     fun closeDrawer() {
@@ -912,6 +921,22 @@ class HomeActivity : Activity() {
 
         override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) { super.onLayout(changed, l, t, r, b); exclusion() }
 
+        // for a screen reader, where swipes belong to the reader: the gestures are offered as named actions
+        private val A_APPS = 0x7f0f0001; private val A_SETTINGS = 0x7f0f0002; private val A_NOTIFS = 0x7f0f0003
+        init { contentDescription = "Home"; importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES }
+        override fun onInitializeAccessibilityNodeInfo(info: android.view.accessibility.AccessibilityNodeInfo) {
+            super.onInitializeAccessibilityNodeInfo(info)
+            info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction(A_APPS, "All apps and search"))
+            info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction(A_NOTIFS, "Notifications"))
+            info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction(A_SETTINGS, "yrs. home settings"))
+        }
+        override fun performAccessibilityAction(action: Int, args: Bundle?): Boolean = when (action) {
+            A_APPS -> { if (isDrawerOpen()) closeDrawer() else openDrawer(); true }
+            A_NOTIFS -> { expandNotifications(); true }
+            A_SETTINGS -> { startActivity(Intent(this@HomeActivity, SettingsActivity::class.java)); true }
+            else -> super.performAccessibilityAction(action, args)
+        }
+
         /**
          * Keeps Android's back swipe off the stretch of edge where the thumb starts the rail (Android allows 200dp),
          * but only on bare home: with the list or a sheet open, a back swipe from that edge must close it.
@@ -1022,6 +1047,11 @@ class HomeActivity : Activity() {
             val quiet = if (p.tidy) Apps.visible.filter { it.key !in home && it !in newApps && Apps.isQuiet(it, now, opened, used, first) } else emptyList()
             val quietSet = quiet.toHashSet()
             val out = ArrayList<Row>(Apps.visible.size + 40); val ls = ArrayList<Char>()
+            // the last few you opened that aren't already on home: usually the one you're after
+            if (p.recent) {
+                val recent = opened.entries.filter { it.value > 0 }.sortedByDescending { it.value }.asSequence().mapNotNull { Apps.byKey(it.key) }.filter { it.key !in home && it.profile != 2 && it in Apps.visible }.take(4).toList()
+                if (recent.isNotEmpty()) { out += Row.Cap("Recent"); recent.forEach { out += Row.AppRow(it) } }
+            }
             if (newApps.isNotEmpty()) { out += Row.Cap("New"); newApps.forEach { out += Row.AppRow(it, tag = "New") } }
             var last = ' '
             for (a in Apps.visible) { if (a in quietSet) continue; if (a.letter != last) { last = a.letter; out += Row.Letter(last); ls += last }; out += Row.AppRow(a) }

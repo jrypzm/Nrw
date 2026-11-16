@@ -58,6 +58,44 @@ class Prefs private constructor(private val sp: SharedPreferences) {
     var live: Boolean get() = bool("live", true); set(v) = setBool("live", v)
     var away: Boolean get() = bool("away", true); set(v) = setBool("away", v)
     var tidy: Boolean get() = bool("tidy", true); set(v) = setBool("tidy", v)
+    var recent: Boolean get() = bool("recent", true); set(v) = setBool("recent", v)
+    /** Open the keyboard as soon as the list opens, so you can just type. */
+    var keyboard: Boolean get() = bool("keyboard", false); set(v) = setBool("keyboard", v)
+    /** The welcome page has been shown. */
+    var welcomed: Boolean get() = bool("welcomed", false); set(v) = setBool("welcomed", v)
+
+    /** Things that describe this phone at this moment, not your choices: they stay out of a saved setup. */
+    private val TRANSIENT = setOf("hourHeld", "hourBatch", "font", "offAt", "lastAway", "lastAwayAt", "awayShown", "awayLog", "opens", "seen", "firstRun", "welcomed")
+
+    /** Your whole setup as text, to keep in a file. */
+    fun export(): String {
+        val o = JSONObject()
+        for ((k, v) in sp.all) {
+            if (k in TRANSIENT || v == null) continue
+            when (v) {
+                is Boolean -> o.put(k, JSONObject().put("b", v)); is Long -> o.put(k, JSONObject().put("l", v)); is Int -> o.put(k, JSONObject().put("i", v))
+                is String -> o.put(k, JSONObject().put("s", v)); is Set<*> -> o.put(k, JSONObject().put("set", org.json.JSONArray(v.filterIsInstance<String>())))
+            }
+        }
+        return JSONObject().put("yrs.home", 1).put("prefs", o).toString(2)
+    }
+
+    /** Puts a saved setup back. Returns false, changing nothing, if the text isn't one. */
+    fun import(text: String): Boolean = runCatching {
+        val root = JSONObject(text); require(root.optInt("yrs.home") == 1)
+        val o = root.getJSONObject("prefs")
+        val e = sp.edit()
+        for (k in sp.all.keys) if (k !in TRANSIENT) e.remove(k)
+        for (k in o.keys()) {
+            if (k in TRANSIENT) continue
+            val v = o.getJSONObject(k)
+            when {
+                v.has("b") -> e.putBoolean(k, v.getBoolean("b")); v.has("l") -> e.putLong(k, v.getLong("l")); v.has("i") -> e.putInt(k, v.getInt("i"))
+                v.has("s") -> e.putString(k, v.getString("s")); v.has("set") -> e.putStringSet(k, v.getJSONArray("set").let { a -> (0 until a.length()).map { a.getString(it) }.toSet() })
+            }
+        }
+        e.commit(); parsed.clear(); true
+    }.getOrDefault(false)
     var strict: Boolean get() = bool("strict", false); set(v) = setBool("strict", v)
     var headphones: Boolean get() = bool("headphones", true); set(v) = setBool("headphones", v)
 
