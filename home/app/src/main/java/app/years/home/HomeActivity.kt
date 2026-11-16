@@ -76,7 +76,7 @@ class HomeActivity : Activity() {
     private lateinit var strip: AlphaStrip
     private val adapter = RowAdapter()
     private var sheet: View? = null
-    private var insetTop = 0; private var insetBottom = 0; private var imeBottom = 0
+    private var insetTop = 0; private var insetBottom = 0; private var imeBottom = 0; private var barsKey = -1
     private val bg = Executors.newSingleThreadExecutor()
     private var battery = -1; private var charging = false
 
@@ -135,7 +135,8 @@ class HomeActivity : Activity() {
             rail.insetTop = b.top; rail.insetBottom = b.bottom
             drawer.setPadding(0, b.top, 0, max(b.bottom, ime.bottom))
             imeBottom = ime.bottom; sheet?.setPadding(0, 0, 0, max(0, ime.bottom - b.bottom))
-            renderFavs()
+            // the keyboard sliding in changes nothing on home; only the system bars do
+            if (barsKey != b.top * 10000 + b.bottom) { barsKey = b.top * 10000 + b.bottom; renderFavs() }
             ins
         }
 
@@ -281,9 +282,36 @@ class HomeActivity : Activity() {
      * Builds home so that it fits. Everything is measured for real, never estimated: the top gives way step by step
      * and the app names step down in size until the clock, what's happening and every app you chose are all on screen.
      */
+    private var lastSig = ""
+    private var touching = false; private var pendingArrange = false
+    private var shownSmart: Set<View> = emptySet()
+
+    /** Everything that decides how home looks. If none of it changed, nothing is rebuilt: no flicker, no lost touches. */
+    private fun signature(): String {
+        val p = Prefs.get(this); val notes = Live.notes; val sb = StringBuilder()
+        sb.append(home.width).append('x').append(home.height).append('|').append(insetBottom).append('|').append(nudge.visibility).append('|').append(resources.configuration.fontScale).append('|').append(p.glow).append(p.live).append(Torch.on).append(Torch.available).append(Apps.all.size)
+        val (m, keys) = homeList(); sb.append('|').append(m)
+        for (k in keys) { val a = Apps.byKey(k); val n = a?.let { notes[it.pkg] }; sb.append(';').append(k).append(a?.label).append(n?.let { it.time > p.seen(a.pkg) }).append(n?.count).append(n?.title) }
+        sb.append('|').append(awayView != null).append('|').append(Live.hour.size).append(Live.hour.maxOfOrNull { it.until })
+        for (n in Live.now.take(2)) sb.append(';').append(n.key).append(n.title).append(n.text).append(n.max > 0).append(n.chrono)
+        val mc = Live.media(); if (mc != null) { val md = Live.metaOf(mc); sb.append("|m").append(mc.packageName).append(md?.getString(android.media.MediaMetadata.METADATA_KEY_TITLE)).append(md?.getString(android.media.MediaMetadata.METADATA_KEY_ARTIST)) }
+        else sb.append("|q").append(p.headphones && Ears.connected).append(nextThing()).append(if (p.hourOn) Live.holding else 0)
+        return sb.toString()
+    }
+
     private fun arrange() {
         val w = home.width; val h = home.height
         if (w == 0 || h == 0) { topLevel = 0; favLevel = 0; buildSmart(); buildFavs(); return }
+        val sig = signature()
+        if (sig == lastSig) {
+            // nothing that changes the layout: just refresh what's live (play/pause, progress)
+            Live.media()?.let { m -> card?.takeIf { it.parent != null }?.bind(m) }
+            for (n in Live.now) nowRows[n.key]?.bind(n)
+            return
+        }
+        // a finger is down (holding an app, dragging the brightness): wait until it lifts, so the touch isn't lost
+        if (touching) { pendingArrange = true; return }
+        lastSig = sig
         val ws = View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY); val free = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         // the "make this your home screen" line sits under the apps: leave it room while it's showing
         val nudgeH = if (nudge.visibility == View.VISIBLE) { nudge.measure(View.MeasureSpec.makeMeasureSpec(w - 2 * dpi(32f), View.MeasureSpec.AT_MOST), free); nudge.measuredHeight + dpi(16f) } else 0
@@ -317,6 +345,10 @@ class HomeActivity : Activity() {
             topBox.measure(ws, free); val avail = h - topBox.measuredHeight
             while (favs.childCount > 1) { favs.measure(ws, free); if (favs.measuredHeight <= avail) break; favs.removeViewAt(favs.childCount - 1) }
         }
+        // only what is genuinely new arrives with a fade; everything that was already there stays put
+        val nowShown = (0 until smart.childCount).map { smart.getChildAt(it) }.toSet()
+        for (v in nowShown) if (v !in shownSmart && (v is MediaCard || v is NowRow || v === awayView)) { v.alpha = 0f; v.translationY = dp(10f); v.animate().alpha(1f).translationY(0f).setDuration(420).setInterpolator(K.EASE).start() }
+        shownSmart = nowShown
     }
     private val CLOCK = floatArrayOf(112f, 112f, 88f, 68f, 68f, 48f)
 
@@ -364,12 +396,10 @@ class HomeActivity : Activity() {
         // apply, keeping views that stay so nothing flickers
         val same = want.size == smart.childCount && want.indices.all { smart.getChildAt(it) === want[it] }
         if (!same) {
-            val had = (0 until smart.childCount).map { smart.getChildAt(it) }.toSet()
             smart.removeAllViews()
             for ((i, v) in want.withIndex()) {
                 (v.parent as? ViewGroup)?.removeView(v)
                 smart.addView(v, lp(-1, -2).apply { if (i > 0) topMargin = dpi(if (v is MediaCard || want[i - 1] is MediaCard) 16f else 8f) })
-                if (v !in had && (v is MediaCard || v is NowRow || v === awayView)) { v.alpha = 0f; v.translationY = dp(10f); v.animate().alpha(1f).translationY(0f).setDuration(420).setInterpolator(K.EASE).start() }
             }
         }
     }
@@ -507,6 +537,17 @@ class HomeActivity : Activity() {
         if (System.currentTimeMillis() - lastRefresh > 60_000) { lastRefresh = System.currentTimeMillis(); Apps.refresh(this) }
     }
 
+    /** Leaving home (an app opened, the screen went off): put the list and any sheet away, so coming back is a clean home. */
+    override fun onStop() {
+        super.onStop()
+        touching = false
+        sheet?.let { sheet = null; root.removeView(it) }
+        if (drawer.visibility == View.VISIBLE) {
+            drawer.animate().cancel(); hideKeyboard(); search.setText("")
+            drawer.translationY = drawer.height.toFloat(); drawer.visibility = View.INVISIBLE; home.alpha = 1f; home.translationY = 0f; list.setSelection(0)
+        }
+    }
+
     private var lastRefresh = 0L
     override fun onPause() { super.onPause(); runCatching { unregisterReceiver(ticks) }; Ears.stop() }
 
@@ -587,7 +628,7 @@ class HomeActivity : Activity() {
         if (q.isBlank()) { adapter.showAll(); strip.visibility = View.VISIBLE; strip.letters = adapter.letters; if (lp.rightMargin == 0) { lp.rightMargin = dpi(28f); list.layoutParams = lp }; return }
         // results use the full width; the A–Z strip only makes sense for the whole list
         strip.visibility = View.GONE; if (lp.rightMargin != 0) { lp.rightMargin = 0; list.layoutParams = lp }
-        val acts = Smart.actions(q, LocalDateTime.now(), DateFormat.is24HourFormat(this)).mapNotNull { resolveInside(it) }
+        val acts = Smart.actions(q, LocalDateTime.now(), DateFormat.is24HourFormat(this)).filter { it.kind != Smart.LIGHT || Torch.available }.mapNotNull { resolveInside(it) }
         val inside = acts.any { it.kind == Smart.INSIDE }
         val apps = if (inside) emptyList() else Search.apps(q); val ans = if (inside) null else Search.answer(q)
         val sets = if (inside) emptyList() else Search.settings(q) + yrsSettings(q)
@@ -720,7 +761,8 @@ class HomeActivity : Activity() {
             background = rounded(0, dp(16f), dpi(1f), K.HAIR2); setPadding(dpi(14f), dpi(8f), dpi(14f), dpi(8f)); setOnClickListener { tap(); f() }
         })
         col.addView(wrap, lp(-1, -2).apply { topMargin = dpi(16f) })
-        scrim.addView(col, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM))
+        val scroll = android.widget.ScrollView(this).apply { isVerticalScrollBarEnabled = false; overScrollMode = View.OVER_SCROLL_NEVER; addView(col) }
+        scrim.addView(scroll, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply { topMargin = insetTop + dpi(40f) })
         root.addView(scrim, FrameLayout.LayoutParams(-1, -1))
         sheet = scrim
         col.translationY = dp(300f)
@@ -842,6 +884,14 @@ class HomeActivity : Activity() {
             val w = r - l; val h = b - t; val band = dpi(200f); val top = (h * .42f).toInt()
             val edge = dpi(26f)
             systemGestureExclusionRects = listOf(if (Prefs.get(context).railLeft) android.graphics.Rect(0, top, edge, top + band) else android.graphics.Rect(w - edge, top, w, top + band))
+        }
+
+        override fun dispatchTouchEvent(e: MotionEvent): Boolean {
+            when (e.actionMasked) {
+                MotionEvent.ACTION_DOWN -> touching = true
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { touching = false; if (pendingArrange) { pendingArrange = false; renderFavs() } }
+            }
+            return super.dispatchTouchEvent(e)
         }
 
         override fun onInterceptTouchEvent(e: MotionEvent): Boolean {

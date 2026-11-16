@@ -110,6 +110,32 @@ class FeaturesTest {
         for (n in 1..8) for (m in listOf(true, false)) for (l in 0..2) check(n, m, l, null)
     }
 
+    @Test fun home_is_calm() {
+        val (c, a) = home()
+        val root = a.window.decorView
+        c.pause().resume(); idle(500)
+        fun words() = root.findViewsOfType(GlowText::class.java).filter { it.isShown && it.text.toString() in names }
+        val before = words()
+        assertEquals(5, before.size)
+        // an update that changes nothing on home rebuilds nothing: same views, so no flicker and no lost press
+        Live.changed(); Live.mediaChanged(); idle(300)
+        assertTrue("nothing rebuilt", before.zip(words()).all { (x, y) -> x === y })
+        // while a finger is down, a change waits; it lands when the finger lifts
+        val t = android.os.SystemClock.uptimeMillis()
+        fun ev(act: Int) = android.view.MotionEvent.obtain(t, t, act, root.width * .5f, root.height * .45f, 0).also { root.dispatchTouchEvent(it); it.recycle() }
+        ev(android.view.MotionEvent.ACTION_DOWN)
+        Live.notes = mapOf("p.messages" to Live.Note("Mum", "hi", System.currentTimeMillis(), 1)); Live.changed(); idle(300)
+        assertTrue("waits for the finger", before.zip(words()).all { (x, y) -> x === y })
+        ev(android.view.MotionEvent.ACTION_UP); idle(300)
+        assertTrue("then updates", words().any { it.text.toString() == "Messages" && it.glowColor != 0 })
+        // leaving home with the list open and a search typed: coming back is a clean home
+        a.openDrawer(); idle(800)
+        val search = root.findViewsOfType(EditText::class.java).first(); search.setText("spo"); idle()
+        assertTrue(a.isDrawerOpen())
+        c.pause().stop(); idle(); c.start().resume(); idle(500)
+        assertTrue("list closed", !a.isDrawerOpen()); assertEquals("", search.text.toString())
+    }
+
     @Test fun smart_search() {
         val (_, a) = home()
         a.openDrawer(); idle(800)
