@@ -72,6 +72,19 @@ What it does, all on the phone:
 - **A pause that grows.** Chosen apps wait a few seconds more each time you open them today, and ask why.
 - **Away time, new and quiet apps, a torch that's a word, a thumb rail you can feel, Work and Private Space** as their own sections.
 
+**yrs. music** &nbsp;·&nbsp; an offline music player for Android 8 or newer
+
+The songs on your phone, in black and white with one colour borrowed from the cover. No internet permission, nothing leaves the phone.
+
+1. Download **[yrs-music.apk](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk)** and install it like yrs.
+2. Open it, allow access to music and turn on the folders that hold your songs.
+3. Songs, Albums and Playlists are the three words at the top. Tap the playing strip, or drag it up, and the cover grows into the player.
+
+- **Calm pages.** Songs is home, with up to six pinned albums or playlists above it. Albums in a grid, playlists with Loved first.
+- **The player.** Square cover, a thin line for time, three symbols, words for Shuffle, Lyrics, Up next and Repeat, and the file's format and quality at the bottom.
+- **Lyrics and Up next.** Synced lyrics from the song or a file you choose; drag to reorder what plays next, swipe to remove.
+- **Made from [Lotus](https://github.com/dn0ne/lotus)** by dn0ne, and like Lotus free software under the GPL-3.0. Source and changes in [music/](music/).
+
 **Try it in your browser** &nbsp;·&nbsp; free, nothing to install
 
 1. Open **[jrypzm.github.io/yrs/web](https://jrypzm.github.io/yrs/web/)** on any phone, tablet or computer.
@@ -98,6 +111,7 @@ Age is calendar-exact, down to Feb 29 birthdays. A year holds 52.1775 weeks and 
 android/     Native Android app
 linux/       Linux desktop app (Rust)
 home/        yrs. home, the Android launcher
+music/       yrs. music, the offline player (GPL-3.0, from Lotus)
 web/         Browser version, icons, launch screens, service worker
 index.html   Website
 .github/     CI, issue forms, README art

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="albums">Albums</string>
+    <string name="app_name" translatable="false">yrs. music</string>
+    <string name="artists">Artists</string>
+    <string name="cant_look_for_lyrics_title_or_artist_is_missing">Can\'t look for lyrics. Title or artist is not specified for this track.</string>
+    <string name="copy_error">Copy error</string>
+    <string name="cover_art_archive_is_unavailable">Failed to load cover art. Cover Art Archive is unavailable. Please try again later.</string>
+    <string name="cover_art_not_found">Unfortunately, cover art for this recording was not found.</string>
+    <string name="failed_to_load_cover_art_album_id_corrupted">Failed to load cover art. Looks like album id for this recording is corrupted.</string>
+    <string name="failed_to_load_cover_art_request_timeout">Failed to load cover art in 3 minutes. Please check network quality and try again.</string>
+    <string name="failed_to_parse_response">Failed to parse response. Please try again.</string>
+    <string name="failed_to_read">Failed to read file. Please try again.</string>
+    <string name="failed_to_refresh">Could not look for music</string>
+    <string name="failed_to_scan">Failed to scan</string>
+    <string name="failed_to_write">Failed to write file. Please try again.</string>
+    <string name="folders">Folders</string>
+    <string name="genres">Genres</string>
+    <string name="grant_permission_in_settings">Please, grant permission in Settings</string>
+    <string name="imported_successfully">Imported successfully.</string>
+    <string name="lyrics_not_found">Unfortunately, lyrics for this track can\'t be found on LRCLIB.</string>
+    <string name="metadata_change_succeed">Track info was changed successfully. Changes will take effect in a couple seconds.</string>
+    <string name="musicbrainz_is_unavailable">MusicBrainz is unavailable. Please try again later.</string>
+    <string name="musicbrainz_server_error">MusicBrainz error occurred. Please try again.</string>
+    <string name="no_internet">Works offline only</string>
+    <string name="no_read_permission">No read permission. Please grant it or try again.</string>
+    <string name="no_write_permission">No write permission. Please grant it or try again.</string>
+    <string name="nothing_to_refresh">No new music found</string>
+    <string name="playlists">Playlists</string>
+    <string name="published_successfully">Published successfully.</string>
+    <string name="query_was_corrupted">Query was corrupted. Please try again.</string>
+    <string name="refreshed_successfully">Library up to date</string>
+    <string name="scanned_successfully">Scanned successfully</string>
+    <string name="track_is_already_on_playlist">This track is already on the playlist.</string>
+    <string name="track_is_not_found_in_media_store">Unfortunately, this track is unavailable for the player. Maybe it\'s because it\'s in a folder not included in the scan.</string>
+    <string name="tracks">Tracks</string>
+    <string name="unable_to_publish">Unable to publish: title, artist or album not specified.</string>
+    <string name="unknown_error_occurred">Unknown error occurred. Please try again.</string>
+    <string name="write_permission_denied">Failed to overwrite metadata. Permission denied. Please try again.</string>
+</resources>
