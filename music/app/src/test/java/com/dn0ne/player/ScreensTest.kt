@@ -54,7 +54,7 @@ import java.io.File
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [34], qualifiers = "w412dp-h915dp-xxhdpi", application = Application::class)
-class ScreensTest {
+abstract class Screens {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
     private val albums = listOf(
@@ -70,13 +70,13 @@ class ScreensTest {
         Triple("Haze", "Lumen Drift", "haze") to listOf("Haze", "Soft Focus"),
     )
 
-    private fun cover(name: String): Uri {
+    protected fun cover(name: String): Uri {
         val f = File.createTempFile(name, ".jpg")
         javaClass.getResourceAsStream("/covers/$name.jpg")!!.use { i -> f.outputStream().use { i.copyTo(it) } }
         return Uri.fromFile(f)
     }
 
-    private fun tracks(): List<Track> {
+    protected fun tracks(): List<Track> {
         var id = 0
         return albums.flatMap { (a, titles) ->
             val art = cover(a.third)
@@ -93,7 +93,7 @@ class ScreensTest {
         }
     }
 
-    private class Fakes(val all: List<Track>) : TrackRepository, PlaylistRepository, LyricsRepository, LyricsReader {
+    protected class Fakes(val all: List<Track>) : TrackRepository, PlaylistRepository, LyricsRepository, LyricsReader {
         val lists = MutableStateFlow(
             listOf(
                 Playlist(LOVED, all.filterIndexed { i, _ -> i % 5 == 0 }),
@@ -121,14 +121,14 @@ class ScreensTest {
         override fun readFromTag(track: Track): Result<Lyrics?, DataError.Local> = Result.Error(DataError.Local.FailedToRead)
     }
 
-    private val outside = object : Outside {
+    protected val outside = object : Outside {
         override fun pickFolder() {}
         override fun pickLyrics() {}
         override fun pickPlaylist() {}
         override fun askForMusic() {}
     }
 
-    private fun model(all: List<Track>): Pair<PlayerViewModel, Fakes> {
+    protected fun model(all: List<Track>): Pair<PlayerViewModel, Fakes> {
         val ctx = rule.activity.applicationContext
         val f = Fakes(all)
         val settings = Settings(ctx)
@@ -141,7 +141,7 @@ class ScreensTest {
         return vm to f
     }
 
-    private fun settle(ms: Long = 900) {
+    protected fun settle(ms: Long = 900) {
         var left = ms
         while (left > 0) {
             rule.mainClock.advanceTimeBy(50)
@@ -151,7 +151,7 @@ class ScreensTest {
         }
     }
 
-    private fun shot(name: String, wait: Long = 300) {
+    protected fun shot(name: String, wait: Long = 300) {
         settle(wait)
         val v: View = rule.activity.window.decorView
         val b = Bitmap.createBitmap(v.width, v.height, Bitmap.Config.ARGB_8888)
@@ -159,7 +159,13 @@ class ScreensTest {
         File("build/screens").mkdirs()
         File("build/screens/$name.png").outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
+}
 
+/** The whole app with a library: every page, the player, lyrics, menus and sheets. */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w412dp-h915dp-xxhdpi", application = Application::class)
+class ScreensTest : Screens() {
     @Test fun screens() {
         rule.mainClock.autoAdvance = false
         rule.runOnUiThread { rule.activity.actionBar?.hide() }
@@ -218,7 +224,13 @@ class ScreensTest {
         rule.onNodeWithText("New playlist").performClick(); settle(900); shot("18-name")
         assertTrue(File("build/screens/18-name.png").exists())
     }
+}
 
+/** No music yet: the calm empty pages. */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w412dp-h915dp-xxhdpi", application = Application::class)
+class EmptyTest : Screens() {
     @Test fun empty() {
         rule.mainClock.autoAdvance = false
         rule.runOnUiThread { rule.activity.actionBar?.hide() }
@@ -229,7 +241,13 @@ class ScreensTest {
         rule.onNodeWithContentDescription("Albums").performClick(); settle(1200); shot("21-empty-albums")
         rule.onNodeWithContentDescription("Playlists").performClick(); settle(1200); shot("22-empty-playlists")
     }
+}
 
+/** First open. */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w412dp-h915dp-xxhdpi", application = Application::class)
+class WelcomeTest : Screens() {
     @Test fun welcome() {
         rule.mainClock.autoAdvance = false
         rule.runOnUiThread { rule.activity.actionBar?.hide() }

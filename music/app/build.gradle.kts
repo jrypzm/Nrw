@@ -113,6 +113,8 @@ android {
                 it.systemProperty("robolectric.graphicsMode", "NATIVE")
                 it.systemProperty("robolectric.dependency.repo.url", "https://maven-central.storage-download.googleapis.com/maven2")
                 it.maxHeapSize = "3g"
+                // one JVM per test class: Robolectric's native graphics can't be loaded twice in one process
+                it.forkEvery = 1
             }
         }
     }
