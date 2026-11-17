@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Download yrs.
+  - name: Download the apps
     url: https://jrypzm.github.io/yrs/
-    about: The latest build for Android, and the iPhone web app.
+    about: yrs., yrs. home and yrs. music, always the newest builds.
   - name: Report a security or privacy problem
     url: https://github.com/jrypzm/yrs/security/advisories/new
     about: Please report these privately.

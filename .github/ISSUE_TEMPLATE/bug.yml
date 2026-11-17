@@ -6,34 +6,40 @@ body:
     attributes:
       value: Thanks for taking the time. A screenshot helps more than anything.
   - type: dropdown
-    id: platform
+    id: app
     attributes:
-      label: Where
-      options: [Android app, iPhone web app, Website]
+      label: Which app
+      options:
+        - yrs. for Android
+        - yrs. for Linux
+        - yrs. in the browser (or on iPhone)
+        - yrs. home
+        - yrs. music
+        - The website
     validations: { required: true }
   - type: textarea
     id: what
     attributes:
       label: What happened
       description: And what you expected instead.
-      placeholder: On the Weeks zoom, the heading said "days left".
+      placeholder: In yrs. music, the lyrics stopped following the song after I scrolled.
     validations: { required: true }
   - type: textarea
     id: steps
     attributes:
       label: Steps to see it
       placeholder: |
-        1. Open yrs.
-        2. Pinch to Weeks
+        1. Open the app
+        2. ...
         3. ...
   - type: input
     id: device
     attributes:
-      label: Phone and version
-      description: yrs. version is in Settings. Leave out your birthday.
-      placeholder: Galaxy S24 Ultra, Android 15, yrs. 1.0.16
+      label: Device and version
+      description: The app's build is in its Settings or in the release you downloaded. Leave out anything personal, like your birthday.
+      placeholder: Galaxy S24 Ultra, Android 15, yrs. music build 3
   - type: textarea
     id: shots
     attributes:
-      label: Screenshots
-      description: Drag images here.
+      label: Screenshots or a recording
+      description: Drag images or videos here.

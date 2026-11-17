@@ -30,6 +30,18 @@ jobs:
         with:
           gradle-version: "8.11.1"
 
+      - name: Run tests and render every screen
+        working-directory: music
+        run: gradle testDebugUnitTest --no-daemon
+
+      - name: Keep the rendered screens
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yrs-music-screens
+          path: music/app/build/screens/*.png
+          if-no-files-found: ignore
+
       - name: Build signed APK
         working-directory: music
         run: gradle assembleRelease --no-daemon

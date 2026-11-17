@@ -1,7 +1,18 @@
 name: Suggest an idea
-description: Something that would help you see or spend your time better.
+description: Something that would make one of the apps better for you.
 labels: [idea]
 body:
+  - type: dropdown
+    id: app
+    attributes:
+      label: Which app
+      options:
+        - yrs.
+        - yrs. home
+        - yrs. music
+        - A new yrs. app
+        - The website
+    validations: { required: true }
   - type: textarea
     id: idea
     attributes:
@@ -12,4 +23,4 @@ body:
     id: why
     attributes:
       label: Why it matters to you
-      description: The feeling or moment behind it.
+      description: The moment or feeling behind it.

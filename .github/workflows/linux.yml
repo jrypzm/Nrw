@@ -1,4 +1,4 @@
-name: Linux AppImage
+name: yrs. Linux AppImage
 
 on:
   push:

@@ -1,134 +1,144 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/hero-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset=".github/assets/hero-light.svg">
-  <img alt="yrs. — Your life, in dots. Every year you've lived, and every year still ahead." src=".github/assets/hero-dark.svg" width="100%">
-</picture>
-
-<br>
-
 <p align="center">
-  <a href="https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/btn-android-dark.svg"><source media="(prefers-color-scheme: light)" srcset=".github/assets/btn-android-light.svg"><img alt="Download for Android" src=".github/assets/btn-android-dark.svg" height="46"></picture></a>
-  &nbsp;
-  <a href="https://jrypzm.github.io/yrs/web/"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/btn-web-dark.svg"><source media="(prefers-color-scheme: light)" srcset=".github/assets/btn-web-light.svg"><img alt="Try it in your browser" src=".github/assets/btn-web-dark.svg" height="46"></picture></a>
+  <img src="assets/icon-yrs.svg" width="76" alt="yrs.">&nbsp;&nbsp;
+  <img src="assets/icon-home.svg" width="76" alt="yrs. home">&nbsp;&nbsp;
+  <img src="assets/icon-music.svg" width="76" alt="yrs. music">
 </p>
 
-<p align="center"><sub>Free &nbsp;·&nbsp; No account &nbsp;·&nbsp; No ads &nbsp;·&nbsp; Nothing leaves your phone &nbsp;·&nbsp; <a href="https://jrypzm.github.io/yrs/">jrypzm.github.io/yrs</a></sub></p>
+<h1 align="center">yrs.</h1>
+
+<p align="center"><b>Quiet apps, made by one person.</b><br>
+Black and white, free and open source. No accounts, no ads, and nothing leaves your phone.</p>
+
+<p align="center">
+  <a href="https://jrypzm.github.io/yrs/"><b>Website</b></a> &nbsp;·&nbsp;
+  <a href="#the-apps">The apps</a> &nbsp;·&nbsp;
+  <a href="#build-it-yourself">Build</a> &nbsp;·&nbsp;
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/jrypzm/yrs/actions/workflows/android.yml"><img alt="yrs. Android" src="https://github.com/jrypzm/yrs/actions/workflows/android.yml/badge.svg"></a>
+  <a href="https://github.com/jrypzm/yrs/actions/workflows/linux.yml"><img alt="yrs. Linux" src="https://github.com/jrypzm/yrs/actions/workflows/linux.yml/badge.svg"></a>
+  <a href="https://github.com/jrypzm/yrs/actions/workflows/home.yml"><img alt="yrs. home" src="https://github.com/jrypzm/yrs/actions/workflows/home.yml/badge.svg"></a>
+  <a href="https://github.com/jrypzm/yrs/actions/workflows/music.yml"><img alt="yrs. music" src="https://github.com/jrypzm/yrs/actions/workflows/music.yml/badge.svg"></a>
+</p>
 
 <br>
 
-<p align="center"><img alt="Every year, one dot. White for the years behind you, dark for the years ahead; the one you're in fills a little every day. Count in years, weeks, days, summers, weekends or full moons, or watch it tick live." src=".github/assets/tile-life.png" width="100%"></p>
+## The apps
 
-<p align="center"><img alt="From all of history to a single day: pinch through History, Years, Months, Weeks and Days. The headline always counts in what you see." src=".github/assets/tile-zoom.png" width="100%"></p>
+| | App | What it does | Get it |
+|:-:|---|---|---|
+| <img src="assets/icon-yrs.svg" width="48"> | **[yrs.](android/)** | Your life, in dots. Every year lived and still ahead, on your screen, lock screen and widgets. | [Android](https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk) · [Linux](https://github.com/jrypzm/yrs/releases/download/linux/yrs-x86_64.AppImage) · [Web](https://jrypzm.github.io/yrs/web/) |
+| <img src="assets/icon-home.svg" width="48"> | **[yrs. home](home/)** | A calm launcher. Your apps as words that glow when something new arrives; the rest waits for your hour. | [Android](https://github.com/jrypzm/yrs/releases/download/home/yrs-home.apk) |
+| <img src="assets/icon-music.svg" width="48"> | **[yrs. music](music/)** | An offline player for the songs on your phone. Three words, a square cover, one colour from the artwork. | [Android](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk) |
 
-<p align="center"><img alt="Write to the you of later: name a year, seal a letter that opens on that birthday, and write one line a day." src=".github/assets/tile-letters.png" width="100%"></p>
+<p align="center">
+  <img src="assets/yrs-1.webp" width="24%" alt="yrs.: 49 years left, one dot per year">
+  <img src="assets/home-1.webp" width="24%" alt="yrs. home: the time and favourite apps as words">
+  <img src="assets/music-1.webp" width="24%" alt="yrs. music: the Songs page">
+  <img src="assets/music-2.webp" width="24%" alt="yrs. music: the player">
+</p>
 
-<p align="center"><img alt="Know what's left, of everything: visits left with the people you love, and where your remaining years go." src=".github/assets/tile-people.png" width="100%"></p>
+<br>
 
-<p align="center"><img alt="See it before anything else: four lock screens, Grid, Daylight, Hourglass and Stars, redrawn every day on Android." src=".github/assets/tile-lock.png" width="100%"></p>
+### yrs. &nbsp;<sub>Android 10+ · Linux · any browser</sub>
 
-<p align="center"><img alt="Seven widgets, one idea each: Life, Number, Decade, This year, Days, Today and People." src=".github/assets/tile-widgets.png" width="100%"></p>
+Every year you've lived and every year still ahead, one dot each. Zoom from all of history down to a single day, count the visits left with the people you love, write a letter that opens on a future birthday, and put it on your lock screen so you spend the time on purpose. Four lock screens, seven widgets, and a Linux app that can set your KDE wallpaper.
 
-<p align="center"><img alt="No account. No cloud. Nothing leaves your phone. The Android app has no internet permission." src=".github/assets/tile-privacy.png" width="100%"></p>
+**[Download for Android](https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk)** · **[AppImage for Linux](https://github.com/jrypzm/yrs/releases/download/linux/yrs-x86_64.AppImage)** · **[Open in your browser](https://jrypzm.github.io/yrs/web/)** (on iPhone, add it to your Home Screen) · [More about yrs.](android/)
+
+### yrs. home &nbsp;<sub>Android 11+ · about 200 KB</sub>
+
+A black, quiet home screen: the time, your favourite apps as words, and everything else one swipe or one thumb away. Names glow and say who when something arrives, people reach you straight away, and shops, social and news can wait for The Hour. Search sets alarms and timers, calls, converts and counts.
+
+**[Download for Android](https://github.com/jrypzm/yrs/releases/download/home/yrs-home.apk)**, open it and tap **Make yrs. home your home screen**. · [More about yrs. home](home/)
+
+### yrs. music &nbsp;<sub>Android 8+ · offline</sub>
+
+Songs, Albums and Playlists as three plain words. Tap the playing strip and the cover grows into the player on a spring; a thin line for time, three symbols, Shuffle, Lyrics, Up next and Repeat as words, and the file's format and quality at the bottom. Synced lyrics, a queue you can drag, and no internet permission at all. Made from [Lotus](https://github.com/dn0ne/lotus) by dn0ne.
+
+**[Download for Android](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk)**. It installs next to Lotus without replacing it. · [More about yrs. music](music/)
+
+<br>
+
+## Installing on Android
+
+The apps aren't on the Play Store, so Android installs them straight from the download:
+
+1. Tap the download link and open the file from your notifications.
+2. If asked, allow installs from your browser.
+3. Play Protect may ask about an unknown app; tap **Install anyway**. Updates install over the top and keep your data.
+
+Every APK is built and signed by GitHub Actions from the code in this repository. The links above always point at the newest build.
+
+<br>
+
+## Promises
+
+- **Nothing leaves your phone.** The Android apps have no internet permission. There is no server to send anything to.
+- **No accounts, no ads, no tracking.** No sign-up, no analytics, nothing to sell.
+- **Open source.** Every line is here. Read it, build it, change it.
+- **Calm by design.** True black, white words, at most one colour. Nothing that shouts.
+
+<br>
+
+## Build it yourself
+
+| Folder | What | Toolchain | Build |
+|---|---|---|---|
+| [`android/`](android/) | yrs. for Android | JDK 17, Gradle 8.11 | `gradle assembleRelease` |
+| [`linux/`](linux/) | yrs. for Linux | Rust (stable) | `./build-appimage.sh` |
+| [`web/`](web/) | yrs. in the browser | none | open `web/index.html` |
+| [`home/`](home/) | yrs. home | JDK 17, Gradle 8.11 | `gradle assembleRelease` |
+| [`music/`](music/) | yrs. music | JDK 17, Gradle 8.11 | `gradle assembleRelease` |
+
+Run each command inside its folder. The Android projects have screen tests that render every page to PNG with Robolectric or Paparazzi; see each app's README.
+
+```
+android/     yrs. for Android: Kotlin, Jetpack Compose, Glance widgets, a live wallpaper
+linux/       yrs. for Linux: Rust and egui, shipped as one AppImage
+web/         yrs. in the browser: one HTML file, installable, works offline
+home/        yrs. home: the launcher, Kotlin and Android views
+music/       yrs. music: Kotlin, Compose and Media3, from Lotus (GPL-3.0)
+index.html   the website, with the apps and their downloads
+life/        the long page about yrs.
+assets/      icons and screenshots used by the website and this README
+docs/        design notes
+marketing/   images for posts and stories
+.github/     CI that builds, signs and publishes every app; issue forms
+```
+
+### Releases
+
+Every push that touches an app's folder builds it in GitHub Actions and replaces its release:
+
+| App | Workflow | Release | Download |
+|---|---|---|---|
+| yrs. Android | [`android.yml`](.github/workflows/android.yml) | latest | [`yrs.apk`](https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk) |
+| yrs. Linux | [`linux.yml`](.github/workflows/linux.yml) | `linux` | [`yrs-x86_64.AppImage`](https://github.com/jrypzm/yrs/releases/download/linux/yrs-x86_64.AppImage) |
+| yrs. home | [`home.yml`](.github/workflows/home.yml) | `home` | [`yrs-home.apk`](https://github.com/jrypzm/yrs/releases/download/home/yrs-home.apk) |
+| yrs. music | [`music.yml`](.github/workflows/music.yml) | `music` | [`yrs-music.apk`](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk) |
+
+The website is served by GitHub Pages straight from the repository root.
 
 <br>
 
 ## About
 
-yrs. is a small, independent project made by one person. No company, no investors, no ads: just an idea I wanted to exist, built in spare time.
+yrs. is made by one person. No company, no team, no investors: just apps I wanted to exist on my own phone, built to show what matters and then let you go.
 
-It's **open source under the MIT license**. Use it, read it, build it yourself, change anything, or take the code and make it your own. Pull requests and ideas are welcome.
-
-<br>
-
-## Get yrs.
-
-**Android** &nbsp;·&nbsp; Android 11 or newer
-
-1. Tap **[Download yrs.apk](https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk)**. You always get the latest build.
-2. Open it from your notifications. If asked, allow installs from your browser.
-3. yrs. isn't on the Play Store yet, so Play Protect may ask. Tap **Install anyway**. Updates keep your data.
-
-**Linux** &nbsp;·&nbsp; Fedora, Ubuntu, Arch and other current desktops, Wayland or X11
-
-1. Download **[yrs-x86_64.AppImage](https://github.com/jrypzm/yrs/releases/download/linux/yrs-x86_64.AppImage)**. One file, about 5 MB.
-2. Make it executable: right-click it, Properties, Permissions, **Is executable**. Or `chmod +x yrs-x86_64.AppImage`.
-3. Open it. yrs. adds itself to your app launcher with its icon, so you can pin it to the taskbar. On KDE Plasma it can also set your wallpaper and lock screen, sit in the tray and start at login.
-
-**yrs. home** &nbsp;·&nbsp; a launcher for Android 11 or newer
-
-A black, quiet home screen: the time, your favourite apps as words, and everything else one swipe or one thumb away. About 200 KB, no internet permission.
-
-1. Download **[yrs-home.apk](https://github.com/jrypzm/yrs/releases/download/home/yrs-home.apk)** and install it like yrs.
-2. Open it and tap **Make yrs. home your home screen**.
-3. Swipe up for all apps and search, slide your thumb down the right edge to open any app by letter, hold an app for more, double-tap to lock.
-
-What it does, all on the phone:
-- **Words that glow.** No dots: an app's name lights up when something new arrives, and says who.
-- **People waiting.** Messages from people across WhatsApp, SMS, Telegram and others, with reply right there.
-- **The Hour.** Optional. People reach you straight away; shops, social and news wait for the times you pick and arrive together.
-- **The live line.** Timers, calls, deliveries and directions under the clock, with music controls when something plays.
-- **Search that understands.** `7:30` sets an alarm, `10 min` a timer, a number calls, `.yt lofi` searches inside YouTube, `days to christmas` counts.
-- **Moments.** A different home for morning, work, evening and night. Headphones in brings your music app forward.
-- **A pause that grows.** Chosen apps wait a few seconds more each time you open them today, and ask why.
-- **Away time, new and quiet apps, a torch that's a word, a thumb rail you can feel, Work and Private Space** as their own sections.
-
-**yrs. music** &nbsp;·&nbsp; an offline music player for Android 8 or newer
-
-The songs on your phone, in black and white with one colour borrowed from the cover. No internet permission, nothing leaves the phone.
-
-1. Download **[yrs-music.apk](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk)** and install it like yrs.
-2. Open it, allow access to music and turn on the folders that hold your songs.
-3. Songs, Albums and Playlists are the three words at the top. Tap the playing strip, or drag it up, and the cover grows into the player.
-
-- **Calm pages.** Songs is home, with up to six pinned albums or playlists above it. Albums in a grid, playlists with Loved first.
-- **The player.** Square cover, a thin line for time, three symbols, words for Shuffle, Lyrics, Up next and Repeat, and the file's format and quality at the bottom.
-- **Lyrics and Up next.** Synced lyrics from the song or a file you choose; drag to reorder what plays next, swipe to remove.
-- **Made from [Lotus](https://github.com/dn0ne/lotus)** by dn0ne, and like Lotus free software under the GPL-3.0. Source and changes in [music/](music/).
-
-**Try it in your browser** &nbsp;·&nbsp; free, nothing to install
-
-1. Open **[jrypzm.github.io/yrs/web](https://jrypzm.github.io/yrs/web/)** on any phone, tablet or computer.
-2. Enter your birthday. That's it.
-3. Like it? Add it to your **Home Screen** from your browser's Share or menu button. It opens full screen and works offline.
-
-The browser version is the same design and the same maths. Browsers can't add widgets or change your wallpaper on their own, so there you save the lock screen once from Settings.
-
-<details>
-<summary><b>Under the hood</b></summary>
-<br>
-
-| | |
-|---|---|
-| **Android** | Kotlin, Jetpack Compose, Glance widgets, WorkManager, a live wallpaper service. No internet permission. |
-| **Linux** | Rust and egui, drawn by hand: one 5 MB AppImage that starts instantly and idles at zero CPU. Tray, notifications and Plasma wallpaper through standard desktop services |
-| **Web** | One self-contained HTML file: vanilla JavaScript and canvas, installable, with an offline service worker |
-| **Website** | WebGL. Every day of a life is one point, morphing from years to weeks to days to all of history |
-| **Builds** | GitHub Actions builds and signs every APK, publishes the release, and renders screenshot tests |
-
-Age is calendar-exact, down to Feb 29 birthdays. A year holds 52.1775 weeks and a day is a real calendar day, so every zoom level agrees with every other.
-
-```
-android/     Native Android app
-linux/       Linux desktop app (Rust)
-home/        yrs. home, the Android launcher
-music/       yrs. music, the offline player (GPL-3.0, from Lotus)
-web/         Browser version, icons, launch screens, service worker
-index.html   Website
-.github/     CI, issue forms, README art
-```
-
-Build the APK with JDK 17 and Gradle 8.11.1: `cd android && gradle assembleRelease`.
-</details>
+Ideas and bug reports are welcome and every one is read: **[open an issue](https://github.com/jrypzm/yrs/issues/new/choose)**. If you'd like to help with code, start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
 <br>
 
-<p align="center">
-  <b>If yrs. means something to you, give it a star.</b><br>
-  <sub>It's free, made by one person, and a star helps other people find it.</sub><br><br>
-  <a href="https://github.com/jrypzm/yrs"><picture><source media="(prefers-color-scheme: dark)" srcset=".github/assets/btn-star-dark.svg"><source media="(prefers-color-scheme: light)" srcset=".github/assets/btn-star-light.svg"><img alt="Star on GitHub" src=".github/assets/btn-star-dark.svg" height="46"></picture></a>
-</p>
+## License
 
-<p align="center"><sub><a href="https://github.com/jrypzm/yrs/issues/new/choose">Ideas & bugs</a> &nbsp;·&nbsp; <a href="CONTRIBUTING.md">Contributing</a> &nbsp;·&nbsp; <a href="SECURITY.md">Security</a> &nbsp;·&nbsp; <a href="LICENSE">MIT License</a></sub></p>
+yrs., yrs. home, the website and the web app are released under the [MIT License](LICENSE).
+
+yrs. music is a modified version of [Lotus](https://github.com/dn0ne/lotus) by dn0ne and is released under the [GNU GPL v3](music/LICENSE.md), like Lotus. See [music/NOTICE](music/NOTICE).
+
+The apps use the [Inter](https://rsms.me/inter/) typeface by Rasmus Andersson, under the SIL Open Font License 1.1.
 
 <br>
 

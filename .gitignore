@@ -1,5 +1,20 @@
+# build output
+build/
+.gradle/
+.kotlin/
+target/
+dist/
+local.properties
+
+# editors and systems
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# local archives and fonts kept out of the repo
 *.zip
 fonts/*.otf
 fonts/*.ttf
 fonts/*.woff2
-dist/
