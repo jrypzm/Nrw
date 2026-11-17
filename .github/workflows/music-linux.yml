@@ -1,0 +1,48 @@
+name: yrs. music Linux AppImage
+
+on:
+  push:
+    paths:
+      - "music-linux/**"
+      - ".github/workflows/music-linux.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: music-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  appimage:
+    # an older Ubuntu, so the AppImage runs on every current Fedora, Ubuntu and Arch
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sound headers
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: music-linux
+      - name: Test
+        working-directory: music-linux
+        run: cargo test --release
+      - name: Build the AppImage
+        working-directory: music-linux
+        run: ./build-appimage.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: yrs-music-linux
+          path: music-linux/dist/yrs-music-x86_64.AppImage
+      - name: Publish to the "music-linux" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # one release that always holds the newest AppImage, so the download link never changes
+          gh release view music-linux >/dev/null 2>&1 || gh release create music-linux --latest=false --title "yrs. music for Linux" \
+            --notes "yrs. music for Linux: one file, no install."
+          gh release upload music-linux music-linux/dist/yrs-music-x86_64.AppImage --clobber
+          gh release edit music-linux --notes "yrs. music for Linux, built from ${{ github.sha }}. Download yrs-music-x86_64.AppImage, make it executable (chmod +x, or Properties → Is executable), and open it. Plays FLAC, MP3, AAC and ALAC, Ogg Vorbis, WAV and AIFF. Runs on Fedora, Ubuntu, Arch and other current desktops, on Wayland and X11. No internet use."

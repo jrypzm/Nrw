@@ -1,6 +1,6 @@
 # Security
 
-The yrs. apps keep everything on your device. yrs., yrs. home and yrs. music for Android have no internet permission. The web app stores its data only in your browser, and the Linux app only in your home folder.
+The yrs. apps keep everything on your device. yrs., yrs. home and yrs. music for Android have no internet permission. The web app stores its data only in your browser, and the Linux apps only in your home folder.
 
 ## Reporting a problem
 
@@ -22,6 +22,7 @@ Only the newest build of each app receives fixes:
 | yrs. for Linux | [`linux` release](https://github.com/jrypzm/yrs/releases/tag/linux) |
 | yrs. home | [`home` release](https://github.com/jrypzm/yrs/releases/tag/home) |
 | yrs. music | [`music` release](https://github.com/jrypzm/yrs/releases/tag/music) |
+| yrs. music for Linux | [`music-linux` release](https://github.com/jrypzm/yrs/releases/tag/music-linux) |
 | Web app and website | [jrypzm.github.io/yrs](https://jrypzm.github.io/yrs/) |
 
 ## Release signing

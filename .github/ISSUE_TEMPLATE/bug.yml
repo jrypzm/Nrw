@@ -14,7 +14,8 @@ body:
         - yrs. for Linux
         - yrs. in the browser (or on iPhone)
         - yrs. home
-        - yrs. music
+        - yrs. music for Android
+        - yrs. music for Linux
         - The website
     validations: { required: true }
   - type: textarea

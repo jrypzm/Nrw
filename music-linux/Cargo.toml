@@ -1,0 +1,28 @@
+[package]
+name = "yrs-music"
+version = "1.0.0"
+edition = "2021"
+description = "yrs. music: your music, offline."
+license = "MIT"
+
+[dependencies]
+eframe = { version = "0.31", default-features = false, features = ["glow", "wayland", "x11", "default_fonts"] }
+egui = "0.31"
+rodio = { version = "0.20", default-features = false, features = ["symphonia-all"] }
+lofty = "0.22"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+resvg = { version = "0.45", default-features = false }
+souvlaki = { version = "0.7", default-features = false, features = ["use_zbus"] }
+rfd = { version = "0.15", default-features = false, features = ["xdg-portal", "async-std"] }
+walkdir = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rand = "0.8"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
+# a panic in a helper thread (the desktop bus, a picker) must never stop the music
+panic = "unwind"

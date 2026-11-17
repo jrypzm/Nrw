@@ -21,6 +21,7 @@ Black and white, free and open source. No accounts, no ads, and nothing leaves y
   <a href="https://github.com/jrypzm/yrs/actions/workflows/linux.yml"><img alt="yrs. Linux" src="https://github.com/jrypzm/yrs/actions/workflows/linux.yml/badge.svg"></a>
   <a href="https://github.com/jrypzm/yrs/actions/workflows/home.yml"><img alt="yrs. home" src="https://github.com/jrypzm/yrs/actions/workflows/home.yml/badge.svg"></a>
   <a href="https://github.com/jrypzm/yrs/actions/workflows/music.yml"><img alt="yrs. music" src="https://github.com/jrypzm/yrs/actions/workflows/music.yml/badge.svg"></a>
+  <a href="https://github.com/jrypzm/yrs/actions/workflows/music-linux.yml"><img alt="yrs. music for Linux" src="https://github.com/jrypzm/yrs/actions/workflows/music-linux.yml/badge.svg"></a>
 </p>
 
 <br>
@@ -31,7 +32,7 @@ Black and white, free and open source. No accounts, no ads, and nothing leaves y
 |:-:|---|---|---|
 | <img src="assets/icon-yrs.svg" width="48"> | **[yrs.](android/)** | Your life, in dots. Every year lived and still ahead, on your screen, lock screen and widgets. | [Android](https://github.com/jrypzm/yrs/releases/latest/download/yrs.apk) · [Linux](https://github.com/jrypzm/yrs/releases/download/linux/yrs-x86_64.AppImage) · [Web](https://jrypzm.github.io/yrs/web/) |
 | <img src="assets/icon-home.svg" width="48"> | **[yrs. home](home/)** | A calm launcher. Your apps as words that glow when something new arrives; the rest waits for your hour. | [Android](https://github.com/jrypzm/yrs/releases/download/home/yrs-home.apk) |
-| <img src="assets/icon-music.svg" width="48"> | **[yrs. music](music/)** | An offline player for the songs on your phone. Three words, a square cover, one colour from the artwork. | [Android](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk) |
+| <img src="assets/icon-music.svg" width="48"> | **[yrs. music](music/)** | An offline player for the songs on your phone and computer. Three words, a square cover, one colour from the artwork. | [Android](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk) · [Linux](https://github.com/jrypzm/yrs/releases/download/music-linux/yrs-music-x86_64.AppImage) |
 
 <p align="center">
   <img src="assets/yrs-1.webp" width="24%" alt="yrs.: 49 years left, one dot per year">
@@ -54,11 +55,11 @@ A black, quiet home screen: the time, your favourite apps as words, and everythi
 
 **[Download for Android](https://github.com/jrypzm/yrs/releases/download/home/yrs-home.apk)**, open it and tap **Make yrs. home your home screen**. · [More about yrs. home](home/)
 
-### yrs. music &nbsp;<sub>Android 8+ · offline</sub>
+### yrs. music &nbsp;<sub>Android 8+ · Linux · offline</sub>
 
 Songs, Albums and Playlists as three plain words. Tap the playing strip and the cover grows into the player on a spring; a thin line for time, three symbols, Shuffle, Lyrics, Up next and Repeat as words, and the file's format and quality at the bottom. Synced lyrics, a queue you can drag, and no internet permission at all. Made from [Lotus](https://github.com/dn0ne/lotus) by dn0ne.
 
-**[Download for Android](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk)**. It installs next to Lotus without replacing it. · [More about yrs. music](music/)
+**[Download for Android](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk)** (installs next to Lotus without replacing it) · **[AppImage for Linux](https://github.com/jrypzm/yrs/releases/download/music-linux/yrs-music-x86_64.AppImage)**, with gapless playback, desktop media controls and a mini player · More about [Android](music/) and [Linux](music-linux/)
 
 <br>
 
@@ -91,7 +92,8 @@ Every APK is built and signed by GitHub Actions from the code in this repository
 | [`linux/`](linux/) | yrs. for Linux | Rust (stable) | `./build-appimage.sh` |
 | [`web/`](web/) | yrs. in the browser | none | open `web/index.html` |
 | [`home/`](home/) | yrs. home | JDK 17, Gradle 8.11 | `gradle assembleRelease` |
-| [`music/`](music/) | yrs. music | JDK 17, Gradle 8.11 | `gradle assembleRelease` |
+| [`music/`](music/) | yrs. music for Android | JDK 17, Gradle 8.11 | `gradle assembleRelease` |
+| [`music-linux/`](music-linux/) | yrs. music for Linux | Rust (stable), ALSA headers | `./build-appimage.sh` |
 
 Run each command inside its folder. The Android projects have screen tests that render every page to PNG with Robolectric or Paparazzi; see each app's README.
 
@@ -100,7 +102,8 @@ android/     yrs. for Android: Kotlin, Jetpack Compose, Glance widgets, a live w
 linux/       yrs. for Linux: Rust and egui, shipped as one AppImage
 web/         yrs. in the browser: one HTML file, installable, works offline
 home/        yrs. home: the launcher, Kotlin and Android views
-music/       yrs. music: Kotlin, Compose and Media3, from Lotus (GPL-3.0)
+music/       yrs. music for Android: Kotlin, Compose and Media3, from Lotus (GPL-3.0)
+music-linux/ yrs. music for Linux: Rust, egui and rodio
 index.html   the website, with the apps and their downloads
 life/        the long page about yrs.
 assets/      icons and screenshots used by the website and this README
@@ -119,6 +122,7 @@ Every push that touches an app's folder builds it in GitHub Actions and replaces
 | yrs. Linux | [`linux.yml`](.github/workflows/linux.yml) | `linux` | [`yrs-x86_64.AppImage`](https://github.com/jrypzm/yrs/releases/download/linux/yrs-x86_64.AppImage) |
 | yrs. home | [`home.yml`](.github/workflows/home.yml) | `home` | [`yrs-home.apk`](https://github.com/jrypzm/yrs/releases/download/home/yrs-home.apk) |
 | yrs. music | [`music.yml`](.github/workflows/music.yml) | `music` | [`yrs-music.apk`](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk) |
+| yrs. music for Linux | [`music-linux.yml`](.github/workflows/music-linux.yml) | `music-linux` | [`yrs-music-x86_64.AppImage`](https://github.com/jrypzm/yrs/releases/download/music-linux/yrs-music-x86_64.AppImage) |
 
 The website is served by GitHub Pages straight from the repository root.
 
@@ -134,9 +138,9 @@ Ideas and bug reports are welcome and every one is read: **[open an issue](https
 
 ## License
 
-yrs., yrs. home, the website and the web app are released under the [MIT License](LICENSE).
+yrs., yrs. home, yrs. music for Linux, the website and the web app are released under the [MIT License](LICENSE).
 
-yrs. music is a modified version of [Lotus](https://github.com/dn0ne/lotus) by dn0ne and is released under the [GNU GPL v3](music/LICENSE.md), like Lotus. See [music/NOTICE](music/NOTICE).
+yrs. music for Android is a modified version of [Lotus](https://github.com/dn0ne/lotus) by dn0ne and is released under the [GNU GPL v3](music/LICENSE.md), like Lotus. See [music/NOTICE](music/NOTICE).
 
 The apps use the [Inter](https://rsms.me/inter/) typeface by Rasmus Andersson, under the SIL Open Font License 1.1.
 

@@ -13,6 +13,8 @@ It plays the songs saved on your phone. It has no internet permission and keeps 
 
 Download: [yrs-music.apk](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk). It installs next to Lotus without replacing it.
 
+On Linux there's [yrs. music for Linux](../music-linux/), a separate app in the same look: [yrs-music-x86_64.AppImage](https://github.com/jrypzm/yrs/releases/download/music-linux/yrs-music-x86_64.AppImage).
+
 ## Built on Lotus
 
 yrs. music is a modified version of [Lotus](https://github.com/dn0ne/lotus) by dn0ne. The playback engine, library reading, playlists and lyrics storage come from Lotus; the interface is new. Changes from Lotus:

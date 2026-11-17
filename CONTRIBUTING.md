@@ -27,7 +27,8 @@ Pull requests are welcome. For anything bigger than a small fix, open an issue f
 | yrs. for Linux | `linux/` | `./build-appimage.sh` | `cargo run --release` |
 | yrs. in the browser | `web/` | none | open it in a browser |
 | yrs. home | `home/` | `gradle assembleRelease` | `gradle testDebugUnitTest` |
-| yrs. music | `music/` | `gradle assembleRelease` | `gradle testDebugUnitTest` |
+| yrs. music for Android | `music/` | `gradle assembleRelease` | `gradle testDebugUnitTest` |
+| yrs. music for Linux | `music-linux/` | `./build-appimage.sh` | `cargo test` |
 
 The Android apps need JDK 17 and Gradle 8.11 or newer. Screen tests write PNGs to `app/build/screens` (or Paparazzi's snapshot folder), so you can see every page without a phone.
 
