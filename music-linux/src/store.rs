@@ -31,7 +31,14 @@ pub struct Store {
     pub queue: Vec<PathBuf>,
     pub at: usize,
     pub pos: f32,
-    pub sort: (u8, bool),
+    /// Songs order: 0 name, 1 size, 2 length, 3 date changed; and whether the first way round.
+    pub order: (u8, bool),
+    /// The player beside the list (true) or along the bottom.
+    pub side: bool,
+    /// Width of the player beside the list.
+    pub split: f32,
+    /// Use the desktop's own window frame instead of ours.
+    pub system_frame: bool,
     pub size: Option<[f32; 2]>,
     pub welcomed: bool,
     pub from: String,
@@ -39,7 +46,7 @@ pub struct Store {
 
 impl Default for Store {
     fn default() -> Self {
-        Store { folders: vec![], volume: 0.8, muted: false, shuffle: false, repeat: Repeat::All, cover_colour: true, loved: vec![], lists: vec![], queue: vec![], at: 0, pos: 0.0, sort: (0, true), size: None, welcomed: false, from: String::new() }
+        Store { folders: vec![], volume: 0.8, muted: false, shuffle: false, repeat: Repeat::All, cover_colour: true, loved: vec![], lists: vec![], queue: vec![], at: 0, pos: 0.0, order: (0, true), side: true, split: 420.0, system_frame: false, size: None, welcomed: false, from: String::new() }
     }
 }
 

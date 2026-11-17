@@ -57,7 +57,10 @@ pub struct App {
     pub focus_search: bool,
     pub now: bool,
     pub side: Side,
-    pub mini: bool,
+    /// What the player beside the list shows instead of the cover.
+    pub panel: Option<Side>,
+    /// Which shape the window has right now.
+    pub shape: crate::layout::Shape,
     pub selected: Option<usize>,
     pub toast: Option<(String, f64)>,
     pub lyrics: Option<(PathBuf, Option<Lyrics>)>,
@@ -72,6 +75,7 @@ pub struct App {
     save_at: Option<f64>,
     last_track: Option<usize>,
     pub drag_from: Option<usize>,
+    last_size: Option<[f32; 2]>,
     pub lyric_scroll: f32,
 }
 
@@ -108,7 +112,8 @@ impl App {
             focus_search: false,
             now: false,
             side: Side::Lyrics,
-            mini: false,
+            panel: None,
+            shape: crate::layout::Shape::Wide,
             selected: None,
             toast: None,
             lyrics: None,
@@ -123,6 +128,7 @@ impl App {
             save_at: None,
             last_track: None,
             drag_from: None,
+            last_size: None,
             lyric_scroll: 0.0,
         }
     }
@@ -290,28 +296,34 @@ impl App {
 
     // ------------------------------------------------------------ the window
 
+    /// Our window has no frame, so its edges are drawn as thin grips that sit above
+    /// everything else: pressing one resizes the window and never reaches a song below.
     fn window_edges(&mut self, ctx: &egui::Context) {
+        if self.store.system_frame { return; }
         let maximized = ctx.input(|i| i.viewport().maximized.unwrap_or(false));
-        if maximized || self.mini { return; }
-        let Some(p) = ctx.input(|i| i.pointer.hover_pos()) else { return };
+        if maximized { return; }
         let r = ctx.screen_rect();
-        let e = 6.0;
-        let (l, rt, t, b) = (p.x < r.left() + e, p.x > r.right() - e, p.y < r.top() + e, p.y > r.bottom() - e);
+        let e = 7.0;
+        let c = 18.0;
         use egui::ResizeDirection as D;
-        let dir = match (l, rt, t, b) {
-            (true, _, true, _) => Some((D::NorthWest, CursorIcon::ResizeNorthWest)),
-            (_, true, true, _) => Some((D::NorthEast, CursorIcon::ResizeNorthEast)),
-            (true, _, _, true) => Some((D::SouthWest, CursorIcon::ResizeSouthWest)),
-            (_, true, _, true) => Some((D::SouthEast, CursorIcon::ResizeSouthEast)),
-            (true, ..) => Some((D::West, CursorIcon::ResizeWest)),
-            (_, true, ..) => Some((D::East, CursorIcon::ResizeEast)),
-            (_, _, true, _) => Some((D::North, CursorIcon::ResizeNorth)),
-            (.., true) => Some((D::South, CursorIcon::ResizeSouth)),
-            _ => None,
-        };
-        if let Some((d, c)) = dir {
-            ctx.set_cursor_icon(c);
-            if ctx.input(|i| i.pointer.primary_pressed()) { ctx.send_viewport_cmd(ViewportCommand::BeginResize(d)); }
+        let zones = [
+            (Rect::from_min_max(r.min, pos2(r.left() + c, r.top() + c)), D::NorthWest, CursorIcon::ResizeNorthWest),
+            (Rect::from_min_max(pos2(r.right() - c, r.top()), pos2(r.right(), r.top() + c)), D::NorthEast, CursorIcon::ResizeNorthEast),
+            (Rect::from_min_max(pos2(r.left(), r.bottom() - c), pos2(r.left() + c, r.bottom())), D::SouthWest, CursorIcon::ResizeSouthWest),
+            (Rect::from_min_max(pos2(r.right() - c, r.bottom() - c), r.max), D::SouthEast, CursorIcon::ResizeSouthEast),
+            (Rect::from_min_max(pos2(r.left(), r.top() + c), pos2(r.left() + e, r.bottom() - c)), D::West, CursorIcon::ResizeWest),
+            (Rect::from_min_max(pos2(r.right() - e, r.top() + c), pos2(r.right(), r.bottom() - c)), D::East, CursorIcon::ResizeEast),
+            (Rect::from_min_max(pos2(r.left() + c, r.top()), pos2(r.right() - c, r.top() + 4.0)), D::North, CursorIcon::ResizeNorth),
+            (Rect::from_min_max(pos2(r.left() + c, r.bottom() - e), pos2(r.right() - c, r.bottom())), D::South, CursorIcon::ResizeSouth),
+        ];
+        for (i, (zone, dir, cursor)) in zones.into_iter().enumerate() {
+            egui::Area::new(Id::new(("edge", i))).order(egui::Order::Foreground).fixed_pos(zone.min).show(ctx, |ui| {
+                let (_, resp) = ui.allocate_exact_size(zone.size(), Sense::drag());
+                if resp.hovered() || resp.dragged() { ctx.set_cursor_icon(cursor); }
+                if resp.drag_started() || resp.is_pointer_button_down_on() && ctx.input(|i| i.pointer.primary_pressed()) {
+                    ctx.send_viewport_cmd(ViewportCommand::BeginResize(dir));
+                }
+            });
         }
     }
 
@@ -325,50 +337,37 @@ impl App {
         }
     }
 
-    pub fn window_buttons(&mut self, ui: &mut Ui, right: f32, cy: f32, more: bool) {
-        let mut x = right - 14.0;
-        let mut slot = || { x -= 34.0; Rect::from_center_size(pos2(x + 17.0, cy), vec2(34.0, 34.0)) };
-        let close = slot();
-        let (a, b) = (slot(), slot());
-        let more_r = slot().translate(vec2(-6.0, 0.0));
-        if self.glyph(ui, close, I::Close, 18.0, DIM, "w-close").clicked() { ui.ctx().send_viewport_cmd(ViewportCommand::Close); }
-        if !self.mini {
-            if self.glyph(ui, a, I::Max, 18.0, DIM, "w-max").clicked() {
+    /// Close, fill the screen, tuck away, and the three dots. `full` adds the window
+    /// buttons; small layouts keep only close and the dots.
+    pub fn window_buttons(&mut self, ui: &mut Ui, right: f32, cy: f32, full: bool) {
+        let mut x = right - 10.0;
+        let own = !self.store.system_frame;
+        let mut slot = |w: f32| { x -= w; Rect::from_center_size(pos2(x + w / 2.0, cy), vec2(w, 32.0)) };
+        if own {
+            if self.glyph(ui, slot(32.0), I::Close, 17.0, DIM, "w-close").clicked() { ui.ctx().send_viewport_cmd(ViewportCommand::Close); }
+            if full {
                 let m = ui.ctx().input(|i| i.viewport().maximized.unwrap_or(false));
-                ui.ctx().send_viewport_cmd(ViewportCommand::Maximized(!m));
+                if self.glyph(ui, slot(32.0), I::Max, 17.0, DIM, "w-max").clicked() { ui.ctx().send_viewport_cmd(ViewportCommand::Maximized(!m)); }
+                if self.glyph(ui, slot(32.0), I::Min, 17.0, DIM, "w-min").clicked() { ui.ctx().send_viewport_cmd(ViewportCommand::Minimized(true)); }
             }
-            if self.glyph(ui, b, I::Min, 18.0, DIM, "w-min").clicked() { ui.ctx().send_viewport_cmd(ViewportCommand::Minimized(true)); }
-        } else if self.glyph(ui, a, I::Max, 18.0, DIM, "w-full").clicked() {
-            self.set_mini(ui.ctx(), false);
+            slot(4.0);
         }
-        if more {
-            let r = self.glyph(ui, more_r, I::More, 20.0, DIM, "w-more");
-            let popup = Id::new("more-menu");
-            if r.clicked() { ui.memory_mut(|m| m.toggle_popup(popup)); }
-            egui::popup::popup_below_widget(ui, popup, &r, egui::PopupCloseBehavior::CloseOnClick, |ui| {
-                ui.set_min_width(210.0);
-                if ui.button("Mini player").clicked() { self.set_mini(ui.ctx(), true); }
-                if ui.button("Look for new music").clicked() { let c = ui.ctx().clone(); self.rescan(&c); }
-                if ui.button("Settings").clicked() { self.go(View::Settings); }
-            });
-        }
-    }
-
-    pub fn set_mini(&mut self, ctx: &egui::Context, on: bool) {
-        if self.mini == on { return; }
-        self.mini = on;
-        if on {
-            self.store.size = Some(ctx.input(|i| i.screen_rect().size()).into());
-            ctx.send_viewport_cmd(ViewportCommand::Maximized(false));
-            ctx.send_viewport_cmd(ViewportCommand::MinInnerSize(vec2(320.0, 420.0)));
-            ctx.send_viewport_cmd(ViewportCommand::InnerSize(vec2(360.0, 470.0)));
-            ctx.send_viewport_cmd(ViewportCommand::WindowLevel(egui::WindowLevel::AlwaysOnTop));
-        } else {
-            let s = self.store.size.map(|s| vec2(s[0], s[1])).unwrap_or(vec2(1280.0, 800.0));
-            ctx.send_viewport_cmd(ViewportCommand::WindowLevel(egui::WindowLevel::Normal));
-            ctx.send_viewport_cmd(ViewportCommand::MinInnerSize(vec2(780.0, 540.0)));
-            ctx.send_viewport_cmd(ViewportCommand::InnerSize(s.max(vec2(780.0, 540.0))));
-        }
+        let r = self.glyph(ui, slot(32.0), I::More, 19.0, DIM, "w-more");
+        let popup = Id::new("more-menu");
+        if r.clicked() { ui.memory_mut(|m| m.toggle_popup(popup)); }
+        egui::popup::popup_below_widget(ui, popup, &r, egui::PopupCloseBehavior::CloseOnClickOutside, |ui| {
+            ui.set_min_width(230.0);
+            if ui.button("Search").clicked() { self.focus_search = true; ui.memory_mut(|m| m.close_popup()); }
+            if ui.button("Look for new music").clicked() { let c = ui.ctx().clone(); self.rescan(&c); ui.memory_mut(|m| m.close_popup()); }
+            if ui.button("Settings").clicked() { self.go(View::Settings); ui.memory_mut(|m| m.close_popup()); }
+            ui.separator();
+            ui.label(meta(ui, "Player", DIM, 200.0));
+            let side = self.store.side;
+            let accent = self.accent;
+            let pick = |ui: &mut Ui, on: bool, text: &str| ui.button(egui::RichText::new(text.to_string()).color(if on { accent } else { WHITE }));
+            if pick(ui, side, "On the right").clicked() { self.store.side = true; self.dirty(); ui.memory_mut(|m| m.close_popup()); }
+            if pick(ui, !side, "At the bottom").clicked() { self.store.side = false; self.dirty(); ui.memory_mut(|m| m.close_popup()); }
+        });
     }
 
     // ------------------------------------------------------------ keys and the desktop
@@ -383,7 +382,6 @@ impl App {
                 if self.dialog.is_some() { self.dialog = None }
                 else if !self.search.is_empty() { self.search.clear(); ctx.memory_mut(|m| m.surrender_focus(Id::new("search"))); }
                 else if self.now { self.now = false }
-                else if self.mini { self.set_mini(ctx, false) }
                 else if self.view != View::Home { self.back() }
                 continue;
             }
@@ -405,8 +403,7 @@ impl App {
                 Key::ArrowUp => { let v = self.player.volume + 0.05; self.player.set_volume(v); self.dirty() }
                 Key::ArrowDown => { let v = self.player.volume - 0.05; self.player.set_volume(v); self.dirty() }
                 Key::Slash => self.focus_search = true,
-                Key::M => { let m = !self.mini; self.set_mini(ctx, m) }
-                Key::L => { if self.now && self.side == Side::Lyrics { self.now = false } else { self.now = true; self.side = Side::Lyrics } }
+                Key::L => self.toggle_side(Side::Lyrics),
                 Key::Q if mods.command => ctx.send_viewport_cmd(ViewportCommand::Close),
                 Key::Enter => if let Some(t) = self.selected { self.play_from_view(t) },
                 _ => {}
@@ -419,6 +416,18 @@ impl App {
                 if p.is_dir() { self.add_folder(ctx, p) }
                 else if let Some(&t) = self.lib.by_path.get(&p) { self.player.play_list(&self.lib, vec![t], 0, String::new()) }
             }
+        }
+    }
+
+    /// Lyrics or Up next: inside the player beside the list, or in the full player otherwise.
+    pub fn toggle_side(&mut self, side: Side) {
+        if self.shape == crate::layout::Shape::Wide && self.store.side && !self.now {
+            self.panel = if self.panel == Some(side) { None } else { Some(side) };
+        } else if self.now && self.side == side {
+            self.now = false;
+        } else {
+            self.now = true;
+            self.side = side;
         }
     }
 
@@ -492,6 +501,7 @@ impl App {
     }
 
     pub fn save_now(&mut self) {
+        if let Some(sz) = self.last_size { self.store.size = Some(sz); }
         self.store.volume = self.player.volume;
         self.store.muted = self.player.muted;
         self.store.shuffle = self.player.shuffle;
@@ -537,11 +547,16 @@ impl eframe::App for App {
         self.animate_accent(ctx);
         self.window_edges(ctx);
 
+        let maximized = ctx.input(|i| i.viewport().maximized.unwrap_or(false));
+        if !maximized {
+            let sz = ctx.input(|i| i.screen_rect().size());
+            let sz = [sz.x, sz.y];
+            if self.last_size != Some(sz) { self.last_size = Some(sz); self.dirty(); }
+        }
         let frame = egui::Frame::NONE.fill(BLACK);
         egui::CentralPanel::default().frame(frame).show(ctx, |ui| {
             let full = ui.max_rect();
-            if self.mini { self.draw_mini(ui, full); }
-            else if self.lib.tracks.is_empty() && self.scanning.is_none() { self.draw_welcome(ui, full); }
+            if self.lib.tracks.is_empty() && self.scanning.is_none() { self.draw_welcome(ui, full); }
             else { self.draw_main(ui, full); }
             self.draw_toast(ui, full);
         });

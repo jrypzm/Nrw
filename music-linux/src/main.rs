@@ -7,6 +7,7 @@ mod app;
 mod audio;
 mod covers;
 mod icons;
+mod layout;
 mod library;
 mod lyrics;
 mod mpris;
@@ -23,13 +24,16 @@ fn icon() -> Option<egui::IconData> {
 
 fn main() -> eframe::Result<()> {
     let args: Vec<std::path::PathBuf> = std::env::args_os().skip(1).map(std::path::PathBuf::from).filter(|p| p.exists()).collect();
-    let size = store::Store::load().size.unwrap_or([1280.0, 800.0]);
+    let st = store::Store::load();
+    let size = st.size.unwrap_or([1280.0, 800.0]);
+    // any size is welcome: the layout reshapes itself down to a strip or just the cover
     let mut vp = egui::ViewportBuilder::default()
         .with_title("yrs. music")
         .with_app_id("yrs-music")
-        .with_decorations(false)
-        .with_inner_size([size[0].max(780.0), size[1].max(540.0)])
-        .with_min_inner_size([780.0, 540.0])
+        .with_decorations(st.system_frame)
+        .with_resizable(true)
+        .with_inner_size([size[0].max(220.0), size[1].max(96.0)])
+        .with_min_inner_size([200.0, 90.0])
         .with_drag_and_drop(true);
     if let Some(i) = icon() { vp = vp.with_icon(i); }
     let opts = eframe::NativeOptions { viewport: vp, vsync: true, multisampling: 0, ..Default::default() };

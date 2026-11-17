@@ -30,6 +30,9 @@ pub struct Track {
     pub kbps: Option<u32>,
     #[serde(default)]
     pub album_key: String,
+    /// Bytes on disk, for sorting by size.
+    #[serde(default)]
+    pub size: u64,
 }
 
 impl Track {
@@ -96,10 +99,6 @@ impl Library {
 
     pub fn album_of(&self, t: usize) -> Option<&Album> {
         self.by_album.get(&self.tracks[t].album_key).map(|&a| &self.albums[a])
-    }
-
-    pub fn total_secs(&self) -> f64 {
-        self.tracks.iter().map(|t| t.secs as f64).sum()
     }
 }
 
@@ -175,6 +174,10 @@ fn mtime(p: &Path) -> u64 {
     std::fs::metadata(p).and_then(|m| m.modified()).ok().and_then(|t| t.duration_since(UNIX_EPOCH).ok()).map(|d| d.as_secs()).unwrap_or(0)
 }
 
+fn bytes(p: &Path) -> u64 {
+    std::fs::metadata(p).map(|m| m.len()).unwrap_or(0)
+}
+
 pub fn read_one(path: &Path) -> Option<Track> {
     let file = lofty::read_from_path(path).ok()?;
     let props = file.properties();
@@ -215,6 +218,7 @@ pub fn read_one(path: &Path) -> Option<Track> {
         rate: props.sample_rate(),
         kbps: props.audio_bitrate(),
         album_key,
+        size: bytes(path),
     })
 }
 
@@ -235,7 +239,8 @@ pub fn scan(folders: Vec<PathBuf>, tx: Sender<Scan>, wake: impl Fn() + Send + 's
         }
         let total = files.len();
         let (keep, todo): (Vec<_>, Vec<_>) = files.into_iter().partition(|p| old.get(p).map(|t| t.mtime == mtime(p) && !t.album_key.is_empty()).unwrap_or(false));
-        let mut tracks: Vec<Track> = keep.iter().filter_map(|p| old.get(p).cloned()).collect();
+        // older caches have no size; a stat is cheap
+        let mut tracks: Vec<Track> = keep.iter().filter_map(|p| old.get(p).cloned()).map(|mut t| { if t.size == 0 { t.size = bytes(&t.path); } t }).collect();
         let _ = tx.send(Scan::Progress(tracks.len(), total));
         wake();
         let threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).min(8);

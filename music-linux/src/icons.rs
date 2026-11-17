@@ -22,6 +22,7 @@ pub enum I {
     Volume,
     Mute,
     Grip,
+    Sort,
 }
 
 fn tri(x: f32, y: f32, w: f32, h: f32) -> String {
@@ -53,6 +54,7 @@ fn svg(i: I) -> String {
         I::Volume => k("M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z") + &s("M15 9.2a4 4 0 0 1 0 5.6M17.6 7a7 7 0 0 1 0 10"),
         I::Mute => k("M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z") + &s("M15.5 9.5l5 5M20.5 9.5l-5 5"),
         I::Grip => s("M6 9.5h12M6 14.5h12"),
+        I::Sort => s("M8 5v14M5 16l3 3 3-3M16 19V5M13 8l3-3 3 3"),
     };
     format!(r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">{body}</svg>"##)
 }

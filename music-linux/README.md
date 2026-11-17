@@ -14,16 +14,18 @@
 
 ## What it does
 
-- **Songs, Albums, Playlists.** Three words at the top. Songs is a table you can sort; Albums is a grid of covers; Loved and your playlists live in Playlists.
-- **The player.** Click the playing bar and the cover grows into the player, with one colour borrowed from the artwork. Synced lyrics beside it, or what plays next.
+- **Songs on the left, the player on the right.** The list shows each song's name; one click plays it. The player keeps the big cover in view with the time, the three symbols and Shuffle, Lyrics, Up next and Repeat. Drag the line between them to give either side more room, or put the player along the bottom from the three dots.
+- **Sort the way you think:** by name, file size, length or the date a file changed, each either way round.
+- **One window, every size.** There is no separate mini player: make the window smaller and it reshapes itself. Narrow, it becomes a list with a strip below like the phone; small, a mini player; flat and wide, a thin strip for the edge of the screen; tiny, just the cover with the symbols over it.
+- **Lyrics and Up next** open inside the player: synced lyrics glide to the current line (click one to jump there), the queue drags to reorder.
 - **Gapless.** The next song is queued a few seconds early, so albums play without a gap.
 - **Honest quality.** FLAC, MP3, AAC and ALAC, Ogg Vorbis, WAV and AIFF, with the format, bit depth and sample rate shown as they are.
-- **Your desktop's controls.** Media keys, the GNOME and KDE panels and the lock screen control it through MPRIS.
-- **Mini player.** Press M for a small window that stays on top.
-- **Lyrics** from a `.lrc` file beside the song, from the song's own tag, or from a file you choose.
-- **It remembers** your queue and where you were, and reopens paused right there.
+- **Your desktop's controls.** Media keys, the Cinnamon, GNOME and KDE sound applets and the lock screen control it through MPRIS.
+- **It remembers** your queue, where you were, the window size and the layout, and reopens paused right there.
 
 Nothing leaves your computer. Your files are read where they are; the app keeps its library cache in `~/.local/share/yrs-music` and covers in `~/.cache/yrs-music`.
+
+**Window frame.** yrs. music draws its own black frame; grab any edge or corner to resize it. If your desktop prefers its own frame (title bar and borders), turn on Settings → Use the desktop's window frame.
 
 ## Keys
 
@@ -35,7 +37,6 @@ Nothing leaves your computer. Your files are read where they are; the app keeps 
 | ↑ ↓ | Volume |
 | / or Ctrl F | Search |
 | L | Lyrics |
-| M | Mini player |
 | Esc | Close or go back |
 
 ## Inside
@@ -46,8 +47,9 @@ Rust and [egui](https://github.com/emilk/egui), drawn by hand in the yrs. look. 
 src/
   main.rs      the window
   app.rs       state, keys, the desktop
+  layout.rs    the window's shape: wide, narrow, mini, strip, tiny; the player panel
   pages.rs     Songs, Albums, Playlists, an album, a playlist, search, settings, first open
-  now.rs       the playing bar, the player, lyrics, up next, the mini player
+  now.rs       the playing bar, the full player, lyrics, up next
   player.rs    the queue: shuffle, repeat, play next, gapless hand-over
   audio.rs     the sound thread
   library.rs   reading folders, tags and covers
@@ -63,7 +65,7 @@ Rust stable and the ALSA headers (`libasound2-dev` on Debian and Ubuntu, `alsa-l
 ```
 cd music-linux
 cargo run --release        # run it
-cargo test                 # the lyrics parser
+cargo test                 # lyrics, layout shapes, dates and sizes
 ./build-appimage.sh        # dist/yrs-music-x86_64.AppImage
 ```
 

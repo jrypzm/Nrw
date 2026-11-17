@@ -59,7 +59,7 @@ A black, quiet home screen: the time, your favourite apps as words, and everythi
 
 Songs, Albums and Playlists as three plain words. Tap the playing strip and the cover grows into the player on a spring; a thin line for time, three symbols, Shuffle, Lyrics, Up next and Repeat as words, and the file's format and quality at the bottom. Synced lyrics, a queue you can drag, and no internet permission at all. Made from [Lotus](https://github.com/dn0ne/lotus) by dn0ne.
 
-**[Download for Android](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk)** (installs next to Lotus without replacing it) · **[AppImage for Linux](https://github.com/jrypzm/yrs/releases/download/music-linux/yrs-music-x86_64.AppImage)**, with gapless playback, desktop media controls and a mini player · More about [Android](music/) and [Linux](music-linux/)
+**[Download for Android](https://github.com/jrypzm/yrs/releases/download/music/yrs-music.apk)** (installs next to Lotus without replacing it) · **[AppImage for Linux](https://github.com/jrypzm/yrs/releases/download/music-linux/yrs-music-x86_64.AppImage)**, songs on the left and the player on the right, a window that reshapes itself down to a mini player, gapless playback and desktop media controls · More about [Android](music/) and [Linux](music-linux/)
 
 <br>
 

@@ -2,7 +2,7 @@
 
 use crate::app::{App, Dialog, Tab, View};
 use crate::icons::I;
-use crate::library::{sort_key, Size};
+use crate::library::Size;
 use crate::theme::*;
 use egui::{pos2, vec2, Color32, CornerRadius, CursorIcon, Id, Rect, Sense, Ui, UiBuilder};
 
@@ -11,50 +11,33 @@ pub const BAR: f32 = 88.0;
 const ROW: f32 = 56.0;
 
 impl App {
-    pub fn draw_main(&mut self, ui: &mut Ui, full: Rect) {
-        let ctx = ui.ctx().clone();
-        let has = self.player.current().is_some();
-        let t = ctx.animate_bool_with_time_and_easing(Id::new("now-open"), self.now && has, 0.48, egui::emath::easing::cubic_in_out);
-        let bar_h = if has { BAR } else { 0.0 };
-        let content = Rect::from_min_max(pos2(full.left(), full.top() + TOP), pos2(full.right(), full.bottom() - bar_h));
-        if t < 1.0 && self.lib.tracks.is_empty() {
-            // the very first read of a library: say so, calmly
-            self.top_bar(ui, Rect::from_min_max(full.min, pos2(full.right(), full.top() + TOP)));
-            let (a, b) = self.scanning.unwrap_or((0, 0));
-            let x = full.left() + (full.width() * 0.09).max(48.0);
-            let g = line(ui, "Reading your music", font(F::Display, 34.0), WHITE, full.width() - x * 2.0, -1.0);
-            ui.painter().galley(pos2(x, full.top() + full.height() * 0.34), g, WHITE);
-            let s = if b == 0 { "Looking through your folders…".to_string() } else { format!("{} of {} songs", count(a), count(b)) };
-            let g = line(ui, &s, font(F::Regular, 17.0), MUTE, full.width() - x * 2.0, 0.0);
-            ui.painter().galley(pos2(x, full.top() + full.height() * 0.34 + 54.0), g, WHITE);
-            let w = (full.width() - x * 2.0).min(420.0);
-            let y = full.top() + full.height() * 0.34 + 96.0;
-            ui.painter().rect_filled(Rect::from_min_size(pos2(x, y), vec2(w, 2.0)), CornerRadius::same(1), RAIL);
-            let k = if b == 0 { 0.06 } else { a as f32 / b as f32 };
-            ui.painter().rect_filled(Rect::from_min_size(pos2(x, y), vec2(w * k.clamp(0.02, 1.0), 2.0)), CornerRadius::same(1), self.accent);
-            return;
-        }
-        if t < 1.0 {
-            self.top_bar(ui, Rect::from_min_max(full.min, pos2(full.right(), full.top() + TOP)));
-            ui.scope_builder(UiBuilder::new().max_rect(content), |ui| {
-                // the library steps back as the player rises over it
-                if t > 0.0 { ui.multiply_opacity(1.0 - t * 0.7); }
-                ui.set_clip_rect(content);
-                if !self.search.is_empty() { self.page_search(ui, content) } else {
-                    match self.view.clone() {
-                        View::Home => match self.tab { Tab::Songs => self.page_songs(ui, content), Tab::Albums => self.page_albums(ui, content), Tab::Lists => self.page_lists(ui, content) },
-                        View::Album(k) => self.page_album(ui, content, &k),
-                        View::List(w) => self.page_list(ui, content, w),
-                        View::Settings => self.page_settings(ui, content),
-                    }
-                }
-            });
-        }
-        if t > 0.0 { self.draw_now(ui, full, bar_h, t); }
-        if has { self.draw_bar(ui, Rect::from_min_max(pos2(full.left(), full.bottom() - BAR), full.max), t); }
+    /// The very first read of a library: say so, calmly.
+    pub fn reading(&mut self, ui: &mut Ui, full: Rect) {
+        let (a, b) = self.scanning.unwrap_or((0, 0));
+        let x = full.left() + (full.width() * 0.09).max(28.0);
+        let w = (full.width() - (x - full.left()) * 2.0).max(120.0);
+        let y = full.top() + full.height() * 0.34;
+        ui.painter().galley(pos2(x, y), line(ui, "Reading your music", font(F::Display, 34.0), WHITE, w, -1.0), WHITE);
+        let s = if b == 0 { "Looking through your folders…".to_string() } else { format!("{} of {} songs", count(a), count(b)) };
+        ui.painter().galley(pos2(x, y + 54.0), line(ui, &s, font(F::Regular, 17.0), MUTE, w, 0.0), WHITE);
+        let bw = w.min(420.0);
+        ui.painter().rect_filled(Rect::from_min_size(pos2(x, y + 96.0), vec2(bw, 2.0)), CornerRadius::same(1), RAIL);
+        let k = if b == 0 { 0.06 } else { a as f32 / b as f32 };
+        ui.painter().rect_filled(Rect::from_min_size(pos2(x, y + 96.0), vec2(bw * k.clamp(0.02, 1.0), 2.0)), CornerRadius::same(1), self.accent);
     }
 
-    fn top_bar(&mut self, ui: &mut Ui, r: Rect) {
+    /// Whichever page is open, in `content`.
+    pub fn page(&mut self, ui: &mut Ui, content: Rect) {
+        if !self.search.is_empty() { self.page_search(ui, content); return; }
+        match self.view.clone() {
+            View::Home => match self.tab { Tab::Songs => self.page_songs(ui, content), Tab::Albums => self.page_albums(ui, content), Tab::Lists => self.page_lists(ui, content) },
+            View::Album(k) => self.page_album(ui, content, &k),
+            View::List(w) => self.page_list(ui, content, w),
+            View::Settings => self.page_settings(ui, content),
+        }
+    }
+
+    pub fn top_bar(&mut self, ui: &mut Ui, r: Rect, wide: bool) {
         self.drag_area(ui, r);
         let cy = r.center().y;
         // logo and name
@@ -63,13 +46,13 @@ impl App {
         let g = line(ui, "yrs.", font(F::Display, 17.0), WHITE, f32::INFINITY, -0.5);
         ui.painter().galley(pos2(logo.right() + 9.0, cy - g.size().y / 2.0), g, WHITE);
         // search
-        let sr = Rect::from_min_size(pos2(r.left() + 140.0, cy - 17.0), vec2(300.0_f32.min(r.width() - 360.0).max(160.0), 34.0));
+        let sr = Rect::from_min_size(pos2(r.left() + 130.0, cy - 17.0), vec2(300.0_f32.min(r.width() - 290.0).max(110.0), 34.0));
         ui.painter().hline(sr.x_range(), sr.bottom(), egui::Stroke::new(1.0_f32, HAIR));
         self.icons.draw(ui, I::Search, Rect::from_min_size(sr.min, vec2(20.0, 34.0)), 18.0, FAINT);
         let edit = egui::TextEdit::singleline(&mut self.search)
             .id(Id::new("search"))
             .frame(false)
-            .hint_text(egui::RichText::new("Search songs, albums, artists").color(FAINT).font(font(F::Regular, 14.0)))
+            .hint_text(egui::RichText::new(if sr.width() > 240.0 { "Search songs, albums, artists" } else { "Search" }).color(FAINT).font(font(F::Regular, 14.0)))
             .font(font(F::Regular, 14.0))
             .text_color(WHITE)
             .desired_width(sr.width() - 56.0)
@@ -78,7 +61,7 @@ impl App {
         if self.focus_search { er.request_focus(); self.focus_search = false; }
         if !self.search.is_empty() {
             if self.glyph(ui, Rect::from_center_size(pos2(sr.right() - 12.0, cy), vec2(24.0, 24.0)), I::Close, 14.0, DIM, "search-clear").clicked() { self.search.clear(); }
-        } else if !er.has_focus() {
+        } else if !er.has_focus() && sr.width() > 200.0 {
             let k = line(ui, "/", font(F::Medium, 11.0), FAINT, f32::INFINITY, 0.0);
             let kr = Rect::from_center_size(pos2(sr.right() - 12.0, cy), vec2(18.0, 17.0));
             ui.painter().rect_stroke(kr, CornerRadius::same(5), egui::Stroke::new(1.0_f32, Color32::from_rgb(34, 34, 36)), egui::StrokeKind::Inside);
@@ -86,10 +69,13 @@ impl App {
         }
         if let Some((a, b)) = self.scanning {
             let s = if b == 0 { "Looking for music…".to_string() } else { format!("Reading {} of {}", count(a), count(b)) };
-            let g = line(ui, &s, font(F::Medium, 12.0), DIM, 300.0, 0.0);
-            ui.painter().galley(pos2(sr.right() + 24.0, cy - g.size().y / 2.0), g, DIM);
+            let room = r.right() - 150.0 - sr.right() - 24.0;
+            if room > 80.0 {
+                let g = line(ui, &s, font(F::Medium, 12.0), DIM, room, 0.0);
+                ui.painter().galley(pos2(sr.right() + 24.0, cy - g.size().y / 2.0), g, DIM);
+            }
         }
-        self.window_buttons(ui, r.right(), cy, true);
+        self.window_buttons(ui, r.right(), cy, wide || true);
     }
 
     pub fn logo(&mut self, ui: &Ui, r: Rect) {
@@ -107,116 +93,147 @@ impl App {
 
     /// The three words, and whatever sits on the right of the page header.
     fn words(&mut self, ui: &mut Ui, area: Rect) {
-        let mut x = area.left() + 24.0;
-        let y = area.top() + 16.0;
+        let mut x = area.left() + 20.0;
+        let y = area.top() + 12.0;
+        let size = if area.width() < 560.0 { 24.0 } else { 28.0 };
         for (tab, name) in [(Tab::Songs, "Songs"), (Tab::Albums, "Albums"), (Tab::Lists, "Playlists")] {
             let on = self.tab == tab && self.view == View::Home;
             let k = ui.ctx().animate_bool_with_time(Id::new(("word", name)), on, 0.22);
-            let g = line(ui, name, font(F::Display, 30.0), WHITE, f32::INFINITY, -0.9);
+            let g = line(ui, name, font(F::Display, size), WHITE, f32::INFINITY, -0.9);
             let rect = Rect::from_min_size(pos2(x, y), g.size());
             let r = ui.interact(rect.expand(4.0), Id::new(("tab", name)), Sense::click());
             let c = if r.hovered() && !on { mix(GHOST, MUTE, 0.5) } else { mix(GHOST, WHITE, k) };
-            ui.painter().galley(rect.min, line(ui, name, font(F::Display, 30.0), c, f32::INFINITY, -0.9), c);
+            ui.painter().galley(rect.min, line(ui, name, font(F::Display, size), c, f32::INFINITY, -0.9), c);
             if r.hovered() { ui.ctx().set_cursor_icon(CursorIcon::PointingHand); }
             if r.clicked() { self.tab = tab; self.view = View::Home; self.history.clear(); }
-            x = rect.right() + 24.0;
+            x = rect.right() + size * 0.8;
         }
     }
 
     // ------------------------------------------------------------ Songs
 
     fn sorted(&mut self) -> Vec<usize> {
-        if self.sorted.0 != self.generation || self.sorted.1 != self.store.sort {
+        if self.sorted.0 != self.generation || self.sorted.1 != self.store.order {
             let mut v: Vec<usize> = (0..self.lib.tracks.len()).collect();
             let tr = &self.lib.tracks;
-            match self.store.sort.0 {
-                1 => v.sort_by(|&a, &b| sort_key(&tr[a].artist).cmp(&sort_key(&tr[b].artist)).then(sort_key(&tr[a].album).cmp(&sort_key(&tr[b].album))).then(tr[a].track.cmp(&tr[b].track))),
-                2 => v.sort_by(|&a, &b| sort_key(&tr[a].album).cmp(&sort_key(&tr[b].album)).then(tr[a].disc.cmp(&tr[b].disc)).then(tr[a].track.cmp(&tr[b].track))),
-                3 => v.sort_by(|&a, &b| tr[a].secs.total_cmp(&tr[b].secs)),
-                4 => v.sort_by(|&a, &b| tr[b].mtime.cmp(&tr[a].mtime)),
+            let (key, first) = self.store.order;
+            // "first way round" reads naturally for each: A to Z, largest, longest, newest
+            match key {
+                1 => v.sort_by(|&a, &b| tr[b].size.cmp(&tr[a].size)),
+                2 => v.sort_by(|&a, &b| tr[b].secs.total_cmp(&tr[a].secs)),
+                3 => v.sort_by(|&a, &b| tr[b].mtime.cmp(&tr[a].mtime)),
                 _ => {}
             }
-            if !self.store.sort.1 { v.reverse(); }
-            self.sorted = (self.generation, self.store.sort, v);
+            if !first { v.reverse(); }
+            self.sorted = (self.generation, self.store.order, v);
         }
         self.sorted.2.clone()
+    }
+
+    fn order_words(key: u8) -> (&'static str, [&'static str; 2]) {
+        match key {
+            1 => ("File size", ["Largest first", "Smallest first"]),
+            2 => ("Length", ["Longest first", "Shortest first"]),
+            3 => ("Date changed", ["Newest first", "Oldest first"]),
+            _ => ("Name", ["A to Z", "Z to A"]),
+        }
+    }
+
+    /// The sort control: one line of words that opens a small menu.
+    fn sort_control(&mut self, ui: &mut Ui, right: f32, y: f32) -> f32 {
+        let (key, first) = self.store.order;
+        let (name, ways) = Self::order_words(key);
+        let label = if key == 0 { format!("Name, {}", ways[if first { 0 } else { 1 }]) } else { format!("{name}, {}", ways[if first { 0 } else { 1 }].to_lowercase()) };
+        let g = line(ui, &label, font(F::Medium, 13.0), MUTE, 260.0, 0.0);
+        let x = right - g.size().x;
+        let rect = Rect::from_min_max(pos2(x - 24.0, y - 4.0), pos2(right, y + g.size().y + 4.0));
+        let resp = ui.interact(rect, Id::new("sort"), Sense::click());
+        let c = if resp.hovered() { WHITE } else { MUTE };
+        self.icons.draw(ui, I::Sort, Rect::from_center_size(pos2(x - 12.0, y + g.size().y / 2.0), vec2(16.0, 16.0)), 15.0, DIM);
+        ui.painter().galley(pos2(x, y), line(ui, &label, font(F::Medium, 13.0), c, 260.0, 0.0), WHITE);
+        if resp.hovered() { ui.ctx().set_cursor_icon(CursorIcon::PointingHand); }
+        let popup = Id::new("sort-menu");
+        if resp.clicked() { ui.memory_mut(|m| m.toggle_popup(popup)); }
+        let accent = self.accent;
+        egui::popup::popup_below_widget(ui, popup, &resp, egui::PopupCloseBehavior::CloseOnClickOutside, |ui| {
+            ui.set_min_width(220.0);
+            ui.label(meta(ui, "Sort by", DIM, 200.0));
+            for k in 0..4u8 {
+                let (n, _) = Self::order_words(k);
+                let on = key == k;
+                if ui.button(egui::RichText::new(n.to_string()).color(if on { accent } else { WHITE })).clicked() {
+                    self.store.order = (k, true);
+                    self.dirty();
+                }
+            }
+            ui.separator();
+            ui.label(meta(ui, "Order", DIM, 200.0));
+            let (_, ways) = Self::order_words(self.store.order.0);
+            for (i, w) in ways.iter().enumerate() {
+                let on = self.store.order.1 == (i == 0);
+                if ui.button(egui::RichText::new(w.to_string()).color(if on { accent } else { WHITE })).clicked() {
+                    self.store.order.1 = i == 0;
+                    self.dirty();
+                }
+            }
+        });
+        rect.left()
     }
 
     fn page_songs(&mut self, ui: &mut Ui, area: Rect) {
         self.words(ui, area);
         let list = self.sorted();
-        let total = self.lib.total_secs();
-        let right = area.right() - 24.0;
-        let y = area.top() + 30.0;
-        let sh = line(ui, "Shuffle", font(F::Semi, 14.0), MUTE, f32::INFINITY, 0.0);
-        let shx = right - sh.size().x;
-        if self.word(ui, pos2(shx, y), "Shuffle", font(F::Semi, 14.0), MUTE, WHITE, "songs-shuffle").clicked() { self.player.play_all(&self.lib, list.clone(), true, "Songs".into()); }
-        let pl = line(ui, "Play", font(F::Semi, 14.0), WHITE, f32::INFINITY, 0.0);
-        let plx = shx - 22.0 - pl.size().x;
-        if self.word(ui, pos2(plx, y), "Play", font(F::Semi, 14.0), WHITE, WHITE, "songs-play").clicked() { self.player.play_all(&self.lib, list.clone(), false, "Songs".into()); }
-        let m = meta(ui, &format!("{} · {}", songs(list.len()), span(total)), DIM, 400.0);
-        ui.painter().galley(pos2(plx - 28.0 - m.size().x, y + 2.0), m, DIM);
-        let table = Rect::from_min_max(pos2(area.left(), area.top() + 74.0), area.max);
-        self.song_table(ui, table, &list, "songs", true);
+        let right = area.right() - 20.0;
+        let y = area.top() + 60.0;
+        let narrow = area.width() < 560.0;
+        let mut x = right;
+        if !narrow {
+            let sh = line(ui, "Shuffle", font(F::Semi, 14.0), MUTE, f32::INFINITY, 0.0);
+            x -= sh.size().x;
+            if self.word(ui, pos2(x, y - 1.0), "Shuffle", font(F::Semi, 14.0), MUTE, WHITE, "songs-shuffle").clicked() { self.player.play_all(&self.lib, list.clone(), true, "Songs".into()); }
+            let pl = line(ui, "Play", font(F::Semi, 14.0), WHITE, f32::INFINITY, 0.0);
+            x -= 18.0 + pl.size().x;
+            if self.word(ui, pos2(x, y - 1.0), "Play", font(F::Semi, 14.0), WHITE, WHITE, "songs-play").clicked() { self.player.play_all(&self.lib, list.clone(), false, "Songs".into()); }
+            x -= 24.0;
+        }
+        let sx = self.sort_control(ui, x, y);
+        let m = meta(ui, &songs(list.len()), DIM, (sx - area.left() - 40.0).max(40.0));
+        ui.painter().galley(pos2(area.left() + 20.0, y + 1.0), m, DIM);
+        let body = Rect::from_min_max(pos2(area.left(), area.top() + 86.0), area.max);
+        self.song_list(ui, body, &list, "songs");
     }
 
-    /// The table of songs used by Songs and search: number, cover, title, artist, album, time.
-    fn song_table(&mut self, ui: &mut Ui, area: Rect, list: &[usize], id: &str, sortable: bool) {
-        let w = area.width() - 48.0;
-        let (cn, ct) = (44.0, 64.0);
-        let rest = w - cn - ct - 16.0 * 4.0;
-        let (c1, c2) = (rest * 0.42, rest * 0.29);
-        let x0 = area.left() + 24.0;
-        let cols = [x0, x0 + cn + 16.0, x0 + cn + 32.0 + c1, x0 + cn + 48.0 + c1 + c2, area.right() - 24.0];
-        // header
-        let hy = area.top();
-        let heads = [("#", 99u8), ("Title", 0), ("Artist", 1), ("Album", 2), ("Time", 3)];
-        for (i, (h, key)) in heads.iter().enumerate() {
-            let on = sortable && self.store.sort.0 == *key;
-            let label = if on { format!("{h} {}", if self.store.sort.1 { "↑" } else { "↓" }) } else { h.to_string() };
-            let g = meta(ui, &label, if on { WHITE } else { DIM }, 200.0);
-            let at = if i == 0 || i == 4 { pos2(cols[i] + if i == 0 { cn } else { 0.0 } - g.size().x, hy + 11.0) } else { pos2(cols[i], hy + 11.0) };
-            let r = Rect::from_min_size(at, g.size()).expand(6.0);
-            ui.painter().galley(at, g, WHITE);
-            if sortable && *key != 99 {
-                let resp = ui.interact(r, Id::new((id, "head", i)), Sense::click());
-                if resp.hovered() { ui.ctx().set_cursor_icon(CursorIcon::PointingHand); }
-                if resp.clicked() { self.store.sort = if self.store.sort.0 == *key { (*key, !self.store.sort.1) } else { (*key, true) }; self.dirty(); }
-            }
-        }
-        ui.painter().hline(area.x_range(), hy + 34.0, egui::Stroke::new(1.0_f32, HAIR));
-        let body = Rect::from_min_max(pos2(area.left(), hy + 35.0), area.max);
+    /// The list of songs: a small cover and the name, one click plays. The right edge shows
+    /// what the list is ordered by: time, size, or the day the file changed.
+    fn song_list(&mut self, ui: &mut Ui, area: Rect, list: &[usize], id: &str) {
         let current = self.player.current();
         let accent = self.accent;
-        ui.scope_builder(UiBuilder::new().max_rect(body), |ui| {
-            egui::ScrollArea::vertical().id_salt(id).auto_shrink([false, false]).show_rows(ui, ROW, list.len(), |ui, range| {
-                for i in range {
-                    let t = list[i];
-                    let (rect, resp) = ui.allocate_exact_size(vec2(body.width(), ROW), Sense::click());
-                    let playing = current == Some(t);
-                    let sel = self.selected == Some(t);
-                    if resp.hovered() || sel { ui.painter().rect_filled(rect, CornerRadius::ZERO, if sel { Color32::from_rgb(16, 16, 18) } else { LIFT }); }
-                    let tr = self.lib.tracks[t].clone();
-                    let cy = rect.center().y;
-                    if playing {
-                        let icon = if self.player.playing { I::Play } else { I::Pause };
-                        self.icons.draw(ui, icon, Rect::from_center_size(pos2(cols[0] + cn - 6.0, cy), vec2(14.0, 14.0)), 13.0, accent);
-                    } else {
-                        let g = line(ui, &(i + 1).to_string(), font(F::Medium, 13.0), DIM, cn, 0.0);
-                        ui.painter().galley(pos2(cols[0] + cn - g.size().x, cy - g.size().y / 2.0), g, WHITE);
+        let cols = if area.width() > 980.0 { 2 } else { 1 };
+        let rows = list.len().div_ceil(cols);
+        let key = self.store.order.0;
+        ui.scope_builder(UiBuilder::new().max_rect(area), |ui| {
+            egui::ScrollArea::vertical().id_salt(id).auto_shrink([false, false]).show_rows(ui, ROW, rows, |ui, range| {
+                for r in range {
+                    let (row, _) = ui.allocate_exact_size(vec2(area.width(), ROW), Sense::hover());
+                    let cw = (area.width() - 8.0 - 8.0 * (cols as f32 - 1.0)) / cols as f32;
+                    for c in 0..cols {
+                        let Some(&t) = list.get(r * cols + c) else { break };
+                        let rect = Rect::from_min_size(pos2(row.left() + 4.0 + c as f32 * (cw + 8.0), row.top()), vec2(cw, ROW));
+                        let resp = ui.interact(rect, Id::new((id, t)), Sense::click());
+                        let playing = current == Some(t);
+                        if resp.hovered() { ui.painter().rect_filled(rect, CornerRadius::same(10), LIFT); ui.ctx().set_cursor_icon(CursorIcon::PointingHand); }
+                        let tr = &self.lib.tracks[t];
+                        let (title, album_key, album) = (tr.title.clone(), tr.album_key.clone(), tr.album.clone());
+                        let value = match key { 1 => size_text(tr.size), 3 => date_text(tr.mtime), _ => clock(tr.secs) };
+                        let cy = rect.center().y;
+                        self.cover(ui, &album_key, &album, Rect::from_min_size(pos2(rect.left() + 16.0, cy - 20.0), vec2(40.0, 40.0)), 6.0, Size::S);
+                        let vg = line(ui, &value, font(F::Medium, 13.0), if playing { accent } else { DIM }, 120.0, 0.0);
+                        let tw = rect.width() - 16.0 - 54.0 - vg.size().x - 32.0;
+                        ui.painter().galley(pos2(rect.left() + 70.0, cy - 10.0), line(ui, &title, font(F::Medium, 15.0), if playing { accent } else { WHITE }, tw, -0.15), WHITE);
+                        ui.painter().galley(pos2(rect.right() - 16.0 - vg.size().x, cy - vg.size().y / 2.0), vg, WHITE);
+                        if resp.clicked() { self.selected = Some(t); self.play_from_view(t); }
+                        resp.context_menu(|ui| self.song_menu(ui, t, None));
                     }
-                    self.cover(ui, &tr.album_key, &tr.album, Rect::from_min_size(pos2(cols[1], cy - 20.0), vec2(40.0, 40.0)), 6.0, Size::S);
-                    let g = line(ui, &tr.title, font(F::Medium, 15.0), WHITE, c1 - 56.0, -0.15);
-                    ui.painter().galley(pos2(cols[1] + 54.0, cy - g.size().y / 2.0), g, WHITE);
-                    let g = line(ui, &tr.artist, font(F::Regular, 14.0), MUTE, c2 - 8.0, 0.0);
-                    ui.painter().galley(pos2(cols[2], cy - g.size().y / 2.0), g, WHITE);
-                    let g = line(ui, &tr.album, font(F::Regular, 14.0), MUTE, cols[4] - cols[3] - ct - 16.0, 0.0);
-                    ui.painter().galley(pos2(cols[3], cy - g.size().y / 2.0), g, WHITE);
-                    let g = line(ui, &clock(tr.secs), font(F::Medium, 13.0), if playing { accent } else { DIM }, ct, 0.0);
-                    ui.painter().galley(pos2(cols[4] - g.size().x, cy - g.size().y / 2.0), g, WHITE);
-                    if resp.clicked() { self.selected = Some(t); }
-                    if resp.double_clicked() { self.play_from_view(t); }
-                    resp.context_menu(|ui| self.song_menu(ui, t, None));
                 }
             });
         });
@@ -395,8 +412,8 @@ impl App {
                     }
                     let g = line(ui, &clock(tr.secs), font(F::Medium, 13.0), if playing { accent } else { DIM }, 70.0, 0.0);
                     ui.painter().galley(pos2(rect.right() - 24.0 - g.size().x, cy - g.size().y / 2.0), g, WHITE);
-                    if resp.double_clicked() || (numbered && resp.clicked() && false) { self.play_from_view(t); }
-                    if resp.clicked() { self.selected = Some(t); }
+                    if resp.hovered() { ui.ctx().set_cursor_icon(CursorIcon::PointingHand); }
+                    if resp.clicked() { self.selected = Some(t); self.play_from_view(t); }
                     resp.context_menu(|ui| self.song_menu(ui, t, in_list));
                 }
                 if let Some(f) = &foot {
@@ -565,7 +582,7 @@ impl App {
             y += tile + 56.0;
         }
         if !s.is_empty() {
-            self.song_table(ui, Rect::from_min_max(pos2(area.left(), y), area.max), &s, "search-rows", false);
+            self.song_list(ui, Rect::from_min_max(pos2(area.left(), y), area.max), &s, "search-rows");
         }
     }
 
@@ -606,8 +623,22 @@ impl App {
                 let on = self.store.cover_colour;
                 if self.word(ui, pos2(x + w - 30.0, r.top() + 20.0), if on { "On" } else { "Off" }, font(F::Medium, 16.0), if on { WHITE } else { FAINT }, WHITE, "cc").clicked() { self.store.cover_colour = !on; self.dirty(); }
 
+                cap(ui, "Window");
+                let (r, _) = ui.allocate_exact_size(vec2(area.width(), 62.0), Sense::hover());
+                ui.painter().galley(pos2(x, r.top() + 12.0), line(ui, "The player", font(F::Regular, 16.0), WHITE, w, 0.0), WHITE);
+                ui.painter().galley(pos2(x, r.top() + 34.0), line(ui, "Beside the list, or along the bottom", font(F::Regular, 13.0), MUTE, w - 200.0, 0.0), WHITE);
+                let side = self.store.side;
+                let g = line(ui, "At the bottom", font(F::Medium, 15.0), WHITE, f32::INFINITY, 0.0);
+                if self.word(ui, pos2(x + w - g.size().x, r.top() + 20.0), "At the bottom", font(F::Medium, 15.0), if side { FAINT } else { WHITE }, WHITE, "pl-bottom").clicked() { self.store.side = false; self.dirty(); }
+                if self.word(ui, pos2(x + w - g.size().x - 112.0, r.top() + 20.0), "On the right", font(F::Medium, 15.0), if side { WHITE } else { FAINT }, WHITE, "pl-right").clicked() { self.store.side = true; self.dirty(); }
+                let (r, _) = ui.allocate_exact_size(vec2(area.width(), 62.0), Sense::hover());
+                ui.painter().galley(pos2(x, r.top() + 12.0), line(ui, "Use the desktop's window frame", font(F::Regular, 16.0), WHITE, w - 80.0, 0.0), WHITE);
+                ui.painter().galley(pos2(x, r.top() + 34.0), line(ui, "Your desktop's own title bar and borders. Applies next time yrs. music opens.", font(F::Regular, 13.0), MUTE, w - 80.0, 0.0), WHITE);
+                let on = self.store.system_frame;
+                if self.word(ui, pos2(x + w - 30.0, r.top() + 20.0), if on { "On" } else { "Off" }, font(F::Medium, 16.0), if on { WHITE } else { FAINT }, WHITE, "frame").clicked() { self.store.system_frame = !on; self.dirty(); let c = ui.ctx().clone(); self.say(&c, "Reopen yrs. music to change the window frame"); }
+
                 cap(ui, "Keys");
-                for (k, what) in [("Space", "Play or pause"), ("← →", "Back or ahead five seconds"), ("Ctrl ← →", "Previous or next song"), ("↑ ↓", "Volume"), ("/", "Search"), ("L", "Lyrics"), ("M", "Mini player"), ("Esc", "Close or go back")] {
+                for (k, what) in [("Space", "Play or pause"), ("← →", "Back or ahead five seconds"), ("Ctrl ← →", "Previous or next song"), ("↑ ↓", "Volume"), ("/", "Search"), ("L", "Lyrics"), ("Esc", "Close or go back")] {
                     let (r, _) = ui.allocate_exact_size(vec2(area.width(), 34.0), Sense::hover());
                     ui.painter().galley(pos2(x, r.top() + 8.0), line(ui, k, font(F::Medium, 14.0), WHITE, 110.0, 0.0), WHITE);
                     ui.painter().galley(pos2(x + 120.0, r.top() + 8.0), line(ui, what, font(F::Regular, 14.0), MUTE, w - 120.0, 0.0), WHITE);
@@ -650,7 +681,7 @@ impl App {
         }
         let by = full.bottom() - 44.0;
         ui.painter().hline(x..=full.right() - x, by, egui::Stroke::new(1.0_f32, HAIR));
-        ui.painter().galley(pos2(x, by + 18.0), meta(ui, "Space play · ← → seek · / search · M mini player", DIM, w + 200.0), DIM);
+        ui.painter().galley(pos2(x, by + 18.0), meta(ui, "Space play · ← → seek · / search · make the window small for a mini player", DIM, w + 300.0), DIM);
         // a folder hovering over the window
         if ui.ctx().input(|i| !i.raw.hovered_files.is_empty()) {
             ui.painter().rect_stroke(full.shrink(14.0), CornerRadius::same(16), egui::Stroke::new(1.5_f32, a), egui::StrokeKind::Inside);
@@ -666,7 +697,12 @@ impl App {
         if age > 2.8 { self.toast = None; return; }
         let alpha = (age / 0.15).min(1.0).min((2.8 - age) / 0.35).clamp(0.0, 1.0);
         let g = line(ui, &text, font(F::Medium, 14.0), WHITE, 600.0, 0.0);
-        let base = if self.player.current().is_some() { full.bottom() - BAR - 18.0 } else { full.bottom() - 30.0 };
+        let has = self.player.current().is_some();
+        let base = match self.shape {
+            crate::layout::Shape::Wide if has && !self.store.side => full.bottom() - BAR - 18.0,
+            crate::layout::Shape::Narrow if has && !self.now => full.bottom() - crate::layout::STRIP_H - 18.0,
+            _ => full.bottom() - 30.0,
+        };
         let r = Rect::from_center_size(pos2(full.center().x, base - 20.0 + (1.0 - alpha) * 8.0), g.size() + vec2(32.0, 22.0));
         let p = ui.painter();
         p.rect_filled(r, CornerRadius::same(12), Color32::from_rgba_unmultiplied(11, 11, 12, (alpha * 255.0) as u8));
@@ -744,5 +780,40 @@ impl App {
         });
         if shown.should_close() { keep = false; }
         if keep { self.dialog = next; }
+    }
+}
+
+pub fn size_text(b: u64) -> String {
+    let mb = b as f64 / 1_000_000.0;
+    if mb >= 1000.0 { format!("{:.1} GB", mb / 1000.0) } else if mb >= 10.0 { format!("{mb:.0} MB") } else { format!("{mb:.1} MB") }
+}
+
+/// "12 Mar 2026" from seconds since 1970, without a date library.
+pub fn date_text(secs: u64) -> String {
+    let days = (secs / 86_400) as i64;
+    // civil from days (Howard Hinnant's algorithm)
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    const M: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    format!("{d} {} {y}", M[(m - 1) as usize])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn dates_and_sizes() {
+        assert_eq!(date_text(0), "1 Jan 1970");
+        assert_eq!(date_text(1_709_251_200), "1 Mar 2024");
+        assert_eq!(size_text(41_200_000), "41 MB");
+        assert_eq!(size_text(7_400_000), "7.4 MB");
     }
 }

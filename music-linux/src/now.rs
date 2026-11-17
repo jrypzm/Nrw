@@ -1,5 +1,5 @@
 //! What's playing: the bar along the bottom, the full view the cover grows into,
-//! lyrics and the queue beside it, and the mini player.
+//! lyrics and the queue beside it.
 
 use crate::app::{App, Side};
 use crate::icons::I;
@@ -19,7 +19,7 @@ fn lerp_rect(a: Rect, b: Rect, t: f32) -> Rect {
 }
 
 /// A soft round light, made once, tinted with the cover's colour behind the player.
-fn glow(ctx: &egui::Context) -> TextureHandle {
+pub fn glow(ctx: &egui::Context) -> TextureHandle {
     let id = Id::new("glow-texture");
     if let Some(t) = ctx.data(|d| d.get_temp::<TextureHandle>(id)) { return t; }
     let n = 256usize;
@@ -128,7 +128,7 @@ impl App {
         let mut x = r.right() - 24.0;
         let vol_w = 84.0;
         let vr = Rect::from_min_max(pos2(x - vol_w, cy - 1.0), pos2(x, cy + 1.0));
-        self.volume(ui, vr);
+        self.volume_line(ui, vr);
         x -= vol_w + 10.0;
         let vi = if self.player.muted || self.player.volume <= 0.001 { I::Mute } else { I::Volume };
         if self.glyph(ui, Rect::from_center_size(pos2(x - 10.0, cy), vec2(26.0, 26.0)), vi, 18.0, DIM, "bar-mute").clicked() { self.player.toggle_mute(); self.dirty(); }
@@ -139,7 +139,7 @@ impl App {
             x -= g.size().x;
             if x < mid.right() + 10.0 { break; }
             if self.word(ui, pos2(x, cy - g.size().y / 2.0), label, font(F::Semi, 13.0), if on { accent } else { FAINT }, if on { accent } else { MUTE }, ("bar-side", label)).clicked() {
-                if on { self.now = false } else { self.now = true; self.side = side; }
+                self.toggle_side(side);
             }
             x -= 22.0;
         }
@@ -148,7 +148,7 @@ impl App {
         if x - g.size().x > mid.right() + 10.0 { ui.painter().galley(pos2(x - g.size().x, cy - g.size().y / 2.0), g, DIM); }
     }
 
-    fn volume(&mut self, ui: &mut Ui, r: Rect) {
+    pub fn volume_line(&mut self, ui: &mut Ui, r: Rect) {
         let resp = ui.interact(r.expand2(vec2(4.0, 10.0)), Id::new("volume"), Sense::click_and_drag());
         if let Some(p) = resp.interact_pointer_pos() {
             if resp.dragged() || resp.clicked() || resp.is_pointer_button_down_on() {
@@ -231,7 +231,7 @@ impl App {
         }
     }
 
-    fn draw_lyrics(&mut self, ui: &mut Ui, col: Rect, a: f32, accent: Color32) {
+    pub fn draw_lyrics(&mut self, ui: &mut Ui, col: Rect, a: f32, accent: Color32) {
         self.ensure_lyrics();
         let pos = self.player.pos;
         let size = if col.width() > 560.0 { 34.0 } else { 28.0 };
@@ -288,7 +288,7 @@ impl App {
         }
     }
 
-    fn draw_next(&mut self, ui: &mut Ui, col: Rect, a: f32) {
+    pub fn draw_next(&mut self, ui: &mut Ui, col: Rect, a: f32) {
         let up = self.player.upcoming();
         let g = line(ui, "Up next", font(F::Display, 30.0), WHITE.gamma_multiply(a), col.width(), -0.9);
         ui.painter().galley(col.min + vec2(0.0, 18.0), g, WHITE);
@@ -370,33 +370,5 @@ impl App {
         });
         // look again shortly; the picker writes beside our data
         self.lyrics = None;
-    }
-
-    // ------------------------------------------------------------ mini
-
-    pub fn draw_mini(&mut self, ui: &mut Ui, full: Rect) {
-        let top = Rect::from_min_max(full.min, pos2(full.right(), full.top() + 46.0));
-        self.drag_area(ui, top);
-        self.logo(ui, Rect::from_center_size(pos2(full.left() + 30.0, top.center().y), vec2(24.0, 24.0)));
-        self.window_buttons(ui, full.right() + 4.0, top.center().y, false);
-        let accent = self.accent;
-        let Some(cur) = self.player.current() else {
-            let g = para(ui, "Nothing playing. Press M for the full window.", font(F::Regular, 15.0), MUTE, full.width() - 40.0, 22.0);
-            ui.painter().galley(pos2(full.left() + 20.0, full.center().y - 20.0), g, WHITE);
-            return;
-        };
-        let tr = self.lib.tracks[cur].clone();
-        let side = (full.width() - 36.0).min(full.height() - 46.0 - 110.0);
-        let art = Rect::from_min_size(pos2(full.center().x - side / 2.0, top.bottom() + 6.0), vec2(side, side));
-        let drag = ui.interact(art, Id::new("mini-art"), Sense::click_and_drag());
-        if drag.drag_started() { ui.ctx().send_viewport_cmd(egui::ViewportCommand::StartDrag); }
-        if drag.double_clicked() { self.set_mini(ui.ctx(), false); }
-        self.cover(ui, &tr.album_key, &tr.album, art, 10.0, Size::L);
-        let y = art.bottom() + 16.0;
-        let tw = art.width() - 130.0;
-        ui.painter().galley(pos2(art.left(), y), line(ui, &tr.title, font(F::Semi, 16.0), WHITE, tw, -0.15), WHITE);
-        ui.painter().galley(pos2(art.left(), y + 22.0), line(ui, &tr.artist, font(F::Regular, 13.0), MUTE, tw, 0.0), WHITE);
-        self.controls(ui, pos2(art.right() - 56.0, y + 18.0), 26.0, 20.0, 40.0, "mini");
-        self.timeline(ui, Rect::from_min_max(pos2(art.left(), y + 56.0), pos2(art.right(), y + 58.0)), "mini-time", accent);
     }
 }
