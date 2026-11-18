@@ -1,6 +1,6 @@
 # yrs. folders for Linux Mint
 
-Black glass folders in Nemo, the Linux Mint file manager. Every folder gets its own name written on the frosted front, and how many things are inside, which updates as you add and remove files.
+Big black glass folders in Nemo, the Linux Mint file manager. Every folder gets its own name written large on the frosted front.
 
 ![yrs. folders in Nemo](preview.png)
 
@@ -10,7 +10,7 @@ Black glass folders in Nemo, the Linux Mint file manager. Every folder gets its 
 curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh
 ```
 
-Then open Files and make the icons bigger with <kbd>Ctrl</kbd>+<kbd>+</kbd> (or the slider at the bottom right) so the names are easy to read.
+It sets Nemo's icons to the "large" size, so the names are easy to read (undo puts your size back). A folder you zoomed yourself keeps its own zoom: press <kbd>Ctrl</kbd>+<kbd>0</kbd> there to reset it.
 
 If it says Nemo's Python support is missing, run `sudo apt install nemo-python` and try again.
 
@@ -28,7 +28,7 @@ A small Nemo plugin, [`yrs-folders.py`](yrs-folders.py), installed for you only 
 - Undo removes the plugin and clears only the icons it set.
 - No root, no internet, nothing runs outside Nemo.
 
-The name shows in Nemo's icon view, and on the desktop. Dialogs from other apps and the sidebar keep your theme's icons.
+Nemo still writes each name under the icon too: it uses one style for files and folders, so hiding it for folders would hide your file names as well. The name on the folder shows in Nemo's icon view and on the desktop. Dialogs from other apps and the sidebar keep your theme's icons.
 
 ## Build
 

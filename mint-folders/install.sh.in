@@ -1,5 +1,5 @@
 #!/bin/sh
-# yrs. folders: black glass folders in Nemo, each with its own name on the front.
+# yrs. folders: big black glass folders in Nemo, each with its own name on the front.
 #   install:  curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh
 #   undo:     curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh -s -- --undo
 set -eu
@@ -27,6 +27,14 @@ if [ "${1:-}" = "--undo" ]; then
       esac
     done
   fi
+  if [ -f "$KEEP/zoom" ] && command -v gsettings >/dev/null 2>&1; then
+    was=$(cat "$KEEP/zoom")
+    for try in 1 2 3; do
+      gsettings set org.nemo.icon-view default-zoom-level "$was" 2>/dev/null || true
+      sleep 1
+      [ "$(gsettings get org.nemo.icon-view default-zoom-level 2>/dev/null)" = "'$was'" ] && break
+    done
+  fi
   rm -rf "$KEEP" "$CACHE"
   echo "Your folders are back to your theme's icons."
   echo "If any still show the glass folder, close every Nemo window and open it again."
@@ -46,11 +54,26 @@ if [ ! -e /usr/lib/x86_64-linux-gnu/nemo/extensions-3.0/libnemo-python.so ] \
 fi
 
 mkdir -p "$EXT" "$KEEP"
+rm -rf "$CACHE"   # pictures from an older version; they are drawn again as you browse
+
+# Big enough to read the names: Nemo's "large" zoom, unless yours is already bigger.
+if command -v gsettings >/dev/null 2>&1; then
+  zoom=$(gsettings get org.nemo.icon-view default-zoom-level 2>/dev/null | tr -d "'") || zoom=""
+  case "$zoom" in
+    smallest|smaller|small|standard)
+      [ -f "$KEEP/zoom" ] || echo "$zoom" > "$KEEP/zoom"
+      for try in 1 2 3; do
+        gsettings set org.nemo.icon-view default-zoom-level large 2>/dev/null || true
+        sleep 1
+        [ "$(gsettings get org.nemo.icon-view default-zoom-level 2>/dev/null)" = "'large'" ] && break
+      done ;;
+  esac
+fi
 cat > "$EXT/yrs-folders.py" <<'PY'
 @PLUGIN@
 PY
 restart_nemo
 
-echo "Your folders now show the yrs. glass folder with their name on the front."
-echo "Open Files. To read the names, make the icons bigger with Ctrl and + (or the slider at the bottom right)."
+echo "Your folders now show the yrs. glass folder with their name on the front, big."
+echo "A folder you zoomed yourself keeps its zoom: press Ctrl and + there, or Ctrl and 0 to reset it."
 echo "To undo: curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh -s -- --undo"
