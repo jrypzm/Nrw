@@ -1,0 +1,36 @@
+name: A VSCodium icon for Linux Mint
+
+on:
+  push:
+    paths:
+      - "mint-vscodium/**"
+      - ".github/workflows/mint-vscodium.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mint-vscodium-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the installer
+        working-directory: mint-vscodium
+        run: |
+          python3 make.py --pack
+          sh -n install-yrs-vscodium.sh
+          git diff --exit-code -- install-yrs-vscodium.sh || (echo "Run make.py and commit the result" && exit 1)
+      - name: Publish to the "mint-vscodium" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view mint-vscodium >/dev/null 2>&1 || gh release create mint-vscodium --latest=false --title "A VSCodium icon for Linux Mint" \
+            --notes "A bold blue icon for VSCodium."
+          gh release upload mint-vscodium mint-vscodium/install-yrs-vscodium.sh --clobber
+          gh release edit mint-vscodium --notes "A bold blue icon for VSCodium, built from ${{ github.sha }}. Install: curl -fsSL https://github.com/${{ github.repository }}/releases/download/mint-vscodium/install-yrs-vscodium.sh | sh — undo: add -s -- --undo."

@@ -1,0 +1,91 @@
+#!/bin/sh
+# A new icon for VSCodium on Linux Mint: VSCodium's coral in crisp white
+# on a bold blue tile with a thin rim of light.
+#
+#   sh install-yrs-vscodium.sh            give VSCodium the new icon
+#   sh install-yrs-vscodium.sh --undo     bring back the icon it had before
+#
+# What it does, all inside your home folder:
+#   - puts the icon in ~/.local/share/icons as "yrs-vscodium", from 16 to 512 pixels
+#     (a name of its own, so no icon theme can override it)
+#   - gives VSCodium's launcher (apt, Flatpak, Snap or built from source) a personal copy in
+#     ~/.local/share/applications, the same as the original except for the icon
+#   - keeps a copy of anything it replaces, so --undo puts it all back
+# No root, nothing downloaded, VSCodium itself is not touched.
+set -eu
+
+DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
+ICONS="$DATA/icons/hicolor"
+APPS="$DATA/applications"
+KEEP="$DATA/yrs-vscodium"
+SIZES="16 22 24 32 48 64 96 128 256 512"
+NAME="yrs-vscodium"
+MARK="X-yrs-vscodium=true"
+
+say() { printf '%s\n' "$*"; }
+
+refresh() {
+    touch "$ICONS" 2>/dev/null || true
+    command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$APPS" >/dev/null 2>&1 || true
+    command -v gtk-update-icon-cache >/dev/null 2>&1 && [ -f "$ICONS/index.theme" ] && gtk-update-icon-cache -q "$ICONS" >/dev/null 2>&1 || true
+}
+
+if [ "${1:-}" = "--undo" ] || [ "${1:-}" = "--uninstall" ]; then
+    for n in $SIZES; do rm -f "$ICONS/${n}x${n}/apps/$NAME.png"; done
+    for f in "$APPS"/*.desktop; do [ -f "$f" ] && grep -q "^$MARK" "$f" && rm -f "$f"; done
+    if [ -d "$KEEP/apps" ]; then
+        for f in "$KEEP/apps"/*.desktop; do [ -f "$f" ] && cp "$f" "$APPS/"; done
+    fi
+    rm -rf "$KEEP"
+    refresh
+    say "VSCodium's icon is back to how it was."
+    exit 0
+fi
+
+command -v base64 >/dev/null 2>&1 || { say "base64 isn't available." >&2; exit 1; }
+mkdir -p "$KEEP/apps" "$APPS"
+
+put() {
+    mkdir -p "$ICONS/${1}x${1}/apps"
+    base64 -d > "$ICONS/${1}x${1}/apps/$NAME.png"
+}
+
+@ICONS@
+
+# every VSCodium launcher on this computer: apt or source, Flatpak (system and yours), Snap
+found=""
+for d in $(printf '%s' "${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" | tr ':' ' ') \
+         /usr/local/share /usr/share /var/lib/flatpak/exports/share "$DATA/flatpak/exports/share" \
+         /var/lib/snapd/desktop "$HOME/.local/share"; do
+    for src in "$d"/applications/codium.desktop "$d"/applications/com.vscodium.codium.desktop "$d"/applications/codium_codium.desktop "$d"/applications/vscodium.desktop; do
+        [ -f "$src" ] || continue
+        base=$(basename "$src")
+        dest="$APPS/$base"
+        [ "$src" = "$dest" ] && continue
+        case " $found " in *" $base "*) continue ;; esac   # the first one found wins, as in the menu
+        found="$found $base"
+        # a launcher you made yourself under that name is kept for --undo
+        if [ -f "$dest" ] && ! grep -q "^$MARK" "$dest"; then cp "$dest" "$KEEP/apps/$base"; fi
+        sed -e "s/^Icon=.*/Icon=$NAME/" -e "/^\[Desktop Entry\]/a $MARK" "$src" > "$dest.tmp"
+        mv "$dest.tmp" "$dest"
+    done
+done
+
+# other launchers of yours that start VSCodium with another icon
+for f in "$APPS"/*.desktop; do
+    [ -f "$f" ] || continue
+    grep -q "^$MARK" "$f" && continue
+    grep -Eqi '^Exec=(.*/)?codium( |$)|^Exec=.*com\.vscodium\.codium' "$f" || continue
+    icon=$(sed -n 's/^Icon=//p' "$f" | head -n 1)
+    [ "$icon" = "$NAME" ] && continue
+    base=$(basename "$f")
+    [ -f "$KEEP/apps/$base" ] || cp "$f" "$KEEP/apps/$base"
+    sed "s/^Icon=.*/Icon=$NAME/" "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+    found="$found $base"
+done
+refresh
+
+say "VSCodium now has the new icon."
+[ -n "$found" ] || say "I didn't find VSCodium on this computer yet; run this again after installing it."
+say "If you still see the old one, press Ctrl+Alt+Esc to refresh Cinnamon (or log out and in)."
+say "To undo: curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-vscodium/install-yrs-vscodium.sh | sh -s -- --undo"
