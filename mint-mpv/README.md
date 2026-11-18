@@ -21,7 +21,7 @@ curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-mpv/install-yrs-
 ## What it does
 
 - Puts the icon in `~/.local/share/icons/hicolor` as `yrs-mpv`, at ten sizes from 16 to 512 pixels: a name of its own, so no icon theme can override it.
-- Gives Ghostty's launcher a personal copy in `~/.local/share/applications`, identical except for the icon. That covers `mpv.desktop` (apt), `io.mpv.Mpv.desktop` (Flatpak) and the Snap's `mpv_mpv.desktop`. Mint's icon theme has its own mpv icon, which is why the new one has a name of its own. Yours is used before theirs.
+- Gives mpv's launcher a personal copy in `~/.local/share/applications`, identical except for the icon. That covers `mpv.desktop` (apt), `io.mpv.Mpv.desktop` (Flatpak) and the Snap's `mpv_mpv.desktop`. Mint's icon theme has its own mpv icon, which is why the new one has a name of its own. Yours is used before theirs.
 - If a launcher of your own starts mpv with another icon, it is pointed at the new one too.
 - Anything it replaces is copied to `~/.local/share/yrs-mpv` first, and undo puts it back.
 - No root, nothing downloaded, mpv itself is not changed.
