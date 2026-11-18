@@ -15,6 +15,12 @@ restart_nemo() {
   if command -v nemo >/dev/null 2>&1 && pgrep -x nemo >/dev/null 2>&1; then
     nemo -q >/dev/null 2>&1 || true
   fi
+  # the desktop is drawn by its own program; start it again so it loads the plugin too
+  if command -v nemo-desktop >/dev/null 2>&1 && pgrep -x nemo-desktop >/dev/null 2>&1; then
+    nemo-desktop -q >/dev/null 2>&1 || true
+    sleep 1
+    (setsid nemo-desktop >/dev/null 2>&1 &) || true
+  fi
 }
 set_zoom() {
   for try in 1 2 3; do
@@ -88,4 +94,5 @@ PY
 restart_nemo
 
 echo "Done. Open Files: every folder has its own design now."
+echo "If a folder still shows the old icon, press F5 in that window to refresh it."
 echo "To undo: curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh -s -- --undo"
