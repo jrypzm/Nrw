@@ -6,11 +6,10 @@
 #   sh install-yrs-zim.sh --undo     bring back the icon it had before
 #
 # What it does, all inside your home folder:
-#   - puts the icon in ~/.local/share/icons under the names Zim uses
-#     ("org.zim_wiki.Zim" today, "zim" in older versions), from 16 to 512 pixels;
-#     yours is found before the system's, for the apt version and the Flatpak alike
-#   - if a launcher of yours in ~/.local/share/applications starts Zim with some other
-#     icon, points it at the new one
+#   - puts the icon in ~/.local/share/icons as "yrs-zim", from 16 to 512 pixels; a name
+#     of its own, because Mint's icon theme has its own Zim icon that would win otherwise
+#   - gives Zim's launchers (apt and Flatpak) a personal copy in ~/.local/share/applications,
+#     the same as the system's except for the icon; yours is used before theirs
 #   - keeps a copy of anything it replaces, so --undo puts it all back
 # No root, nothing downloaded, Zim itself is not touched.
 set -eu
@@ -20,7 +19,8 @@ ICONS="$DATA/icons/hicolor"
 APPS="$DATA/applications"
 KEEP="$DATA/yrs-zim"
 SIZES="16 22 24 32 48 64 96 128 256 512"
-NAMES="org.zim_wiki.Zim zim"
+NAME="yrs-zim"
+MARK="X-yrs-zim=true"
 
 say() { printf '%s\n' "$*"; }
 
@@ -31,12 +31,13 @@ refresh() {
 }
 
 if [ "${1:-}" = "--undo" ] || [ "${1:-}" = "--uninstall" ]; then
-    for n in $SIZES; do for name in $NAMES; do rm -f "$ICONS/${n}x${n}/apps/$name.png"; done; done
+    for n in $SIZES; do rm -f "$ICONS/${n}x${n}/apps/$NAME.png"; done
     if [ -d "$KEEP/icons" ]; then
         (cd "$KEEP/icons" && find . -type f) | while IFS= read -r f; do
             mkdir -p "$(dirname "$ICONS/$f")"; cp "$KEEP/icons/$f" "$ICONS/$f"
         done
     fi
+    for f in "$APPS"/*.desktop; do [ -f "$f" ] && grep -q "^$MARK" "$f" && rm -f "$f"; done
     if [ -d "$KEEP/apps" ]; then
         for f in "$KEEP/apps"/*.desktop; do [ -f "$f" ] && cp "$f" "$APPS/"; done
     fi
@@ -49,37 +50,55 @@ fi
 command -v base64 >/dev/null 2>&1 || { say "base64 isn't available." >&2; exit 1; }
 mkdir -p "$KEEP/icons" "$KEEP/apps"
 
-# keep any Zim icon already in your home folder
-if [ ! -f "$KEEP/installed" ]; then
-    for n in $SIZES; do for name in $NAMES; do
-        f="$ICONS/${n}x${n}/apps/$name.png"
-        if [ -f "$f" ]; then mkdir -p "$KEEP/icons/${n}x${n}/apps"; cp "$f" "$KEEP/icons/${n}x${n}/apps/$name.png"; fi
-    done; done
-fi
-
 put() {
     mkdir -p "$ICONS/${1}x${1}/apps"
-    base64 -d > "$ICONS/${1}x${1}/apps/org.zim_wiki.Zim.png"
-    cp "$ICONS/${1}x${1}/apps/org.zim_wiki.Zim.png" "$ICONS/${1}x${1}/apps/zim.png"
+    base64 -d > "$ICONS/${1}x${1}/apps/$NAME.png"
 }
 
 @ICONS@
-touch "$KEEP/installed"
 
-# your own launchers that start Zim with another icon
+# an earlier version of this installer (it left "$KEEP/installed") used Zim's own icon names,
+# which Mint's theme beat; remove the ones it put there and put back anything it had kept
+if [ -f "$KEEP/installed" ]; then
+for n in $SIZES; do
+    for old in org.zim_wiki.Zim zim; do
+        f="$ICONS/${n}x${n}/apps/$old.png"
+        rm -f "$f"
+        [ -f "$KEEP/icons/${n}x${n}/apps/$old.png" ] && cp "$KEEP/icons/${n}x${n}/apps/$old.png" "$f"
+    done
+done
+rm -rf "$KEEP/icons" "$KEEP/installed"
+fi
+
+# every Zim launcher on this computer: apt, Flatpak (system and yours), older versions
 found=""
+for d in $(printf '%s' "${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" | tr ':' ' ') \
+         /var/lib/flatpak/exports/share "$DATA/flatpak/exports/share" /usr/share /usr/local/share; do
+    for src in "$d"/applications/org.zim_wiki.Zim.desktop "$d"/applications/zim.desktop; do
+        [ -f "$src" ] || continue
+        base=$(basename "$src")
+        dest="$APPS/$base"
+        [ -n "$(printf '%s' "$found" | grep -F " $base")" ] && continue   # the first one found wins, as in the menu
+        found="$found $base"
+        mkdir -p "$APPS"
+        # a launcher you made yourself under that name is kept for --undo
+        if [ -f "$dest" ] && ! grep -q "^$MARK" "$dest"; then cp "$dest" "$KEEP/apps/$base"; fi
+        sed -e "s/^Icon=.*/Icon=$NAME/" -e "/^\[Desktop Entry\]/a $MARK" "$src" > "$dest.tmp"
+        mv "$dest.tmp" "$dest"
+    done
+done
+
+# other launchers of yours that start Zim with another icon
 for f in "$APPS"/*.desktop; do
     [ -f "$f" ] || continue
+    grep -q "^$MARK" "$f" && continue
     grep -Eqi '^Exec=(.*/)?zim( |$)|^Exec=.*org\.zim_wiki\.Zim' "$f" || continue
-    found=1
     icon=$(sed -n 's/^Icon=//p' "$f" | head -n 1)
-    case "$icon" in org.zim_wiki.Zim|zim) continue ;; esac
+    [ "$icon" = "$NAME" ] && continue
     base=$(basename "$f")
     [ -f "$KEEP/apps/$base" ] || cp "$f" "$KEEP/apps/$base"
-    sed "s/^Icon=.*/Icon=org.zim_wiki.Zim/" "$f" > "$f.tmp" && mv "$f.tmp" "$f"
-done
-for d in $(printf '%s' "${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" | tr ':' ' ') /var/lib/flatpak/exports/share "$HOME/.local/share/flatpak/exports/share"; do
-    ls "$d"/applications/*zim* >/dev/null 2>&1 && found=1
+    sed "s/^Icon=.*/Icon=$NAME/" "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+    found="$found $base"
 done
 refresh
 

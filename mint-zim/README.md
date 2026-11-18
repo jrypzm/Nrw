@@ -20,8 +20,9 @@ curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-zim/install-yrs-
 
 ## What it does
 
-- Puts the icon in `~/.local/share/icons/hicolor` under the names Zim uses, `org.zim_wiki.Zim` and the older `zim`, at ten sizes from 16 to 512 pixels. Icons in your home folder are found before the system's, so this works for the apt version and the Flatpak without touching them.
-- If a launcher of yours in `~/.local/share/applications` starts Zim with another icon, it is pointed at the new one.
+- Puts the icon in `~/.local/share/icons/hicolor` as `yrs-zim`, at ten sizes from 16 to 512 pixels. It needs a name of its own: Mint's icon theme (Mint-Y) has its own Zim icon, and a theme's icon wins over one with the same name anywhere else.
+- Gives Zim's launcher (`org.zim_wiki.Zim.desktop` from apt or Flatpak, or the older `zim.desktop`) a personal copy in `~/.local/share/applications`, identical except for the icon. Yours is used before the system's and the Flatpak's.
+- If a launcher of your own starts Zim with another icon, it is pointed at the new one too.
 - Anything it replaces is copied to `~/.local/share/yrs-zim` first, and undo puts it back.
 - No root, nothing downloaded, Zim itself is not changed.
 
