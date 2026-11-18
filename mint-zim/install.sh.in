@@ -1,0 +1,89 @@
+#!/bin/sh
+# Violet Quill: a new icon for Zim Desktop Wiki on Linux Mint. A quill in sprayed black ink
+# with a white nib, on a grainy violet glow.
+#
+#   sh install-yrs-zim.sh            give Zim the Violet Quill icon
+#   sh install-yrs-zim.sh --undo     bring back the icon it had before
+#
+# What it does, all inside your home folder:
+#   - puts the icon in ~/.local/share/icons under the names Zim uses
+#     ("org.zim_wiki.Zim" today, "zim" in older versions), from 16 to 512 pixels;
+#     yours is found before the system's, for the apt version and the Flatpak alike
+#   - if a launcher of yours in ~/.local/share/applications starts Zim with some other
+#     icon, points it at the new one
+#   - keeps a copy of anything it replaces, so --undo puts it all back
+# No root, nothing downloaded, Zim itself is not touched.
+set -eu
+
+DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
+ICONS="$DATA/icons/hicolor"
+APPS="$DATA/applications"
+KEEP="$DATA/yrs-zim"
+SIZES="16 22 24 32 48 64 96 128 256 512"
+NAMES="org.zim_wiki.Zim zim"
+
+say() { printf '%s\n' "$*"; }
+
+refresh() {
+    touch "$ICONS" 2>/dev/null || true
+    command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$APPS" >/dev/null 2>&1 || true
+    command -v gtk-update-icon-cache >/dev/null 2>&1 && [ -f "$ICONS/index.theme" ] && gtk-update-icon-cache -q "$ICONS" >/dev/null 2>&1 || true
+}
+
+if [ "${1:-}" = "--undo" ] || [ "${1:-}" = "--uninstall" ]; then
+    for n in $SIZES; do for name in $NAMES; do rm -f "$ICONS/${n}x${n}/apps/$name.png"; done; done
+    if [ -d "$KEEP/icons" ]; then
+        (cd "$KEEP/icons" && find . -type f) | while IFS= read -r f; do
+            mkdir -p "$(dirname "$ICONS/$f")"; cp "$KEEP/icons/$f" "$ICONS/$f"
+        done
+    fi
+    if [ -d "$KEEP/apps" ]; then
+        for f in "$KEEP/apps"/*.desktop; do [ -f "$f" ] && cp "$f" "$APPS/"; done
+    fi
+    rm -rf "$KEEP"
+    refresh
+    say "Zim's icon is back to how it was."
+    exit 0
+fi
+
+command -v base64 >/dev/null 2>&1 || { say "base64 isn't available." >&2; exit 1; }
+mkdir -p "$KEEP/icons" "$KEEP/apps"
+
+# keep any Zim icon already in your home folder
+if [ ! -f "$KEEP/installed" ]; then
+    for n in $SIZES; do for name in $NAMES; do
+        f="$ICONS/${n}x${n}/apps/$name.png"
+        if [ -f "$f" ]; then mkdir -p "$KEEP/icons/${n}x${n}/apps"; cp "$f" "$KEEP/icons/${n}x${n}/apps/$name.png"; fi
+    done; done
+fi
+
+put() {
+    mkdir -p "$ICONS/${1}x${1}/apps"
+    base64 -d > "$ICONS/${1}x${1}/apps/org.zim_wiki.Zim.png"
+    cp "$ICONS/${1}x${1}/apps/org.zim_wiki.Zim.png" "$ICONS/${1}x${1}/apps/zim.png"
+}
+
+@ICONS@
+touch "$KEEP/installed"
+
+# your own launchers that start Zim with another icon
+found=""
+for f in "$APPS"/*.desktop; do
+    [ -f "$f" ] || continue
+    grep -Eqi '^Exec=(.*/)?zim( |$)|^Exec=.*org\.zim_wiki\.Zim' "$f" || continue
+    found=1
+    icon=$(sed -n 's/^Icon=//p' "$f" | head -n 1)
+    case "$icon" in org.zim_wiki.Zim|zim) continue ;; esac
+    base=$(basename "$f")
+    [ -f "$KEEP/apps/$base" ] || cp "$f" "$KEEP/apps/$base"
+    sed "s/^Icon=.*/Icon=org.zim_wiki.Zim/" "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+done
+for d in $(printf '%s' "${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" | tr ':' ' ') /var/lib/flatpak/exports/share "$HOME/.local/share/flatpak/exports/share"; do
+    ls "$d"/applications/*zim* >/dev/null 2>&1 && found=1
+done
+refresh
+
+say "Zim now has the Violet Quill icon."
+[ -n "$found" ] || say "I didn't find Zim on this computer yet; the icon will show as soon as it's installed (sudo apt install zim)."
+say "If you still see the old one, press Ctrl+Alt+Esc to refresh Cinnamon (or log out and in)."
+say "To undo: curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-zim/install-yrs-zim.sh | sh -s -- --undo"

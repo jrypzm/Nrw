@@ -71,6 +71,8 @@ Songs, Albums and Playlists as three plain words. Tap the playing strip and the 
 
 **Helium,** a lime Volt icon for the Helium browser: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-helium/install-yrs-helium.sh | sh` ([more](mint-helium/)).
 
+**Zim,** a grainy violet quill for Zim Desktop Wiki: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-zim/install-yrs-zim.sh | sh` ([more](mint-zim/)).
+
 <br>
 
 ## Installing on Android
@@ -106,6 +108,7 @@ Every APK is built and signed by GitHub Actions from the code in this repository
 | [`music-linux/`](music-linux/) | yrs. music for Linux | Rust (stable), ALSA headers | `./build-appimage.sh` |
 | [`mint-menu/`](mint-menu/) | the yrs. menu icon for Linux Mint | Python 3 | `python3 make.py` |
 | [`mint-files/`](mint-files/) | the yrs. Files icon for Nemo | Python 3 | `python3 make.py` |
+| [`mint-zim/`](mint-zim/) | the Violet Quill icon for Zim | Node, Playwright, Python 3 | `python3 make.py` |
 | [`mint-helium/`](mint-helium/) | the Volt icon for the Helium browser | Node, Playwright, Python 3 | `python3 make.py` |
 | [`mint-folders/`](mint-folders/) | a hundred material folders for Nemo | Node, Playwright, Python 3 | `python3 make.py` |
 
@@ -122,6 +125,7 @@ mint-menu/   the yrs. full stop as the Linux Mint menu icon
 mint-files/  a smoked-glass folder icon for Nemo
 mint-folders/ a hundred material folders for Nemo
 mint-helium/  the Volt icon for the Helium browser
+mint-zim/     the Violet Quill icon for Zim Desktop Wiki
 index.html   the website, with the apps and their downloads
 life/        the long page about yrs.
 assets/      icons and screenshots used by the website and this README

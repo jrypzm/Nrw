@@ -1,0 +1,36 @@
+name: Violet Quill, a Zim icon for Linux Mint
+
+on:
+  push:
+    paths:
+      - "mint-zim/**"
+      - ".github/workflows/mint-zim.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mint-zim-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the installer
+        working-directory: mint-zim
+        run: |
+          python3 make.py --pack
+          sh -n install-yrs-zim.sh
+          git diff --exit-code -- install-yrs-zim.sh || (echo "Run make.py and commit the result" && exit 1)
+      - name: Publish to the "mint-zim" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view mint-zim >/dev/null 2>&1 || gh release create mint-zim --latest=false --title "Violet Quill, a Zim icon for Linux Mint" \
+            --notes "The Violet Quill icon for Zim Desktop Wiki."
+          gh release upload mint-zim mint-zim/install-yrs-zim.sh --clobber
+          gh release edit mint-zim --notes "The Violet Quill icon for Zim Desktop Wiki, built from ${{ github.sha }}. Install: curl -fsSL https://github.com/${{ github.repository }}/releases/download/mint-zim/install-yrs-zim.sh | sh — undo: add -s -- --undo."
