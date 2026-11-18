@@ -65,6 +65,8 @@ Songs, Albums and Playlists as three plain words. Tap the playing strip and the 
 
 **On Linux Mint,** put the yrs. full stop on your panel in place of the menu's Mint logo: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-menu/install-yrs-menu.sh | sh` ([more](mint-menu/)).
 
+**Files icon,** a smoked-glass folder for Nemo: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-files/install-yrs-files.sh | sh` ([more](mint-files/)).
+
 <br>
 
 ## Installing on Android
@@ -99,6 +101,7 @@ Every APK is built and signed by GitHub Actions from the code in this repository
 | [`music/`](music/) | yrs. music for Android | JDK 17, Gradle 8.11 | `gradle assembleRelease` |
 | [`music-linux/`](music-linux/) | yrs. music for Linux | Rust (stable), ALSA headers | `./build-appimage.sh` |
 | [`mint-menu/`](mint-menu/) | the yrs. menu icon for Linux Mint | Python 3 | `python3 make.py` |
+| [`mint-files/`](mint-files/) | the yrs. Files icon for Nemo | Python 3 | `python3 make.py` |
 
 Run each command inside its folder. The Android projects have screen tests that render every page to PNG with Robolectric or Paparazzi; see each app's README.
 
@@ -110,6 +113,7 @@ home/        yrs. home: the launcher, Kotlin and Android views
 music/       yrs. music for Android: Kotlin, Compose and Media3, from Lotus (GPL-3.0)
 music-linux/ yrs. music for Linux: Rust, egui and rodio
 mint-menu/   the yrs. full stop as the Linux Mint menu icon
+mint-files/  a smoked-glass folder icon for Nemo
 index.html   the website, with the apps and their downloads
 life/        the long page about yrs.
 assets/      icons and screenshots used by the website and this README

@@ -1,0 +1,36 @@
+name: yrs. Files icon for Linux Mint
+
+on:
+  push:
+    paths:
+      - "mint-files/**"
+      - ".github/workflows/mint-files.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mint-files-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the installer
+        working-directory: mint-files
+        run: |
+          python3 make.py
+          sh -n install-yrs-files.sh
+          git diff --exit-code -- install-yrs-files.sh || (echo "Run make.py and commit the result" && exit 1)
+      - name: Publish to the "mint-files" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view mint-files >/dev/null 2>&1 || gh release create mint-files --latest=false --title "yrs. Files icon for Linux Mint" \
+            --notes "The yrs. Files icon for Nemo."
+          gh release upload mint-files mint-files/install-yrs-files.sh --clobber
+          gh release edit mint-files --notes "The yrs. Files icon for Nemo, built from ${{ github.sha }}. Install: curl -fsSL https://github.com/${{ github.repository }}/releases/download/mint-files/install-yrs-files.sh | sh — undo: add -s -- --undo."

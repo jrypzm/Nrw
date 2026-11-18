@@ -1,0 +1,48 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+/* The folder, drawn at 1024 so every size comes from one master. Transparent page. */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:transparent;width:1024px;height:1024px;overflow:hidden}
+.icon{position:absolute;inset:0}
+/* a soft contact shadow under the folder */
+.shadow{position:absolute;left:150px;right:150px;top:792px;height:70px;border-radius:50%;background:rgba(0,0,0,.42);filter:blur(34px)}
+.shadow2{position:absolute;left:200px;right:200px;top:800px;height:26px;border-radius:50%;background:rgba(0,0,0,.35);filter:blur(12px)}
+/* the back of the folder: dark, glossy at the top edge */
+.back{position:absolute;left:142px;top:236px;width:740px;height:556px;border-radius:64px;
+  background:linear-gradient(180deg,#3a3a3e 0%,#1b1b1e 18%,#121214 100%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.16),inset 0 -2px 0 rgba(0,0,0,.6)}
+/* pages: white, softly shaded, a few grey lines of "text" */
+.page{position:absolute;background:linear-gradient(180deg,#ffffff,#eeeef0);border-radius:22px;
+  box-shadow:0 10px 24px rgba(0,0,0,.28),inset 0 1px 0 #fff}
+.page i{position:absolute;left:44px;height:11px;border-radius:6px;background:#c9c9cd}
+.p1{left:222px;top:262px;width:330px;height:470px;transform:rotate(-6deg)}
+.p2{left:474px;top:282px;width:250px;height:440px;transform:rotate(2deg)}
+.p3{left:592px;top:300px;width:200px;height:400px;transform:rotate(8deg)}
+/* the front pocket: smoked glass that blurs the pages behind it */
+.front{position:absolute;left:112px;top:0;width:800px;height:1024px;
+  clip-path:path('M 40 452 Q 40 404 88 404 L 376 404 Q 410 404 432 384 L 452 366 Q 474 346 506 346 L 712 346 Q 760 346 760 394 L 760 742 Q 760 806 696 806 L 104 806 Q 40 806 40 742 Z');
+  backdrop-filter:blur(22px) saturate(.5);-webkit-backdrop-filter:blur(22px) saturate(.5);
+  background:linear-gradient(172deg,rgba(160,160,166,.30) 0%,rgba(110,110,116,.34) 34%,rgba(40,40,44,.70) 78%,rgba(22,22,24,.86) 100%)}
+/* light on the glass: a bright rim along the top edge, a soft sheen lower down */
+.rim{position:absolute;left:112px;top:0;width:800px;height:1024px;pointer-events:none}
+</style></head><body>
+<div class="icon">
+  <div class="shadow"></div><div class="shadow2"></div>
+  <div class="back"></div>
+  <div class="page p3"><i style="top:60px;width:96px"></i><i style="top:92px;width:78px"></i><i style="top:124px;width:90px"></i></div>
+  <div class="page p2"><i style="top:64px;width:150px"></i><i style="top:98px;width:120px"></i><i style="top:132px;width:142px"></i><i style="top:166px;width:96px"></i></div>
+  <div class="page p1"><i style="top:66px;width:210px;background:#bdbdc2"></i><i style="top:104px;width:236px"></i><i style="top:138px;width:190px"></i><i style="top:172px;width:220px"></i><i style="top:206px;width:160px"></i><i style="top:240px;width:205px"></i></div>
+  <div class="front"></div>
+  <svg class="rim" viewBox="0 0 800 1024">
+    <defs>
+      <linearGradient id="edge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity=".5"/></linearGradient>
+      <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <clipPath id="shape"><path d="M 40 452 Q 40 404 88 404 L 376 404 Q 410 404 432 384 L 452 366 Q 474 346 506 346 L 712 346 Q 760 346 760 394 L 760 742 Q 760 806 696 806 L 104 806 Q 40 806 40 742 Z"/></clipPath>
+    </defs>
+    <path d="M 40 452 Q 40 404 88 404 L 376 404 Q 410 404 432 384 L 452 366 Q 474 346 506 346 L 712 346 Q 760 346 760 394 L 760 742 Q 760 806 696 806 L 104 806 Q 40 806 40 742 Z" fill="url(#sheen)"/>
+    <path d="M 41.5 452 Q 41.5 405.5 88 405.5 L 376 405.5 Q 410 405.5 432 385.5 L 452 367.5 Q 474 347.5 506 347.5 L 712 347.5 Q 758.5 347.5 758.5 394" fill="none" stroke="url(#edge)" stroke-width="3"/>
+    <g clip-path="url(#shape)"><rect x="40" y="790" width="720" height="20" fill="#000" opacity=".35"/></g>
+  </svg>
+</div>
+</body></html>
