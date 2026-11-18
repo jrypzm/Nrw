@@ -79,6 +79,8 @@ Songs, Albums and Playlists as three plain words. Tap the playing strip and the 
 
 **LocalSend,** its dot as a sleepy creature inside the dashed ring, in teal: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-localsend/install-yrs-localsend.sh | sh` ([more](mint-localsend/)).
 
+**Pure black,** every grey in Mint (apps, Settings, title bars, menus, the panel) in #000000: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-black/install-yrs-black.sh | sh` ([more](mint-black/)).
+
 <br>
 
 ## Installing on Android
@@ -114,6 +116,7 @@ Every APK is built and signed by GitHub Actions from the code in this repository
 | [`music-linux/`](music-linux/) | yrs. music for Linux | Rust (stable), ALSA headers | `./build-appimage.sh` |
 | [`mint-menu/`](mint-menu/) | the yrs. menu icon for Linux Mint | Python 3 | `python3 make.py` |
 | [`mint-files/`](mint-files/) | the yrs. Files icon for Nemo | Python 3 | `python3 make.py` |
+| [`mint-black/`](mint-black/) | pure black Linux Mint | none (one shell script) | |
 | [`mint-localsend/`](mint-localsend/) | a teal sleepy icon for LocalSend | Python 3, numpy, scipy, Pillow | `python3 make.py` |
 | [`mint-mpv/`](mint-mpv/) | a pink sleepy icon for mpv | Python 3, numpy, scipy, Pillow | `python3 make.py` |
 | [`mint-ghostty/`](mint-ghostty/) | a cyan ghost icon for Ghostty | Python 3, numpy, scipy, Pillow | `python3 make.py` |
@@ -138,6 +141,7 @@ mint-zim/     the Violet Quill icon for Zim Desktop Wiki
 mint-ghostty/ a cyan ghost icon for the Ghostty terminal
 mint-mpv/     a pink sleepy icon for the mpv media player
 mint-localsend/ a teal sleepy icon for LocalSend
+mint-black/   every grey in Linux Mint in pure black
 index.html   the website, with the apps and their downloads
 life/        the long page about yrs.
 assets/      icons and screenshots used by the website and this README

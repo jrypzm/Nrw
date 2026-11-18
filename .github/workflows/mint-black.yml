@@ -1,0 +1,32 @@
+name: Pure black Linux Mint
+
+on:
+  push:
+    paths:
+      - "mint-black/**"
+      - ".github/workflows/mint-black.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mint-black-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the script
+        run: sh -n mint-black/install-yrs-black.sh
+      - name: Publish to the "mint-black" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view mint-black >/dev/null 2>&1 || gh release create mint-black --latest=false --title "Pure black Linux Mint" \
+            --notes "Every grey in Linux Mint, in #000000."
+          gh release upload mint-black mint-black/install-yrs-black.sh --clobber
+          gh release edit mint-black --notes "Every grey in Linux Mint (apps, Settings, title bars, menus, the panel) in #000000. Built from ${{ github.sha }}. Install: curl -fsSL https://github.com/${{ github.repository }}/releases/download/mint-black/install-yrs-black.sh | sh — undo: add -s -- --undo."
