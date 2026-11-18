@@ -1,9 +1,11 @@
 #!/bin/sh
-# yrs. folders: big black glass folders in Nemo, each with its own name on the front.
+# yrs. folders: a hundred material folders for Nemo, a different one for every folder.
 #   install:  curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh
 #   undo:     curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh -s -- --undo
 set -eu
 
+PACK_URL=${YRS_FOLDERS_PACK:-https://github.com/jrypzm/yrs/releases/download/mint-folders/yrs-folders-designs.tar.gz}
+PACK_SHA=@SHA256@
 DATA=${XDG_DATA_HOME:-$HOME/.local/share}
 CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/yrs-folders
 EXT=$DATA/nemo-python/extensions
@@ -13,6 +15,13 @@ restart_nemo() {
   if command -v nemo >/dev/null 2>&1 && pgrep -x nemo >/dev/null 2>&1; then
     nemo -q >/dev/null 2>&1 || true
   fi
+}
+set_zoom() {
+  for try in 1 2 3; do
+    gsettings set org.nemo.icon-view default-zoom-level "$1" 2>/dev/null || true
+    sleep 1
+    [ "$(gsettings get org.nemo.icon-view default-zoom-level 2>/dev/null)" = "'$1'" ] && break
+  done
 }
 
 if [ "${1:-}" = "--undo" ]; then
@@ -28,16 +37,11 @@ if [ "${1:-}" = "--undo" ]; then
     done
   fi
   if [ -f "$KEEP/zoom" ] && command -v gsettings >/dev/null 2>&1; then
-    was=$(cat "$KEEP/zoom")
-    for try in 1 2 3; do
-      gsettings set org.nemo.icon-view default-zoom-level "$was" 2>/dev/null || true
-      sleep 1
-      [ "$(gsettings get org.nemo.icon-view default-zoom-level 2>/dev/null)" = "'$was'" ] && break
-    done
+    set_zoom "$(cat "$KEEP/zoom")"
   fi
   rm -rf "$KEEP" "$CACHE"
   echo "Your folders are back to your theme's icons."
-  echo "If any still show the glass folder, close every Nemo window and open it again."
+  echo "If any still show a yrs. folder, close every Nemo window and open it again."
   exit 0
 fi
 
@@ -45,35 +49,48 @@ if ! command -v nemo >/dev/null 2>&1; then
   echo "Nemo, the Linux Mint file manager, isn't installed." >&2
   exit 1
 fi
-if [ ! -e /usr/lib/x86_64-linux-gnu/nemo/extensions-3.0/libnemo-python.so ] \
-   && ! ls /usr/lib/*/nemo/extensions-3.0/libnemo-python.so >/dev/null 2>&1 \
-   && ! ls /usr/lib/nemo/extensions-3.0/libnemo-python.so >/dev/null 2>&1; then
+found=""
+for so in /usr/lib/*/nemo/extensions-3.0/libnemo-python.so /usr/lib/nemo/extensions-3.0/libnemo-python.so /usr/lib64/nemo/extensions-3.0/libnemo-python.so; do
+  [ -e "$so" ] && found=1
+done
+if [ -z "$found" ]; then
   echo "This needs Nemo's Python plugin support. Install it, then run this again:" >&2
   echo "  sudo apt install nemo-python" >&2
   exit 1
 fi
 
-mkdir -p "$EXT" "$KEEP"
-rm -rf "$CACHE"   # pictures from an older version; they are drawn again as you browse
+echo "Fetching the hundred folders..."
+mkdir -p "$KEEP"
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+curl -fsSL "$PACK_URL" -o "$tmp/pack.tar.gz"
+got=$(sha256sum "$tmp/pack.tar.gz" | cut -d' ' -f1)
+if [ "$got" != "$PACK_SHA" ]; then
+  echo "The download didn't match what was published. Nothing was changed; try again in a minute." >&2
+  exit 1
+fi
+mkdir -p "$tmp/designs"
+tar -xzf "$tmp/pack.tar.gz" -C "$tmp/designs"
+rm -rf "$KEEP/designs"
+mv "$tmp/designs" "$KEEP/designs"
+rm -rf "$CACHE"   # pictures from an older version
 
-# Big enough to read the names: Nemo's "large" zoom, unless yours is already bigger.
+# Big enough to enjoy: Nemo's "large" icons, unless yours are already bigger.
 if command -v gsettings >/dev/null 2>&1; then
   zoom=$(gsettings get org.nemo.icon-view default-zoom-level 2>/dev/null | tr -d "'") || zoom=""
   case "$zoom" in
     smallest|smaller|small|standard)
       [ -f "$KEEP/zoom" ] || echo "$zoom" > "$KEEP/zoom"
-      for try in 1 2 3; do
-        gsettings set org.nemo.icon-view default-zoom-level large 2>/dev/null || true
-        sleep 1
-        [ "$(gsettings get org.nemo.icon-view default-zoom-level 2>/dev/null)" = "'large'" ] && break
-      done ;;
+      set_zoom large ;;
   esac
 fi
+
+mkdir -p "$EXT"
 cat > "$EXT/yrs-folders.py" <<'PY'
 @PLUGIN@
 PY
 restart_nemo
 
-echo "Your folders now show the yrs. glass folder with their name on the front, big."
-echo "A folder you zoomed yourself keeps its zoom: press Ctrl and + there, or Ctrl and 0 to reset it."
+echo "Done. Open Files: every folder has its own design now."
+echo "A folder you zoomed yourself keeps its zoom: press Ctrl and 0 there to reset it."
 echo "To undo: curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh -s -- --undo"
