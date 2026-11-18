@@ -22,7 +22,8 @@ curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-vscodium/install
 
 - Puts the icon in `~/.local/share/icons/hicolor` as `yrs-vscodium`, at ten sizes from 16 to 512 pixels: a name of its own, so no icon theme can override it.
 - Gives VSCodium's launcher a personal copy in `~/.local/share/applications`, identical except for the icon: `codium.desktop` (.deb), `com.vscodium.codium.desktop` (Flatpak) and the Snap's `codium_codium.desktop`. Mint's icon theme has its own VSCodium icon, which is why the new one has a name of its own. Yours is used before theirs.
-- If a launcher of your own starts VSCodium with another icon, it is pointed at the new one too.
+- If a launcher of your own starts VSCodium with another icon (an AppImage or a downloaded folder, say), it is pointed at the new one too.
+- Mint's icon theme has its own VSCodium pictures under VSCodium's own names (`vscodium`, `com.vscodium.codium`), and anything that asks for those names gets them. So the new picture is also put under those names in your own copy of the icon theme's folder (`~/.local/share/icons/Mint-Y`, say), which Mint looks at before the system's. The system theme is not touched; only those few files are added.
 - Anything it replaces is copied to `~/.local/share/yrs-vscodium` first, and undo puts it back.
 - No root, nothing downloaded, VSCodium itself is not changed.
 

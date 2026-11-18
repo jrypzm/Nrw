@@ -33,6 +33,12 @@ refresh() {
 if [ "${1:-}" = "--undo" ] || [ "${1:-}" = "--uninstall" ]; then
     for n in $SIZES; do rm -f "$ICONS/${n}x${n}/apps/$NAME.png"; done
     for f in "$APPS"/*.desktop; do [ -f "$f" ] && grep -q "^$MARK" "$f" && rm -f "$f"; done
+    if [ -f "$KEEP/themefiles" ]; then
+        while IFS= read -r f; do rm -f "$f"; done < "$KEEP/themefiles"
+    fi
+    if [ -f "$KEEP/themeindex" ]; then
+        while IFS= read -r f; do rm -f "$f"; d=$(dirname "$f"); find "$d" -type d -empty -delete 2>/dev/null || true; done < "$KEEP/themeindex"
+    fi
     if [ -d "$KEEP/apps" ]; then
         for f in "$KEEP/apps"/*.desktop; do [ -f "$f" ] && cp "$f" "$APPS/"; done
     fi
@@ -84,6 +90,46 @@ for f in "$APPS"/*.desktop; do
     sed "s/^Icon=.*/Icon=$NAME/" "$f" > "$f.tmp" && mv "$f.tmp" "$f"
     found="$found $base"
 done
+# Mint's icon theme has its own VSCodium pictures under VSCodium's own names, and anything that asks
+# for those names (the menu, the panel, the window list, a launcher not found above) gets them.
+# So the new picture goes under those names too, in your own copy of the theme's folder, which is
+# looked at before the system's. The system theme is not touched.
+OLDNAMES="vscodium com.vscodium.codium codium"
+ICON_THEME=$(gsettings get org.cinnamon.desktop.interface icon-theme 2>/dev/null | tr -d "'" || true)
+t=$ICON_THEME; n=0
+: > "$KEEP/themefiles.new"; [ -f "$KEEP/themeindex" ] || : > "$KEEP/themeindex"
+while [ -n "$t" ] && [ "$t" != hicolor ] && [ $n -lt 6 ]; do
+    n=$((n + 1))
+    src=""
+    for b in /usr/share/icons /usr/local/share/icons; do [ -f "$b/$t/index.theme" ] && { src="$b/$t/index.theme"; break; }; done
+    [ -n "$src" ] || break
+    dest="$DATA/icons/$t"
+    if [ ! -f "$dest/index.theme" ]; then
+        mkdir -p "$dest"; cp "$src" "$dest/index.theme"; printf '%s\n' "$dest/index.theme" >> "$KEEP/themeindex"
+    fi
+    # every folder of application icons the theme lists, with its size
+    awk '
+        /^\[/ { sec=substr($0, 2, length($0)-2); next }
+        /^Size=/ { size[sec]=substr($0, 6) }
+        /^Context=/ { ctx[sec]=substr($0, 9) }
+        /^Type=/ { type[sec]=substr($0, 6) }
+        END { for (s in size) if (ctx[s]=="Applications" || s ~ /apps/) print s, size[s], type[s] }
+    ' "$src" | while read -r dir size type; do
+        [ "$dir" = "Icon" ] && continue
+        pick=512
+        for p in $SIZES; do if [ "$p" -ge "$size" ]; then pick=$p; break; fi; done
+        [ "$type" = Scalable ] && pick=512
+        mkdir -p "$dest/$dir"
+        for nm in $OLDNAMES; do
+            cp "$ICONS/${pick}x${pick}/apps/$NAME.png" "$dest/$dir/$nm.png"
+            printf '%s\n' "$dest/$dir/$nm.png" >> "$KEEP/themefiles.new"
+        done
+    done
+    t=$(sed -n 's/^Inherits=//p' "$src" | head -n 1 | cut -d, -f1)
+done
+cat "$KEEP/themefiles.new" >> "$KEEP/themefiles" 2>/dev/null || true
+sort -u "$KEEP/themefiles" -o "$KEEP/themefiles"; rm -f "$KEEP/themefiles.new"
+for d in "$DATA/icons/$ICON_THEME"; do touch "$d" 2>/dev/null || true; done
 refresh
 
 say "VSCodium now has the new icon."
