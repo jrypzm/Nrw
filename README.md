@@ -67,6 +67,8 @@ Songs, Albums and Playlists as three plain words. Tap the playing strip and the 
 
 **Files icon,** a smoked-glass folder for Nemo: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-files/install-yrs-files.sh | sh` ([more](mint-files/)).
 
+**Folders,** black glass folders inside Nemo with each folder's own name on the front: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh` ([more](mint-folders/)).
+
 <br>
 
 ## Installing on Android
@@ -102,6 +104,7 @@ Every APK is built and signed by GitHub Actions from the code in this repository
 | [`music-linux/`](music-linux/) | yrs. music for Linux | Rust (stable), ALSA headers | `./build-appimage.sh` |
 | [`mint-menu/`](mint-menu/) | the yrs. menu icon for Linux Mint | Python 3 | `python3 make.py` |
 | [`mint-files/`](mint-files/) | the yrs. Files icon for Nemo | Python 3 | `python3 make.py` |
+| [`mint-folders/`](mint-folders/) | named glass folders inside Nemo | Python 3 | `python3 make.py` |
 
 Run each command inside its folder. The Android projects have screen tests that render every page to PNG with Robolectric or Paparazzi; see each app's README.
 
@@ -114,6 +117,7 @@ music/       yrs. music for Android: Kotlin, Compose and Media3, from Lotus (GPL
 music-linux/ yrs. music for Linux: Rust, egui and rodio
 mint-menu/   the yrs. full stop as the Linux Mint menu icon
 mint-files/  a smoked-glass folder icon for Nemo
+mint-folders/ glass folders inside Nemo, each with its name on the front
 index.html   the website, with the apps and their downloads
 life/        the long page about yrs.
 assets/      icons and screenshots used by the website and this README
