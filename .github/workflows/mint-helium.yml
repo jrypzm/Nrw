@@ -1,0 +1,36 @@
+name: Volt, a Helium icon for Linux Mint
+
+on:
+  push:
+    paths:
+      - "mint-helium/**"
+      - ".github/workflows/mint-helium.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mint-helium-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the installer
+        working-directory: mint-helium
+        run: |
+          python3 make.py --pack
+          sh -n install-yrs-helium.sh
+          git diff --exit-code -- install-yrs-helium.sh || (echo "Run make.py and commit the result" && exit 1)
+      - name: Publish to the "mint-helium" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view mint-helium >/dev/null 2>&1 || gh release create mint-helium --latest=false --title "Volt, a Helium icon for Linux Mint" \
+            --notes "The Volt icon for the Helium browser."
+          gh release upload mint-helium mint-helium/install-yrs-helium.sh --clobber
+          gh release edit mint-helium --notes "The Volt icon for the Helium browser, built from ${{ github.sha }}. Install: curl -fsSL https://github.com/${{ github.repository }}/releases/download/mint-helium/install-yrs-helium.sh | sh — undo: add -s -- --undo."

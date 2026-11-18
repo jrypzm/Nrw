@@ -1,0 +1,88 @@
+#!/bin/sh
+# Volt: a new icon for the Helium browser on Linux Mint. Acid lime, Helium's star in black.
+#
+#   sh install-yrs-helium.sh            give Helium the Volt icon
+#   sh install-yrs-helium.sh --undo     bring back the icon it had before
+#
+# What it does, all inside your home folder:
+#   - puts the icon in ~/.local/share/icons as "helium", the name Helium's own
+#     packages use, from 16 to 512 pixels; yours is found before the system one
+#   - if you added Helium to your menu from an AppImage, points that launcher at the
+#     new icon too
+#   - keeps a copy of anything it replaces, so --undo puts it all back
+# No root, nothing downloaded, Helium itself is not touched.
+set -eu
+
+DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
+ICONS="$DATA/icons/hicolor"
+APPS="$DATA/applications"
+KEEP="$DATA/yrs-helium"
+SIZES="16 22 24 32 48 64 96 128 256 512"
+
+say() { printf '%s\n' "$*"; }
+
+refresh() {
+    touch "$ICONS" 2>/dev/null || true
+    command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$APPS" >/dev/null 2>&1 || true
+    command -v gtk-update-icon-cache >/dev/null 2>&1 && [ -f "$ICONS/index.theme" ] && gtk-update-icon-cache -q "$ICONS" >/dev/null 2>&1 || true
+}
+
+if [ "${1:-}" = "--undo" ] || [ "${1:-}" = "--uninstall" ]; then
+    for n in $SIZES; do
+        rm -f "$ICONS/${n}x${n}/apps/helium.png" "$ICONS/${n}x${n}/apps/helium-yrs.png"
+    done
+    if [ -d "$KEEP/icons" ]; then
+        (cd "$KEEP/icons" && find . -type f) | while IFS= read -r f; do
+            mkdir -p "$(dirname "$ICONS/$f")"; cp "$KEEP/icons/$f" "$ICONS/$f"
+        done
+    fi
+    if [ -d "$KEEP/apps" ]; then
+        for f in "$KEEP/apps"/*.desktop; do [ -f "$f" ] && cp "$f" "$APPS/"; done
+    fi
+    rm -rf "$KEEP"
+    refresh
+    say "Helium's icon is back to how it was."
+    exit 0
+fi
+
+command -v base64 >/dev/null 2>&1 || { say "base64 isn't available." >&2; exit 1; }
+mkdir -p "$KEEP/icons" "$KEEP/apps"
+
+# keep any helium icon already in your home folder (an AppImage may have put one there)
+for n in $SIZES; do
+    f="$ICONS/${n}x${n}/apps/helium.png"
+    if [ -f "$f" ] && [ ! -f "$KEEP/icons/${n}x${n}/apps/helium.png" ] && [ ! -f "$KEEP/installed" ]; then
+        mkdir -p "$KEEP/icons/${n}x${n}/apps"; cp "$f" "$KEEP/icons/${n}x${n}/apps/helium.png"
+    fi
+done
+
+put() {
+    mkdir -p "$ICONS/${1}x${1}/apps"
+    base64 -d > "$ICONS/${1}x${1}/apps/helium.png"
+    cp "$ICONS/${1}x${1}/apps/helium.png" "$ICONS/${1}x${1}/apps/helium-yrs.png"
+}
+
+@ICONS@
+touch "$KEEP/installed"
+
+# launchers in your home folder that start Helium but use another icon (AppImage menus)
+found=""
+for f in "$APPS"/*.desktop; do
+    [ -f "$f" ] || continue
+    grep -qi '^Exec=.*helium' "$f" || continue
+    found=1
+    icon=$(sed -n 's/^Icon=//p' "$f" | head -n 1)
+    [ "$icon" = "helium" ] || [ "$icon" = "helium-yrs" ] && continue
+    base=$(basename "$f")
+    [ -f "$KEEP/apps/$base" ] || cp "$f" "$KEEP/apps/$base"
+    sed "s/^Icon=.*/Icon=helium-yrs/" "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+done
+for d in $(printf '%s' "${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" | tr ':' ' '); do
+    [ -f "$d/applications/helium.desktop" ] && found=1
+done
+refresh
+
+say "Helium now has the Volt icon."
+[ -n "$found" ] || say "I didn't find Helium on this computer yet; the icon will show as soon as it's installed."
+say "If you still see the old one, press Ctrl+Alt+Esc to refresh Cinnamon (or log out and in)."
+say "To undo: curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-helium/install-yrs-helium.sh | sh -s -- --undo"

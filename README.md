@@ -69,6 +69,8 @@ Songs, Albums and Playlists as three plain words. Tap the playing strip and the 
 
 **Folders,** a hundred material folders inside Nemo (denim, leather, marble, felt, puffer, wood and more), a different one for every folder: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh` ([more](mint-folders/)).
 
+**Helium,** a lime Volt icon for the Helium browser: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-helium/install-yrs-helium.sh | sh` ([more](mint-helium/)).
+
 <br>
 
 ## Installing on Android
@@ -104,6 +106,7 @@ Every APK is built and signed by GitHub Actions from the code in this repository
 | [`music-linux/`](music-linux/) | yrs. music for Linux | Rust (stable), ALSA headers | `./build-appimage.sh` |
 | [`mint-menu/`](mint-menu/) | the yrs. menu icon for Linux Mint | Python 3 | `python3 make.py` |
 | [`mint-files/`](mint-files/) | the yrs. Files icon for Nemo | Python 3 | `python3 make.py` |
+| [`mint-helium/`](mint-helium/) | the Volt icon for the Helium browser | Node, Playwright, Python 3 | `python3 make.py` |
 | [`mint-folders/`](mint-folders/) | a hundred material folders for Nemo | Node, Playwright, Python 3 | `python3 make.py` |
 
 Run each command inside its folder. The Android projects have screen tests that render every page to PNG with Robolectric or Paparazzi; see each app's README.
@@ -118,6 +121,7 @@ music-linux/ yrs. music for Linux: Rust, egui and rodio
 mint-menu/   the yrs. full stop as the Linux Mint menu icon
 mint-files/  a smoked-glass folder icon for Nemo
 mint-folders/ a hundred material folders for Nemo
+mint-helium/  the Volt icon for the Helium browser
 index.html   the website, with the apps and their downloads
 life/        the long page about yrs.
 assets/      icons and screenshots used by the website and this README
