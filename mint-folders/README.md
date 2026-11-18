@@ -10,7 +10,7 @@ A hundred folders made of things: denim, leather, marble with gold, felt with a 
 curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh
 ```
 
-It also sets Nemo's icons to the "large" size so you can see the materials (undo puts your size back). A folder you zoomed yourself keeps its zoom: press <kbd>Ctrl</kbd>+<kbd>0</kbd> there to reset it.
+Your icon size stays as it is. If the earlier version made your icons "large", installing this one puts your old size back.
 
 If it says Nemo's Python support is missing, run `sudo apt install nemo-python` and try again.
 

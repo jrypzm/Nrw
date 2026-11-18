@@ -75,14 +75,10 @@ rm -rf "$KEEP/designs"
 mv "$tmp/designs" "$KEEP/designs"
 rm -rf "$CACHE"   # pictures from an older version
 
-# Big enough to enjoy: Nemo's "large" icons, unless yours are already bigger.
-if command -v gsettings >/dev/null 2>&1; then
-  zoom=$(gsettings get org.nemo.icon-view default-zoom-level 2>/dev/null | tr -d "'") || zoom=""
-  case "$zoom" in
-    smallest|smaller|small|standard)
-      [ -f "$KEEP/zoom" ] || echo "$zoom" > "$KEEP/zoom"
-      set_zoom large ;;
-  esac
+# Nemo keeps your icon size. An earlier version set it to "large": put yours back.
+if [ -f "$KEEP/zoom" ] && command -v gsettings >/dev/null 2>&1; then
+  set_zoom "$(cat "$KEEP/zoom")"
+  rm -f "$KEEP/zoom"
 fi
 
 mkdir -p "$EXT"
@@ -92,5 +88,4 @@ PY
 restart_nemo
 
 echo "Done. Open Files: every folder has its own design now."
-echo "A folder you zoomed yourself keeps its zoom: press Ctrl and 0 there to reset it."
 echo "To undo: curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-folders/install-yrs-folders.sh | sh -s -- --undo"
