@@ -63,6 +63,10 @@ Songs, Albums and Playlists as three plain words. Tap the playing strip and the 
 
 <br>
 
+**On Linux Mint,** put the yrs. full stop on your panel in place of the menu's Mint logo: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-menu/install-yrs-menu.sh | sh` ([more](mint-menu/)).
+
+<br>
+
 ## Installing on Android
 
 The apps aren't on the Play Store, so Android installs them straight from the download:
@@ -94,6 +98,7 @@ Every APK is built and signed by GitHub Actions from the code in this repository
 | [`home/`](home/) | yrs. home | JDK 17, Gradle 8.11 | `gradle assembleRelease` |
 | [`music/`](music/) | yrs. music for Android | JDK 17, Gradle 8.11 | `gradle assembleRelease` |
 | [`music-linux/`](music-linux/) | yrs. music for Linux | Rust (stable), ALSA headers | `./build-appimage.sh` |
+| [`mint-menu/`](mint-menu/) | the yrs. menu icon for Linux Mint | Python 3 | `python3 make.py` |
 
 Run each command inside its folder. The Android projects have screen tests that render every page to PNG with Robolectric or Paparazzi; see each app's README.
 
@@ -104,6 +109,7 @@ web/         yrs. in the browser: one HTML file, installable, works offline
 home/        yrs. home: the launcher, Kotlin and Android views
 music/       yrs. music for Android: Kotlin, Compose and Media3, from Lotus (GPL-3.0)
 music-linux/ yrs. music for Linux: Rust, egui and rodio
+mint-menu/   the yrs. full stop as the Linux Mint menu icon
 index.html   the website, with the apps and their downloads
 life/        the long page about yrs.
 assets/      icons and screenshots used by the website and this README

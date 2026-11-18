@@ -1,0 +1,36 @@
+name: yrs. menu icon for Linux Mint
+
+on:
+  push:
+    paths:
+      - "mint-menu/**"
+      - ".github/workflows/mint-menu.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mint-menu-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the installer
+        working-directory: mint-menu
+        run: |
+          python3 make.py
+          sh -n install-yrs-menu.sh
+          git diff --exit-code -- install-yrs-menu.sh icons || (echo "Run make.py and commit the result" && exit 1)
+      - name: Publish to the "mint-menu" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view mint-menu >/dev/null 2>&1 || gh release create mint-menu --latest=false --title "yrs. menu icon for Linux Mint" \
+            --notes "The yrs. full stop for the Cinnamon menu."
+          gh release upload mint-menu mint-menu/install-yrs-menu.sh --clobber
+          gh release edit mint-menu --notes "The yrs. full stop for the Cinnamon menu, built from ${{ github.sha }}. Install: curl -fsSL https://github.com/${{ github.repository }}/releases/download/mint-menu/install-yrs-menu.sh | sh — undo: add -s -- --undo."
