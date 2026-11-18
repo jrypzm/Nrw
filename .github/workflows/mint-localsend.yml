@@ -1,0 +1,36 @@
+name: A LocalSend icon for Linux Mint
+
+on:
+  push:
+    paths:
+      - "mint-localsend/**"
+      - ".github/workflows/mint-localsend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mint-localsend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the installer
+        working-directory: mint-localsend
+        run: |
+          python3 make.py --pack
+          sh -n install-yrs-localsend.sh
+          git diff --exit-code -- install-yrs-localsend.sh || (echo "Run make.py and commit the result" && exit 1)
+      - name: Publish to the "mint-localsend" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view mint-localsend >/dev/null 2>&1 || gh release create mint-localsend --latest=false --title "A LocalSend icon for Linux Mint" \
+            --notes "A teal sleepy icon for LocalSend."
+          gh release upload mint-localsend mint-localsend/install-yrs-localsend.sh --clobber
+          gh release edit mint-localsend --notes "A teal sleepy icon for LocalSend, built from ${{ github.sha }}. Install: curl -fsSL https://github.com/${{ github.repository }}/releases/download/mint-localsend/install-yrs-localsend.sh | sh — undo: add -s -- --undo."
