@@ -75,6 +75,8 @@ Songs, Albums and Playlists as three plain words. Tap the playing strip and the 
 
 **Ghostty,** Ghostty's ghost as cyan light with its `>_` face: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-ghostty/install-yrs-ghostty.sh | sh` ([more](mint-ghostty/)).
 
+**mpv,** a sleepy creature on candy pink with mpv's disc for a head: `curl -fsSL https://github.com/jrypzm/yrs/releases/download/mint-mpv/install-yrs-mpv.sh | sh` ([more](mint-mpv/)).
+
 <br>
 
 ## Installing on Android
@@ -110,6 +112,7 @@ Every APK is built and signed by GitHub Actions from the code in this repository
 | [`music-linux/`](music-linux/) | yrs. music for Linux | Rust (stable), ALSA headers | `./build-appimage.sh` |
 | [`mint-menu/`](mint-menu/) | the yrs. menu icon for Linux Mint | Python 3 | `python3 make.py` |
 | [`mint-files/`](mint-files/) | the yrs. Files icon for Nemo | Python 3 | `python3 make.py` |
+| [`mint-mpv/`](mint-mpv/) | a pink sleepy icon for mpv | Python 3, numpy, scipy, Pillow | `python3 make.py` |
 | [`mint-ghostty/`](mint-ghostty/) | a cyan ghost icon for Ghostty | Python 3, numpy, scipy, Pillow | `python3 make.py` |
 | [`mint-zim/`](mint-zim/) | the Violet Quill icon for Zim | Node, Playwright, Python 3 | `python3 make.py` |
 | [`mint-helium/`](mint-helium/) | the Volt icon for the Helium browser | Node, Playwright, Python 3 | `python3 make.py` |
@@ -130,6 +133,7 @@ mint-folders/ a hundred material folders for Nemo
 mint-helium/  the Volt icon for the Helium browser
 mint-zim/     the Violet Quill icon for Zim Desktop Wiki
 mint-ghostty/ a cyan ghost icon for the Ghostty terminal
+mint-mpv/     a pink sleepy icon for the mpv media player
 index.html   the website, with the apps and their downloads
 life/        the long page about yrs.
 assets/      icons and screenshots used by the website and this README

@@ -1,0 +1,36 @@
+name: An mpv icon for Linux Mint
+
+on:
+  push:
+    paths:
+      - "mint-mpv/**"
+      - ".github/workflows/mint-mpv.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mint-mpv-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the installer
+        working-directory: mint-mpv
+        run: |
+          python3 make.py --pack
+          sh -n install-yrs-mpv.sh
+          git diff --exit-code -- install-yrs-mpv.sh || (echo "Run make.py and commit the result" && exit 1)
+      - name: Publish to the "mint-mpv" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view mint-mpv >/dev/null 2>&1 || gh release create mint-mpv --latest=false --title "An mpv icon for Linux Mint" \
+            --notes "A pink sleepy icon for mpv."
+          gh release upload mint-mpv mint-mpv/install-yrs-mpv.sh --clobber
+          gh release edit mint-mpv --notes "A pink sleepy icon for mpv, built from ${{ github.sha }}. Install: curl -fsSL https://github.com/${{ github.repository }}/releases/download/mint-mpv/install-yrs-mpv.sh | sh — undo: add -s -- --undo."
