@@ -75,7 +75,8 @@ done
 for f in "$APPS"/*.desktop; do
     [ -f "$f" ] || continue
     grep -q "^$MARK" "$f" && continue
-    grep -Eqi '^Exec=(.*/)?codium( |$)|^Exec=.*com\.vscodium\.codium' "$f" || continue
+    # any launcher that starts VSCodium: codium, the Flatpak, an AppImage or a folder named VSCodium
+    grep -Eqi '^Exec=.*codium|^Name=.*vscodium' "$f" || continue
     icon=$(sed -n 's/^Icon=//p' "$f" | head -n 1)
     [ "$icon" = "$NAME" ] && continue
     base=$(basename "$f")
