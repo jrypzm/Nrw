@@ -63,8 +63,11 @@ found=""
 for d in $(printf '%s' "${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" | tr ':' ' ') \
          /usr/local/share /usr/share /var/lib/flatpak/exports/share "$DATA/flatpak/exports/share" \
          /var/lib/snapd/desktop "$HOME/.local/share"; do
-    for src in "$d"/applications/codium.desktop "$d"/applications/com.vscodium.codium.desktop "$d"/applications/codium_codium.desktop "$d"/applications/vscodium.desktop; do
+    # any launcher that starts VSCodium or uses its icon, whatever the file is called
+    # (codium.desktop, com.visualstudio.CodeOSS.desktop in newer packages, the Flatpak's, the Snap's)
+    for src in "$d"/applications/*.desktop; do
         [ -f "$src" ] || continue
+        grep -Eqi '^Exec=.*codium|^Icon=(vscodium|com\.vscodium\.codium|codium)$' "$src" || continue
         base=$(basename "$src")
         dest="$APPS/$base"
         [ "$src" = "$dest" ] && continue
