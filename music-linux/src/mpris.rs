@@ -20,6 +20,8 @@ pub struct Mpris {
     controls: Option<MediaControls>,
     pub rx: Receiver<Ask>,
     last: (String, bool),
+    /// The position last reported and when, to notice a jump (a seek) and report it too.
+    said: Option<(f32, std::time::Instant)>,
 }
 
 impl Mpris {
@@ -51,7 +53,7 @@ impl Mpris {
                 .is_ok();
             ok.then_some(c)
         });
-        Mpris { controls, rx, last: (String::new(), false) }
+        Mpris { controls, rx, last: (String::new(), false), said: None }
     }
 
     pub fn song(&mut self, title: &str, artist: &str, album: &str, secs: f32, cover: Option<String>) {
@@ -64,8 +66,17 @@ impl Mpris {
     }
 
     pub fn status(&mut self, playing: bool, pos: f32, force: bool) {
-        if self.last.1 == playing && !force { return; }
+        // where the desktop thinks the song is: it counts on from the last report while playing
+        let jumped = match self.said {
+            Some((p, t)) => {
+                let expected = if self.last.1 { p + t.elapsed().as_secs_f32() } else { p };
+                (pos - expected).abs() > 1.5
+            }
+            None => true,
+        };
+        if self.last.1 == playing && !force && !jumped { return; }
         self.last.1 = playing;
+        self.said = Some((pos, std::time::Instant::now()));
         if let Some(c) = &mut self.controls {
             let progress = Some(MediaPosition(Duration::from_secs_f32(pos.max(0.0))));
             let _ = c.set_playback(if playing { MediaPlayback::Playing { progress } } else { MediaPlayback::Paused { progress } });
@@ -74,6 +85,7 @@ impl Mpris {
 
     pub fn stopped(&mut self) {
         self.last = (String::new(), false);
+        self.said = None;
         if let Some(c) = &mut self.controls { let _ = c.set_playback(MediaPlayback::Stopped); }
     }
 }

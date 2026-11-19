@@ -6,6 +6,7 @@
 mod app;
 mod audio;
 mod covers;
+mod decode;
 mod icons;
 mod layout;
 mod library;

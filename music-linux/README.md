@@ -19,7 +19,8 @@
 - **One window, every size.** There is no separate mini player: make the window smaller and it reshapes itself. Narrow, it becomes a list with a strip below like the phone; small, a mini player; flat and wide, a thin strip for the edge of the screen; tiny, just the cover with the symbols over it.
 - **Lyrics and Up next** open inside the player: synced lyrics glide to the current line (click one to jump there), the queue drags to reorder.
 - **Gapless.** The next song is queued a few seconds early, so albums play without a gap.
-- **Honest quality.** FLAC, MP3, AAC and ALAC, Ogg Vorbis, WAV and AIFF, with the format, bit depth and sample rate shown as they are.
+- **Honest quality.** FLAC, MP3, AAC and ALAC (.m4a), Ogg Vorbis, Opus, WebM and MKV audio, WAV and AIFF, with the format, bit depth and sample rate shown as they are.
+- **Never stuck.** A broken or unusual file is skipped with a note instead of stopping the music, and if the sound output goes away (headphones unplugged, the sound server restarted) it reconnects and carries on from the same place.
 - **Your desktop's controls.** Media keys, the Cinnamon, GNOME and KDE sound applets and the lock screen control it through MPRIS.
 - **It remembers** your queue, where you were, the window size and the layout, and reopens paused right there.
 

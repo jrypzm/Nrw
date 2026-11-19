@@ -5,6 +5,14 @@ use crate::library::Library;
 use crate::store::Repeat;
 use rand::seq::SliceRandom;
 
+/// The queue held as file paths while the library is rebuilt.
+pub struct Saved {
+    queue: Vec<std::path::PathBuf>,
+    base: Vec<std::path::PathBuf>,
+    current: Option<std::path::PathBuf>,
+    handed: Option<std::path::PathBuf>,
+}
+
 pub struct Player {
     pub audio: Audio,
     /// Songs in the order they will play (already shuffled when shuffle is on).
@@ -268,6 +276,29 @@ impl Player {
                 }
             }
         }
+    }
+
+    /// Before the library is rebuilt (its indexes change): the queue as file paths.
+    pub fn as_paths(&self, lib: &Library) -> Saved {
+        let path = |&t: &usize| lib.tracks.get(t).map(|x| x.path.clone());
+        Saved {
+            queue: self.queue.iter().filter_map(path).collect(),
+            base: self.base.iter().filter_map(path).collect(),
+            current: self.current().and_then(|t| lib.tracks.get(t)).map(|t| t.path.clone()),
+            handed: self.handed.and_then(|h| self.queue.get(h)).and_then(|t| lib.tracks.get(*t)).map(|t| t.path.clone()),
+        }
+    }
+
+    /// After the rebuild: the same songs again, by path; songs that are gone drop out.
+    pub fn remap(&mut self, lib: &Library, saved: Saved) {
+        let find = |p: &std::path::PathBuf| lib.by_path.get(p).copied();
+        self.queue = saved.queue.iter().filter_map(find).collect();
+        self.base = saved.base.iter().filter_map(find).collect();
+        let cur = saved.current.as_ref().and_then(find);
+        self.at = cur.and_then(|c| self.queue.iter().position(|&x| x == c)).unwrap_or(0).min(self.queue.len().saturating_sub(1));
+        let handed = saved.handed.as_ref().and_then(find);
+        self.handed = handed.and_then(|h| self.queue.iter().enumerate().skip(self.at + 1).find(|(_, &x)| x == h).map(|(i, _)| i).or_else(|| self.queue.iter().position(|&x| x == h)));
+        if self.queue.is_empty() { self.stop(); }
     }
 
     /// The songs still to come, with their places in the queue.

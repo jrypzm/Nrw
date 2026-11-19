@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 use std::time::UNIX_EPOCH;
 
-pub const AUDIO: &[&str] = &["flac", "mp3", "m4a", "mp4", "aac", "ogg", "oga", "wav", "aif", "aiff"];
+pub const AUDIO: &[&str] = &["flac", "mp3", "m4a", "mp4", "aac", "ogg", "oga", "opus", "webm", "mka", "wav", "aif", "aiff", "caf"];
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Track {
@@ -179,7 +179,16 @@ fn bytes(p: &Path) -> u64 {
 }
 
 pub fn read_one(path: &Path) -> Option<Track> {
-    let file = lofty::read_from_path(path).ok()?;
+    // by extension first; if that fails, by what the file really is (an m4a named .mp3,
+    // Opus in an .ogg); if the tag reader can't read it at all (WebM, MKV), list the song
+    // anyway from what the decoder can tell
+    let file = match lofty::read_from_path(path) {
+        Ok(f) => f,
+        Err(_) => match lofty::probe::Probe::open(path).ok().and_then(|p| p.guess_file_type().ok()).map(|p| p.read()).unwrap_or_else(|| lofty::read_from_path(path)) {
+            Ok(f) => f,
+            Err(_) => return read_untagged(path),
+        },
+    };
     let props = file.properties();
     let tag = file.primary_tag().or_else(|| file.first_tag());
     let stem = path.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
@@ -196,11 +205,18 @@ pub fn read_one(path: &Path) -> Option<Track> {
         Some(a) => format!("{}\u{1}{}", a.to_lowercase(), if album_artist.is_empty() { folder.to_lowercase() } else { album_artist.to_lowercase() }),
         None => format!("dir\u{1}{}", folder.to_lowercase()),
     };
-    let format = match ext.as_str() {
-        "M4A" | "MP4" => if format!("{:?}", file.file_type()).contains("Mp4") && props.bit_depth().is_some() { "ALAC".into() } else { "AAC".into() },
-        "OGA" | "OGG" => "OGG".into(),
-        "AIF" => "AIFF".into(),
-        e => e.to_string(),
+    // the label comes from what the file is, not what it is called
+    let kind = format!("{:?}", file.file_type());
+    let format = match kind.as_str() {
+        "Mp4" => if props.bit_depth().is_some() { "ALAC".into() } else { "AAC".into() },
+        "Mpeg" => "MP3".into(),
+        "Flac" => "FLAC".into(),
+        "Opus" => "OPUS".into(),
+        "Vorbis" | "Speex" => "OGG".into(),
+        "Wav" => "WAV".into(),
+        "Aiff" => "AIFF".into(),
+        "Aac" => "AAC".into(),
+        _ => match ext.as_str() { "OGA" => "OGG".into(), "AIF" => "AIFF".into(), e => e.to_string() },
     };
     Some(Track {
         path: path.to_path_buf(),
@@ -218,6 +234,32 @@ pub fn read_one(path: &Path) -> Option<Track> {
         rate: props.sample_rate(),
         kbps: props.audio_bitrate(),
         album_key,
+        size: bytes(path),
+    })
+}
+
+/// A song the tag reader can't open (WebM, MKV): named after its file, timed by the decoder.
+fn read_untagged(path: &Path) -> Option<Track> {
+    let (secs, rate) = crate::decode::length(path)?;
+    let stem = path.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+    let folder = path.parent().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
+    let album = path.parent().and_then(|p| p.file_name()).map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| "Unknown album".into());
+    Some(Track {
+        path: path.to_path_buf(),
+        mtime: mtime(path),
+        title: stem,
+        artist: "Unknown artist".into(),
+        album,
+        album_artist: String::new(),
+        year: None,
+        track: None,
+        disc: None,
+        secs,
+        format: path.extension().map(|e| e.to_string_lossy().to_uppercase()).unwrap_or_default(),
+        bits: None,
+        rate: Some(rate),
+        kbps: None,
+        album_key: format!("dir\u{1}{}", folder.to_lowercase()),
         size: bytes(path),
     })
 }

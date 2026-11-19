@@ -169,8 +169,8 @@ impl App {
                 Scan::Progress(a, b) => self.scanning = Some((a, b)),
                 Scan::Covers => { self.covers.reset(); ctx.request_repaint(); }
                 Scan::Done(tracks) => {
-                    // remember paths across the rebuild, since indexes change
-                    let queue: Vec<PathBuf> = self.player.queue.iter().map(|&t| self.lib.tracks[t].path.clone()).collect();
+                    // indexes change with the rebuild: hold the queue as paths meanwhile
+                    let saved = self.player.as_paths(&self.lib);
                     let mut tracks = tracks;
                     for a in std::mem::take(&mut self.open_args) {
                         if a.is_file() && !tracks.iter().any(|t| t.path == a) {
@@ -180,19 +180,21 @@ impl App {
                     self.lib = Library::build(tracks);
                     self.generation += 1;
                     self.scanning = None;
-                    if !self.restored {
+                    if !self.restored && self.player.queue.is_empty() {
                         self.restored = true;
                         let q: Vec<usize> = self.store.queue.iter().filter_map(|p| self.lib.by_path.get(p).copied()).collect();
                         if !q.is_empty() && self.store.at < q.len() {
                             self.player.restore(&self.lib, q, self.store.at, self.store.pos);
                             self.player.from = self.store.from.clone();
                         }
-                    } else if !queue.is_empty() {
-                        let cur = self.player.current().and_then(|_| queue.get(self.player.at)).cloned();
-                        let q: Vec<usize> = queue.iter().filter_map(|p| self.lib.by_path.get(p).copied()).collect();
-                        self.player.queue = q;
-                        self.player.at = cur.and_then(|c| self.lib.by_path.get(&c)).and_then(|t| self.player.queue.iter().position(|x| x == t)).unwrap_or(0);
+                    } else {
+                        // something was already playing (perhaps started before this scan
+                        // finished): keep it, as the same songs
+                        self.restored = true;
+                        self.player.remap(&self.lib, saved);
                     }
+                    // the song didn't change, only its number did
+                    self.last_track = self.player.current();
                     ctx.request_repaint();
                 }
             }
