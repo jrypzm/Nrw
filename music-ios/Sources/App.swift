@@ -19,8 +19,11 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         _ = Player.shared
         Library.shared.scan()
         // used only to take the screenshots shown with each build
-        if ProcessInfo.processInfo.arguments.contains("-demo-player") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { root.demoPlay() }
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("-demo-player") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { root.demoPlay(open: true) }
+        } else if args.contains("-demo-play") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { root.demoPlay(open: false) }
         }
         return true
     }

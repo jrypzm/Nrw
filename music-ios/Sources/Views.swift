@@ -205,10 +205,10 @@ final class RootViewController: UIViewController, UITableViewDataSource, UITable
         present(p, animated: true)
     }
 
-    func demoPlay() {
+    func demoPlay(open: Bool) {
         guard !Library.shared.tracks.isEmpty else { return }
         Player.shared.play(list: Library.shared.tracks, start: 0)
-        openPlayer()
+        if open { openPlayer() }
     }
 }
 
