@@ -128,91 +128,88 @@ final class Reddit {
     }
 }
 
-/// A hidden Safari view on reddit.com, used to fetch when a plain request isn't let through.
+/// A hidden Safari view that opens each Reddit address the way Safari does when you open a link
+/// (Reddit hands its pages to that, but refuses background requests), then reads the page's text.
+/// One page at a time; let go of 45 seconds after the last one.
 final class Web: NSObject, WKNavigationDelegate {
     static let shared = Web()
     private var view: WKWebView?
-    private var ready = false
-    private var waiting: [() -> Void] = []
+    private var queue: [(URL, (Result<Data, APIError>) -> Void)] = []
+    private var current: ((Result<Data, APIError>) -> Void)?
+    private var status = 0
+    private var cookieSet = false
     private var idle: Timer?
 
     func fetch(_ u: URL, _ done: @escaping (Result<Data, APIError>) -> Void) {
-        fetchOnce(u) { [weak self] r in
-            if case .failure(.http(let c)) = r, c == 403 || c == 429, let s = self {
-                // perhaps a browser check: open the page again, wait for it, then try once more
-                s.reset(force: true)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { s.fetchOnce(u, done) }
-                return
-            }
-            done(r)
-        }
-    }
-
-    private func fetchOnce(_ u: URL, _ done: @escaping (Result<Data, APIError>) -> Void) {
         idle?.invalidate()
-        whenReady { [weak self] ok in
-            guard ok, let v = self?.view else { done(.failure(.offline("Couldn't reach Reddit."))); return }
-            let js = "const r = await fetch(u, {credentials: 'include', headers: {'Accept': 'application/json'}}); return [r.status, await r.text()];"
-            v.callAsyncJavaScript(js, arguments: ["u": u.absoluteString], in: nil, in: .defaultClient) { r in
-                self?.letGoLater()
-                switch r {
-                case .failure(let e):
-                    done(.failure(.offline(e.localizedDescription)))
-                case .success(let any):
-                    guard let a = any as? [Any], a.count == 2, let text = a[1] as? String else { done(.failure(.bad)); return }
-                    let code = (a[0] as? NSNumber)?.intValue ?? 0
-                    if (200 ..< 300).contains(code) { done(.success(Data(text.utf8))); return }
-                    // Reddit's "blocked by network security" page, not a private subreddit
-                    if code == 403, text.lowercased().contains("blocked") {
-                        done(.failure(.offline(Reddit.shared.isSignedIn
-                            ? "Reddit blocked this connection. Try switching between Wi-Fi and mobile data."
-                            : "Reddit blocked this connection. Sign in (on the home screen), or try switching between Wi-Fi and mobile data.")))
-                        return
-                    }
-                    done(.failure(.http(code)))
-                }
-            }
+        queue.append((u, done))
+        next()
+    }
+
+    private func next() {
+        guard current == nil, !queue.isEmpty else { return }
+        let (u, done) = queue.removeFirst()
+        current = done
+        status = 0
+        let v = view ?? make()
+        let go = { v.load(URLRequest(url: u, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 25)) }
+        guard !cookieSet else { go(); return }
+        cookieSet = true
+        // grown-up posts are shown when you're signed out too, as far as Reddit allows
+        if let adult = HTTPCookie(properties: [.domain: ".reddit.com", .path: "/", .name: "over18", .value: "1", .secure: "TRUE", .expires: Date(timeIntervalSinceNow: 31_536_000)]) {
+            v.configuration.websiteDataStore.httpCookieStore.setCookie(adult) { go() }
+        } else {
+            go()
         }
     }
 
-    private func whenReady(_ f: @escaping (Bool) -> Void) {
-        if ready, view != nil { f(true); return }
-        waiting.append { [weak self] in f(self?.ready == true) }
-        guard view == nil else { return }
+    private func make() -> WKWebView {
         let c = WKWebViewConfiguration()
         c.websiteDataStore = .default()
-        let v = WKWebView(frame: CGRect(x: 0, y: 0, width: 10, height: 10), configuration: c)
+        let v = WKWebView(frame: CGRect(x: 0, y: 0, width: 320, height: 480), configuration: c)
         v.customUserAgent = safariUA
         v.navigationDelegate = self
         view = v
-        ready = false
-        // grown-up posts are shown when you're signed out too, as far as Reddit allows
-        let adult = HTTPCookie(properties: [.domain: ".reddit.com", .path: "/", .name: "over18", .value: "1", .secure: "TRUE", .expires: Date(timeIntervalSinceNow: 31_536_000)])
-        let go = { v.load(URLRequest(url: URL(string: "https://old.reddit.com/wiki/pages/")!)) }
-        if let adult = adult { c.websiteDataStore.httpCookieStore.setCookie(adult) { go() } } else { go() }
+        return v
     }
 
-    private func flush() {
-        let w = waiting
-        waiting = []
-        w.forEach { $0() }
+    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+        if navigationResponse.isForMainFrame { status = (navigationResponse.response as? HTTPURLResponse)?.statusCode ?? 0 }
+        decisionHandler(.allow)
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        // give a browser check on the page a moment to finish
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            self.ready = true
-            self.flush()
+        webView.evaluateJavaScript("document.body ? document.body.innerText : ''") { [weak self] any, _ in
+            guard let s = self else { return }
+            let text = any as? String ?? ""
+            let first = text.first { !$0.isWhitespace }
+            if (200 ..< 300).contains(s.status) || s.status == 0, first == "{" || first == "[" {
+                s.finish(.success(Data(text.utf8)))
+            } else if text.lowercased().contains("blocked") {
+                s.finish(.failure(.offline(Reddit.shared.isSignedIn
+                    ? "Reddit blocked this connection. Try switching between Wi-Fi and mobile data."
+                    : "Reddit blocked this connection. Sign in (on the home screen), or try switching between Wi-Fi and mobile data.")))
+            } else {
+                s.finish(.failure(s.status >= 300 ? .http(s.status) : .bad))
+            }
         }
     }
 
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { failed() }
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { failed() }
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { failed(error) }
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { failed(error) }
 
-    private func failed() {
-        ready = false
-        flush()
-        view = nil
+    private func failed(_ e: Error) {
+        let ns = e as NSError
+        if ns.code == NSURLErrorCancelled { return }
+        finish(.failure(.offline(ns.code == NSURLErrorNotConnectedToInternet ? "No internet connection." : ns.localizedDescription)))
+    }
+
+    private func finish(_ r: Result<Data, APIError>) {
+        let done = current
+        current = nil
+        done?(r)
+        letGoLater()
+        next()
     }
 
     private func letGoLater() {
@@ -221,13 +218,14 @@ final class Web: NSObject, WKNavigationDelegate {
     }
 
     /// Lets go of the hidden Safari view (and the memory it holds).
-    func reset(force: Bool = false) {
+    func reset() {
         idle?.invalidate()
         idle = nil
-        guard force || waiting.isEmpty else { return }
+        guard current == nil, queue.isEmpty else { return }
+        view?.stopLoading()
         view?.navigationDelegate = nil
         view = nil
-        ready = false
+        cookieSet = false
         DispatchQueue.main.async { malloc_zone_pressure_relief(nil, 0) }
     }
 }
