@@ -65,7 +65,7 @@ enum Markdown {
             let t = raw.trimmingCharacters(in: .whitespaces)
             if code != nil {
                 if t.hasPrefix(fence) {
-                    d.add(NSAttributedString(string: code!.joined(separator: "\n"), attributes: [.font: Style.mono, .foregroundColor: Style.text, .backgroundColor: Style.codeBG]), Style.para(indent: 0, after: 10))
+                    d.add(NSAttributedString(string: code!.joined(separator: "\u{2028}"), attributes: [.font: Style.mono, .foregroundColor: Style.text, .backgroundColor: Style.codeBG]), Style.para(indent: 0, after: 10))
                     code = nil
                 } else {
                     code!.append(raw)
@@ -113,14 +113,15 @@ enum Markdown {
             }
             if t.hasPrefix("|") {
                 flush()
-                let cells = t.trimmingCharacters(in: CharacterSet(charactersIn: "|")).components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
+                let cells = t.trimmingCharacters(in: CharacterSet(charactersIn: "|")).components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                if cells.isEmpty { continue }
                 if cells.allSatisfy({ $0.allSatisfy { "-:".contains($0) } }) { continue }
                 d.add(inline(cells.joined(separator: "   ·   "), Style.body), Style.para(after: 4))
                 continue
             }
             para.append(t)
         }
-        if let c = code { d.add(NSAttributedString(string: c.joined(separator: "\n"), attributes: [.font: Style.mono, .foregroundColor: Style.text, .backgroundColor: Style.codeBG])) }
+        if let c = code { d.add(NSAttributedString(string: c.joined(separator: "\u{2028}"), attributes: [.font: Style.mono, .foregroundColor: Style.text, .backgroundColor: Style.codeBG])) }
         flush()
         return d
     }
@@ -257,8 +258,9 @@ enum Code {
             case "@": c = Style.link
             default: c = Style.text
             }
-            body.append(NSAttributedString(string: line.replacingOccurrences(of: "\t", with: "    ") + "\n", attributes: [.foregroundColor: c]))
+            body.append(NSAttributedString(string: line.replacingOccurrences(of: "\t", with: "    ") + "\u{2028}", attributes: [.foregroundColor: c]))
         }
+        if body.length > 0 { body.deleteCharacters(in: NSRange(location: body.length - 1, length: 1)) }
         body.addAttribute(.font, value: Style.mono, range: NSRange(location: 0, length: body.length))
         d.add(body, Style.para(after: 18))
     }
