@@ -12,7 +12,9 @@ extension API {
         q["page"] = "\(page)"
         json(path, q) { r in
             done(r.map { j in
-                let arr = (key.map { (j as? JSON)?[$0] as Any } ?? j) as? [JSON] ?? []
+                // unwrapped step by step: iOS 15 doesn't look inside an optional wrapped in Any
+                let arr: [JSON]
+                if let k = key, let obj = j as? JSON { arr = obj[k] as? [JSON] ?? [] } else { arr = j as? [JSON] ?? [] }
                 return (arr.compactMap(parse), arr.count >= API.perPage)
             })
         }
