@@ -52,14 +52,14 @@ final class WelcomeVC: UIViewController, UISearchBarDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "pins"
+        navigationController?.setNavigationBarHidden(true, animated: false)
         view.backgroundColor = .black
         title1.text = "pins."
-        title1.font = .systemFont(ofSize: 40, weight: .bold)
+        title1.font = .systemFont(ofSize: 52, weight: .bold)
         title1.textColor = .white
         title1.textAlignment = .center
-        subtitle.text = "Search Pinterest, or sign in for your home feed."
-        subtitle.font = .systemFont(ofSize: 15)
+        subtitle.text = "Find ideas. Save what you love."
+        subtitle.font = .systemFont(ofSize: 16)
         subtitle.textColor = Style.dim
         subtitle.textAlignment = .center
         subtitle.numberOfLines = 0
@@ -70,22 +70,33 @@ final class WelcomeVC: UIViewController, UISearchBarDelegate {
         bar.delegate = self
         signIn.setTitle("Sign in", for: .normal)
         signIn.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        signIn.setTitleColor(.black, for: .normal)
-        signIn.backgroundColor = .white
-        signIn.layer.cornerRadius = 24
+        signIn.setTitleColor(.white, for: .normal)
+        signIn.backgroundColor = Style.accent
+        signIn.layer.cornerRadius = 27
         signIn.addTarget(self, action: #selector(tapSignIn), for: .touchUpInside)
         [title1, subtitle, bar, signIn].forEach { view.addSubview($0) }
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard)))
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         let w = view.bounds.width, cx = w / 2
-        let top = view.safeAreaInsets.top + 60
-        title1.frame = CGRect(x: 0, y: top, width: w, height: 48)
-        subtitle.frame = CGRect(x: 24, y: top + 56, width: w - 48, height: 44)
-        bar.frame = CGRect(x: 16, y: top + 112, width: w - 32, height: 56)
-        signIn.frame = CGRect(x: cx - 110, y: top + 184, width: 220, height: 48)
+        // the block sits a little above centre, which reads as more composed than dead-centre
+        let mid = view.bounds.height * 0.34
+        title1.frame = CGRect(x: 0, y: mid, width: w, height: 60)
+        subtitle.frame = CGRect(x: 24, y: mid + 66, width: w - 48, height: 24)
+        bar.frame = CGRect(x: 28, y: mid + 118, width: w - 56, height: 56)
+        signIn.frame = CGRect(x: cx - 120, y: mid + 190, width: 240, height: 54)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
     }
 
     @objc private func dismissKeyboard() { bar.resignFirstResponder() }
@@ -277,36 +288,42 @@ final class PinHeader: UIView, GridHeader {
         picture.contentMode = .scaleAspectFit
         picture.backgroundColor = p.color
         picture.clipsToBounds = true
-        picture.layer.cornerRadius = 14
+        picture.layer.cornerRadius = 20
         picture.isUserInteractionEnabled = true
         picture.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapPicture)))
         addSubview(picture)
         if p.video != nil {
-            badge.text = "▶ play"
-            badge.font = .systemFont(ofSize: 15, weight: .semibold)
+            badge.text = "  ▶  "
+            badge.font = .systemFont(ofSize: 18, weight: .bold)
             badge.textColor = .white
-            badge.backgroundColor = UIColor(white: 0, alpha: 0.6)
+            badge.backgroundColor = UIColor(white: 0, alpha: 0.55)
             badge.textAlignment = .center
-            badge.layer.cornerRadius = 8
+            badge.layer.cornerRadius = 22
             badge.clipsToBounds = true
             picture.addSubview(badge)
         }
         stack.axis = .vertical
-        stack.spacing = 10
-        stack.alignment = .leading
+        stack.spacing = 8
+        stack.alignment = .fill
         addSubview(stack)
 
-        if !p.title.isEmpty { stack.addArrangedSubview(label(p.title, .systemFont(ofSize: 20, weight: .semibold), .white)) }
+        if !p.title.isEmpty { stack.addArrangedSubview(label(p.title, .systemFont(ofSize: 22, weight: .bold), .white)) }
         if !p.about.isEmpty, p.about != p.title { stack.addArrangedSubview(label(p.about, .systemFont(ofSize: 15), Style.text)) }
-        if !p.user.isEmpty {
-            let who = p.userName.isEmpty ? p.user : "\(p.userName) (@\(p.user))"
-            stack.addArrangedSubview(button("By \(who)", #selector(tapUser)))
+        if !p.user.isEmpty || !p.board.isEmpty {
+            let who = p.userName.isEmpty ? p.user : p.userName
+            let meta = [who.isEmpty ? "" : (p.user.isEmpty ? who : "@\(p.user)"), p.board].filter { !$0.isEmpty }.joined(separator: "  ·  ")
+            stack.addArrangedSubview(textButton(meta, #selector(tapUser), size: 14, color: Style.dim))
         }
-        if !p.board.isEmpty { stack.addArrangedSubview(label("On the board \"\(p.board)\"", .systemFont(ofSize: 14), Style.dim)) }
-        if let l = p.link { stack.addArrangedSubview(button("Open the link (\(l.host?.replacingOccurrences(of: "www.", with: "") ?? "website"))", #selector(tapLink))) }
-        stack.addArrangedSubview(button("Save picture to Photos", #selector(tapSave)))
-        stack.addArrangedSubview(button("Open on Pinterest", #selector(tapPinterest)))
-        stack.addArrangedSubview(label("More like this", .systemFont(ofSize: 17, weight: .semibold), .white))
+
+        let save = pill("Save to Photos", accent: true, #selector(tapSave))
+        stack.setCustomSpacing(16, after: stack.arrangedSubviews.last ?? save)
+        stack.addArrangedSubview(save)
+        if p.link != nil { stack.addArrangedSubview(pill("Open link", accent: false, #selector(tapLink))) }
+        stack.addArrangedSubview(pill("Open in Pinterest", accent: false, #selector(tapPinterest)))
+
+        let more = label("More like this", .systemFont(ofSize: 18, weight: .bold), .white)
+        stack.setCustomSpacing(22, after: stack.arrangedSubviews.last ?? more)
+        stack.addArrangedSubview(more)
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -315,13 +332,27 @@ final class PinHeader: UIView, GridHeader {
         let l = UILabel(); l.text = t; l.font = f; l.textColor = c; l.numberOfLines = 0; return l
     }
 
-    private func button(_ t: String, _ a: Selector) -> UIButton {
+    /// A plain left-aligned tappable line (the author/board).
+    private func textButton(_ t: String, _ a: Selector, size: CGFloat, color: UIColor) -> UIButton {
         let b = UIButton(type: .system)
         b.setTitle(t, for: .normal)
-        b.titleLabel?.font = .systemFont(ofSize: 16)
-        b.titleLabel?.numberOfLines = 0
+        b.titleLabel?.font = .systemFont(ofSize: size)
+        b.titleLabel?.numberOfLines = 1
         b.contentHorizontalAlignment = .leading
-        b.tintColor = Style.link
+        b.tintColor = color
+        b.addTarget(self, action: a, for: .touchUpInside)
+        return b
+    }
+
+    /// A full-width rounded action. The accent one (Save) stands out; the rest are quiet cards.
+    private func pill(_ t: String, accent: Bool, _ a: Selector) -> UIButton {
+        let b = UIButton(type: .system)
+        b.setTitle(t, for: .normal)
+        b.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        b.setTitleColor(accent ? .white : Style.text, for: .normal)
+        b.backgroundColor = accent ? Style.accent : Style.card
+        b.layer.cornerRadius = 25
+        b.heightAnchor.constraint(equalToConstant: 50).isActive = true
         b.addTarget(self, action: a, for: .touchUpInside)
         return b
     }
@@ -329,11 +360,11 @@ final class PinHeader: UIView, GridHeader {
     private var ratio: CGFloat { min(max(pin.image("736x")?.1 ?? 1, 0.4), 2.0) }
     private func picHeight(_ w: CGFloat) -> CGFloat { ceil((w - 24) * ratio) }
     private func stackHeight(_ w: CGFloat) -> CGFloat {
-        stack.systemLayoutSizeFitting(CGSize(width: w - 28, height: 0), withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel).height
+        stack.systemLayoutSizeFitting(CGSize(width: w - 32, height: 0), withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel).height
     }
 
     func height(for width: CGFloat) -> CGFloat {
-        12 + picHeight(width) + 16 + stackHeight(width) + 14
+        12 + picHeight(width) + 18 + stackHeight(width) + 18
     }
 
     override func layoutSubviews() {
@@ -341,8 +372,8 @@ final class PinHeader: UIView, GridHeader {
         let w = bounds.width
         let ph = picHeight(w)
         picture.frame = CGRect(x: 12, y: 12, width: w - 24, height: ph)
-        badge.frame = CGRect(x: w - 24 - 96, y: ph - 44, width: 84, height: 32)
-        stack.frame = CGRect(x: 14, y: 12 + ph + 16, width: w - 28, height: stackHeight(w))
+        badge.frame = CGRect(x: (picture.bounds.width - 56) / 2, y: (ph - 56) / 2, width: 56, height: 56)
+        stack.frame = CGRect(x: 16, y: 12 + ph + 18, width: w - 32, height: stackHeight(w))
         loadPicture(w)
     }
 

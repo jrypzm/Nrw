@@ -13,7 +13,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         let bar = UINavigationBarAppearance()
         bar.configureWithOpaqueBackground()
         bar.backgroundColor = .black
-        bar.shadowColor = UIColor(white: 0.17, alpha: 1)
+        bar.shadowColor = .clear
         bar.titleTextAttributes = [.foregroundColor: UIColor.white, .font: UIFont.systemFont(ofSize: 17, weight: .semibold)]
         UINavigationBar.appearance().standardAppearance = bar
         UINavigationBar.appearance().scrollEdgeAppearance = bar

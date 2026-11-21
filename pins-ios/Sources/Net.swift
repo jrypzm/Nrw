@@ -32,9 +32,13 @@ extension Dictionary where Key == String, Value == Any {
 }
 
 enum Style {
-    static let text = UIColor(white: 0.9, alpha: 1)
-    static let dim = UIColor(white: 0.55, alpha: 1)
-    static let link = UIColor(red: 0.42, green: 0.68, blue: 1, alpha: 1)
+    static let text = UIColor(white: 0.92, alpha: 1)
+    static let dim = UIColor(white: 0.52, alpha: 1)
+    static let faint = UIColor(white: 0.14, alpha: 1)
+    static let card = UIColor(white: 0.10, alpha: 1)
+    /// The one warm accent (Pinterest red), used only for primary actions.
+    static let accent = UIColor(red: 0.90, green: 0.12, blue: 0.22, alpha: 1)
+    static let link = UIColor(white: 0.92, alpha: 1)
 }
 
 /// What Safari on this iPhone calls itself.

@@ -11,7 +11,7 @@ final class Masonry: UICollectionViewLayout {
     private var frames: [CGRect] = []
     private var header: CGRect = .zero
     private var total: CGFloat = 0
-    static let gap: CGFloat = 6
+    static let gap: CGFloat = 10
 
     override func prepare() {
         guard let cv = collectionView else { return }
@@ -65,37 +65,28 @@ final class Masonry: UICollectionViewLayout {
 
 final class PinCell: UICollectionViewCell {
     let picture = UIImageView()
-    let label = UILabel()
     private var task: URLSessionDataTask?
     private var url: URL?
-    static let labelHeight: CGFloat = 20
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         picture.contentMode = .scaleAspectFill
         picture.clipsToBounds = true
-        picture.layer.cornerRadius = 10
-        label.font = .systemFont(ofSize: 12)
-        label.textColor = Style.dim
+        picture.layer.cornerRadius = 16
         contentView.addSubview(picture)
-        contentView.addSubview(label)
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        let b = contentView.bounds
-        let lh = label.text == nil ? 0 : PinCell.labelHeight
-        picture.frame = CGRect(x: 0, y: 0, width: b.width, height: b.height - lh)
-        label.frame = CGRect(x: 2, y: b.height - lh, width: b.width - 4, height: lh)
+        picture.frame = contentView.bounds
     }
 
     func show(_ p: Pin, width: CGFloat) {
         task?.cancel()
         picture.image = nil
         picture.backgroundColor = p.color
-        label.text = p.title.isEmpty ? nil : p.title
         // grid thumbnails use Pinterest's small 236-wide picture: a quarter of the memory of the
         // bigger size and much faster to fetch and decode. The full picture loads when you open a pin.
         guard let (u, _) = p.image("236x") else { return }
@@ -103,7 +94,7 @@ final class PinCell: UICollectionViewCell {
         // the 236-wide source is already small; decode it at its own size (no shrinking, no upscaling)
         task = Images.load(u, px: 1024) { [weak self] img in
             guard let s = self, s.url == u else { return }
-            s.picture.image = img
+            UIView.transition(with: s.picture, duration: 0.18, options: .transitionCrossDissolve) { s.picture.image = img }
         }
         setNeedsLayout()
     }
@@ -148,7 +139,7 @@ class GridVC: UICollectionViewController {
         layout.height = { [weak self] i, w in
             guard let p = self?.pins[i] else { return w }
             let ratio = min(max(p.image("236x")?.1 ?? 1, 0.5), 2.2)
-            return ceil(w * ratio) + (p.title.isEmpty ? 0 : PinCell.labelHeight)
+            return ceil(w * ratio)
         }
         collectionView.backgroundColor = .black
         collectionView.indicatorStyle = .white
@@ -167,6 +158,11 @@ class GridVC: UICollectionViewController {
         r.addTarget(self, action: #selector(reload), for: .valueChanged)
         collectionView.refreshControl = r
         reload()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
     }
 
     @objc func reload() {
