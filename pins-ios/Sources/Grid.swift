@@ -107,6 +107,8 @@ final class GridVC: UICollectionViewController {
     private var more = true
     private var loading = false
     private var generation = 0
+    /// Pages in a row that brought no pins; after a few, stop asking.
+    private var empty = 0
     private let note = UILabel()
     private let layout = Masonry()
 
@@ -147,6 +149,7 @@ final class GridVC: UICollectionViewController {
         bookmark = nil
         more = true
         loading = false
+        empty = 0
         load(first: true)
     }
 
@@ -162,8 +165,9 @@ final class GridVC: UICollectionViewController {
             switch r {
             case .success(let (new, bm)):
                 if first { s.pins = new } else { s.pins += new }
+                s.empty = new.isEmpty ? s.empty + 1 : 0
                 s.bookmark = bm
-                s.more = bm != nil
+                s.more = bm != nil && s.empty < 3
                 s.note.text = s.pins.isEmpty ? (s.more ? "Loading…" : "Nothing here.") : nil
                 s.collectionView.reloadData()
                 s.collectionView.layoutIfNeeded()
