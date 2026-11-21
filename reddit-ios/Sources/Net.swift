@@ -149,7 +149,15 @@ final class Web: NSObject, WKNavigationDelegate {
                 case .success(let any):
                     guard let a = any as? [Any], a.count == 2, let text = a[1] as? String else { done(.failure(.bad)); return }
                     let code = (a[0] as? NSNumber)?.intValue ?? 0
-                    done((200 ..< 300).contains(code) ? .success(Data(text.utf8)) : .failure(.http(code)))
+                    if (200 ..< 300).contains(code) { done(.success(Data(text.utf8))); return }
+                    // Reddit's "blocked by network security" page, not a private subreddit
+                    if code == 403, text.lowercased().contains("blocked") {
+                        done(.failure(.offline(Reddit.shared.isSignedIn
+                            ? "Reddit blocked this connection. Try switching between Wi-Fi and mobile data."
+                            : "Reddit blocked this connection. Sign in (on the home screen), or try switching between Wi-Fi and mobile data.")))
+                        return
+                    }
+                    done(.failure(.http(code)))
                 }
             }
         }
