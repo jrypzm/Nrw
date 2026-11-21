@@ -29,9 +29,10 @@ com.apple.pluginkit.pkreporter com.apple.hangreporter com.apple.hangtracerd com.
 DIAG="com.apple.diagnosticd com.apple.diagnosticextensionsd com.apple.diagnosticservicesd com.apple.diagnosticspushd
 com.apple.symptomsd-diag com.apple.sysdiagnose com.apple.sysdiagnose_helper com.apple.sysdiagnose.darwinos"
 UPDATE="com.apple.mobile.softwareupdated com.apple.softwareupdateservicesd com.apple.OTATaskingAgent com.apple.mobile.NRDUpdated"
-TRACKING="com.apple.UsageTrackingAgent com.apple.tipsd com.apple.followupd com.apple.atc.atwakeup com.apple.racoon
+TRACKING="com.apple.UsageTrackingAgent com.apple.followupd com.apple.atc.atwakeup com.apple.racoon
 com.apple.wapic com.apple.wifi.wapic"
-SAFE_GROUPS="CRASH DIAG UPDATE TRACKING"
+TIPS="com.apple.tipsd"
+SAFE_GROUPS="CRASH DIAG UPDATE TRACKING TIPS"
 
 # With --max. Each line says what stops working.
 SIRI="com.apple.assistantd com.apple.assistant_service com.apple.voiced"
@@ -53,7 +54,8 @@ about() {
         CRASH) echo "crash reports, analytics, logging uploads (nothing you use)" ;;
         DIAG) echo "diagnostics and sysdiagnose (nothing you use)" ;;
         UPDATE) echo "software update: no update downloads or nags, so no accidental update that loses the jailbreak" ;;
-        TRACKING) echo "usage tracking, Tips, 'finish setting up' badges, VPN (IPsec racoon), China WAPI Wi-Fi" ;;
+        TIPS) echo "Tips notifications (the Tips app itself, and a TrollStore helper installed in it, still open)" ;;
+        TRACKING) echo "usage tracking, 'finish setting up' badges, VPN (IPsec racoon), China WAPI Wi-Fi" ;;
         SIRI) echo "Siri and Dictation stop working" ;;
         SPOTLIGHT) echo "swipe-down search stops finding things" ;;
         SMART) echo "Siri Suggestions, app suggestions, People and Memories in Photos stop updating" ;;
