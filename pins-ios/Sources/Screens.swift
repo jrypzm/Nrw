@@ -220,12 +220,28 @@ final class PinVC: GridVC {
         headerView = head
         head.onPicture = { [weak self] in self?.openPicture() }
         head.onUser = { [weak self] in self?.openUser() }
-        head.onLink = { [weak self] in if let l = p.link { UIApplication.shared.open(l) } }
-        head.onPinterest = { [weak self] in if let u = p.page { UIApplication.shared.open(u) } }
-        head.onSave = { [weak self] in self?.save() }
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        let dots = UIImage(systemName: "ellipsis", withConfiguration: UIImage.SymbolConfiguration(weight: .bold))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(image: dots, style: .plain, target: self, action: #selector(menu))
+    }
+
+    /// The ⋯ menu: everything you can do with the pin, kept out of the way.
+    @objc private func menu() {
+        let a = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        a.addAction(UIAlertAction(title: "Save to Photos", style: .default) { [weak self] _ in self?.save() })
+        if let l = pin.link {
+            a.addAction(UIAlertAction(title: "Open link", style: .default) { _ in UIApplication.shared.open(l) })
+        }
+        a.addAction(UIAlertAction(title: "Open in Pinterest", style: .default) { [weak self] _ in if let u = self?.pin.page { UIApplication.shared.open(u) } })
+        a.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        a.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
+        present(a, animated: true)
+    }
 
     private func openPicture() {
         if let v = pin.video { play(v); return }
@@ -307,19 +323,12 @@ final class PinHeader: UIView, GridHeader {
         stack.alignment = .fill
         addSubview(stack)
 
-        if !p.title.isEmpty { stack.addArrangedSubview(label(p.title, .systemFont(ofSize: 22, weight: .bold), .white)) }
-        if !p.about.isEmpty, p.about != p.title { stack.addArrangedSubview(label(p.about, .systemFont(ofSize: 15), Style.text)) }
-        if !p.user.isEmpty || !p.board.isEmpty {
-            let who = p.userName.isEmpty ? p.user : p.userName
-            let meta = [who.isEmpty ? "" : (p.user.isEmpty ? who : "@\(p.user)"), p.board].filter { !$0.isEmpty }.joined(separator: "  ·  ")
-            stack.addArrangedSubview(textButton(meta, #selector(tapUser), size: 14, color: Style.dim))
+        // minimal: just the caption and who posted it. Everything else lives in the ⋯ menu up top.
+        if !p.title.isEmpty { stack.addArrangedSubview(label(p.title, .systemFont(ofSize: 20, weight: .semibold), .white)) }
+        if !p.user.isEmpty {
+            let who = p.user.isEmpty ? p.userName : "@\(p.user)"
+            stack.addArrangedSubview(textButton(who, #selector(tapUser), size: 14, color: Style.dim))
         }
-
-        let save = pill("Save to Photos", accent: true, #selector(tapSave))
-        stack.setCustomSpacing(16, after: stack.arrangedSubviews.last ?? save)
-        stack.addArrangedSubview(save)
-        if p.link != nil { stack.addArrangedSubview(pill("Open link", accent: false, #selector(tapLink))) }
-        stack.addArrangedSubview(pill("Open in Pinterest", accent: false, #selector(tapPinterest)))
 
         let more = label("More like this", .systemFont(ofSize: 18, weight: .bold), .white)
         stack.setCustomSpacing(22, after: stack.arrangedSubviews.last ?? more)
@@ -332,7 +341,7 @@ final class PinHeader: UIView, GridHeader {
         let l = UILabel(); l.text = t; l.font = f; l.textColor = c; l.numberOfLines = 0; return l
     }
 
-    /// A plain left-aligned tappable line (the author/board).
+    /// A plain left-aligned tappable line (the author).
     private func textButton(_ t: String, _ a: Selector, size: CGFloat, color: UIColor) -> UIButton {
         let b = UIButton(type: .system)
         b.setTitle(t, for: .normal)
@@ -344,7 +353,7 @@ final class PinHeader: UIView, GridHeader {
         return b
     }
 
-    /// A full-width rounded action. The accent one (Save) stands out; the rest are quiet cards.
+    /// Unused now that actions moved to the ⋯ menu, kept harmless.
     private func pill(_ t: String, accent: Bool, _ a: Selector) -> UIButton {
         let b = UIButton(type: .system)
         b.setTitle(t, for: .normal)
