@@ -162,7 +162,7 @@ final class Library {
                     n += 1
                 }
                 if u.path.hasPrefix(inbox.path) { try? fm.moveItem(at: u, to: dest) } else { try? fm.copyItem(at: u, to: dest) }
-                if first == nil, kinds.contains(dest.pathExtension.lowercased()) { first = dest.lastPathComponent }
+                if first == nil, Library.kinds.contains(dest.pathExtension.lowercased()) { first = dest.lastPathComponent }
             }
             DispatchQueue.main.async {
                 self.scan()
