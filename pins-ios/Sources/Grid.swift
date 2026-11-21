@@ -94,7 +94,7 @@ final class PinCell: UICollectionViewCell {
         // the 236-wide source is already small; decode it at its own size (no shrinking, no upscaling)
         task = Images.load(u, px: 1024) { [weak self] img in
             guard let s = self, s.url == u else { return }
-            UIView.transition(with: s.picture, duration: 0.18, options: .transitionCrossDissolve) { s.picture.image = img }
+            s.picture.image = img
         }
         setNeedsLayout()
     }

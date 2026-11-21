@@ -226,8 +226,10 @@ final class PinVC: GridVC {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let dots = UIImage(systemName: "ellipsis", withConfiguration: UIImage.SymbolConfiguration(weight: .bold))
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: dots, style: .plain, target: self, action: #selector(menu))
+        let dots = UIBarButtonItem(title: "⋯", style: .plain, target: self, action: #selector(menu))
+        dots.setTitleTextAttributes([.font: UIFont.systemFont(ofSize: 26, weight: .regular)], for: .normal)
+        dots.setTitleTextAttributes([.font: UIFont.systemFont(ofSize: 26, weight: .regular)], for: .highlighted)
+        navigationItem.rightBarButtonItem = dots
     }
 
     /// The ⋯ menu: everything you can do with the pin, kept out of the way.
