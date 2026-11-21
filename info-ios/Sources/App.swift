@@ -97,7 +97,7 @@ enum Info {
             let free = UInt64(stats.free_count) * page
             let cached = UInt64(stats.inactive_count + stats.purgeable_count) * page
             let used = total > free + cached ? total - free - cached : 0
-            rows += [("In use", size(used)), ("Free", size(free)), ("Kept for apps, freed when needed", size(cached))]
+            rows += [("In use", size(used)), ("Free", size(free)), ("Ready to free", size(cached))]
         }
         rows.append(("This app uses", size(footprint())))
         return rows
