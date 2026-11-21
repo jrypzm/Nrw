@@ -1,0 +1,502 @@
+// The screens: home, a post with its comments, the picture viewer, video, signing in, links.
+
+import AVKit
+import UIKit
+import WebKit
+
+// MARK: - home
+
+final class HomeVC: Feed, UISearchBarDelegate {
+    private let bar = UISearchBar()
+
+    init() {
+        super.init("reddit")
+        NotificationCenter.default.addObserver(self, selector: #selector(build), name: Reddit.signedIn, object: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        bar.placeholder = "Subreddit, search, or paste a link"
+        bar.searchBarStyle = .minimal
+        bar.barStyle = .black
+        bar.autocapitalizationType = .none
+        bar.autocorrectionType = .no
+        bar.delegate = self
+        bar.sizeToFit()
+        tableView.tableHeaderView = bar
+        tableView.keyboardDismissMode = .onDrag
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        build()   // stars may have changed
+    }
+
+    func searchBarSearchButtonClicked(_ b: UISearchBar) {
+        let q = (b.text ?? "").trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return }
+        b.resignFirstResponder()
+        if let vc = HomeVC.destination(q) { navigationController?.pushViewController(vc, animated: true) }
+    }
+
+    /// "r/pics" or "pics" opens it, "u/name" a person, a link its page; anything else is searched.
+    static func destination(_ q: String) -> UIViewController? {
+        let low = q.lowercased()
+        if low.contains("reddit.com") || low.contains("redd.it"), let u = URL(string: q.hasPrefix("http") ? q : "https://" + q) {
+            return Router.screen(u)
+        }
+        if low.hasPrefix("r/") || low.hasPrefix("/r/") { return Lists.sub(String(q.split(separator: "/").last ?? "")) }
+        if low.hasPrefix("u/") || low.hasPrefix("/u/") { return Lists.user(String(q.split(separator: "/").last ?? "")) }
+        return Lists.search(q)
+    }
+
+    @objc private func build() {
+        let signedIn = Reddit.shared.isSignedIn
+        var rows: [Item] = [
+            Item(title: signedIn ? "Your front page" : "Front page", detail: signedIn ? "From the subreddits you follow" : "What's popular on Reddit", open: { Lists.front() }),
+            Item(title: "Popular", open: { Lists.sub("popular") }),
+            Item(title: "All", open: { Lists.sub("all") }),
+        ]
+        if signedIn {
+            rows.append(Item(title: "Subreddits you follow", open: {
+                Lists.feed("Following") { _ in ("/subreddits/mine/subscriber", [:]) }
+            }))
+        }
+        for s in Favorites.all {
+            rows.append(Item(title: "r/" + s, detail: "★ on your home screen", open: { Lists.sub(s) }))
+        }
+        rows.append(Item(title: "Open a Reddit link", detail: "Paste a link to a post, subreddit or person.", action: { [weak self] in self?.openLink() }))
+        if signedIn {
+            rows.append(Item(title: "Sign out", action: { [weak self] in
+                let a = UIAlertController(title: "Sign out of Reddit?", message: nil, preferredStyle: .alert)
+                a.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                a.addAction(UIAlertAction(title: "Sign out", style: .destructive) { _ in Reddit.shared.signOut() })
+                self?.present(a, animated: true)
+            }))
+        } else {
+            rows.append(Item(title: "Sign in", detail: "On Reddit's own page. Needed for NSFW posts (turn on \"Show mature content\" in your Reddit settings) and for your own front page.", action: { [weak self] in
+                let nav = UINavigationController(rootViewController: LoginVC())
+                nav.modalPresentationStyle = .fullScreen
+                self?.present(nav, animated: true)
+            }))
+        }
+        show(rows)
+    }
+
+    private func openLink(_ error: String? = nil) {
+        let a = UIAlertController(title: "Open a Reddit link", message: error ?? "Paste a link to a post, subreddit or person.", preferredStyle: .alert)
+        a.addTextField { f in
+            f.placeholder = "https://www.reddit.com/r/…"
+            f.keyboardType = .URL
+            f.autocorrectionType = .no
+            f.autocapitalizationType = .none
+            f.clearButtonMode = .always
+            if UIPasteboard.general.hasStrings, let c = UIPasteboard.general.string, c.contains("reddit.com") || c.contains("redd.it") {
+                f.text = c.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        a.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        a.addAction(UIAlertAction(title: "Open", style: .default) { [weak self, weak a] _ in
+            let t = (a?.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !t.isEmpty else { return }
+            if let vc = HomeVC.destination(t) { self?.navigationController?.pushViewController(vc, animated: true) } else { self?.openLink("That isn't a Reddit link. Try again.") }
+        })
+        present(a, animated: true)
+    }
+}
+
+// MARK: - a post and its comments
+
+final class PostVC: UIViewController, UITextViewDelegate {
+    private var post: Post
+    private var comments: [JSON]?
+    private var failure: String?
+    private let tv = UITextView()
+    private let picture = UIImageView()
+    private let badge = UILabel()
+    private var media = Media.none
+
+    init(_ p: Post) {
+        post = p
+        super.init(nibName: nil, bundle: nil)
+        title = "r/" + p.sub
+        navigationItem.backButtonDisplayMode = .minimal
+    }
+
+    /// A post known only by its link.
+    convenience init(permalink: String) {
+        self.init(Post(j: ["permalink": permalink]))
+        title = "Post"
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func loadView() {
+        tv.backgroundColor = .black
+        tv.isEditable = false
+        tv.indicatorStyle = .white
+        tv.dataDetectorTypes = []
+        tv.delegate = self
+        tv.linkTextAttributes = [.foregroundColor: Style.link]
+        tv.alwaysBounceVertical = true
+        tv.layoutManager.allowsNonContiguousLayout = true
+        picture.contentMode = .scaleAspectFit
+        picture.backgroundColor = UIColor(white: 0.07, alpha: 1)
+        picture.clipsToBounds = true
+        picture.layer.cornerRadius = 8
+        picture.isUserInteractionEnabled = true
+        picture.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(openMedia)))
+        badge.font = .systemFont(ofSize: 13, weight: .semibold)
+        badge.textColor = .white
+        badge.backgroundColor = UIColor(white: 0, alpha: 0.65)
+        badge.textAlignment = .center
+        badge.layer.cornerRadius = 6
+        badge.clipsToBounds = true
+        picture.addSubview(badge)
+        tv.addSubview(picture)
+        view = tv
+        let r = UIRefreshControl()
+        r.tintColor = .gray
+        r.addTarget(self, action: #selector(load), for: .valueChanged)
+        tv.refreshControl = r
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Safari", style: .plain, target: self, action: #selector(inSafari))
+        render()
+        load()
+    }
+
+    @objc private func load() {
+        guard !post.permalink.isEmpty else { return }
+        Reddit.shared.get(post.permalink, ["limit": "120", "depth": "6"]) { [weak self] r in
+            guard let s = self else { return }
+            s.tv.refreshControl?.endRefreshing()
+            switch r {
+            case .success(let j):
+                let parts = j as? [JSON] ?? []
+                if let d = parts.first?.o("data").a("children").first?.o("data"), !d.isEmpty {
+                    s.post = Post(j: d)
+                    s.title = "r/" + s.post.sub
+                }
+                s.comments = parts.count > 1 ? parts[1].o("data").a("children") : []
+                s.failure = nil
+            case .failure(let e):
+                s.failure = e.description
+            }
+            s.render()
+        }
+    }
+
+    private var width: CGFloat { max(view.bounds.width, 320) }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        layoutPicture()
+    }
+
+    private func layoutPicture() {
+        let w = width - 20
+        let ratio: CGFloat
+        switch media {
+        case .none: ratio = 0
+        case .image(let p, _): ratio = p.ratio
+        case .gallery(let ps, _): ratio = ps.first?.ratio ?? 1
+        case .video(_, let p): ratio = p?.ratio ?? 0.5625
+        }
+        let h = ratio == 0 ? 0 : min(w * ratio, w * 1.4)
+        picture.isHidden = h == 0
+        picture.frame = CGRect(x: 10, y: 10, width: w, height: h)
+        badge.sizeToFit()
+        badge.frame = CGRect(x: w - badge.bounds.width - 26, y: h - 34, width: badge.bounds.width + 16, height: 24)
+        badge.isHidden = badge.text?.isEmpty ?? true
+        let top = h == 0 ? 14 : h + 24
+        if tv.textContainerInset.top != top { tv.textContainerInset = UIEdgeInsets(top: top, left: 10, bottom: 30, right: 10) }
+    }
+
+    private func render() {
+        let px = (width - 20) * UIScreen.main.scale
+        media = post.j.isEmpty || post.title.isEmpty ? .none : post.media(px: px)
+        var pic: Pic?
+        switch media {
+        case .none: badge.text = nil
+        case .image(let p, _): pic = p; badge.text = nil
+        case .gallery(let ps, _): pic = ps.first; badge.text = "1 of \(ps.count) · tap for all"
+        case .video(_, let p): pic = p; badge.text = "▶ play"
+        }
+        if let p = pic, picture.image == nil || picture.tag != p.url.hashValue {
+            picture.tag = p.url.hashValue
+            Images.load(p.url, px: px) { [weak self] img in
+                guard let s = self, s.picture.tag == p.url.hashValue else { return }
+                s.picture.image = img
+            }
+        }
+        layoutPicture()
+
+        let d = Doc()
+        if !post.title.isEmpty {
+            d.text(post.title, Style.bold(19), .white, Style.para(after: 6))
+            let j = post.j
+            d.text(joined(["r/" + post.sub, "u/" + post.author, count(j.i("score")) + " points", ago(j.d("created_utc"))]), .systemFont(ofSize: 13), Style.dim, Style.para(after: 2))
+            let tags = joined([post.nsfw ? "NSFW" : "", j.b("spoiler") ? "spoiler" : "", j.s("link_flair_text")])
+            if !tags.isEmpty { d.text(tags, .systemFont(ofSize: 13), Style.link, Style.para(after: 2)) }
+            d.gap(6)
+            let body = j.s("selftext")
+            if !body.isEmpty { Markdown.render(body, into: d) }
+            if !post.isSelf, case .none = media, let u = URL(string: post.link) {
+                d.add(NSAttributedString(string: post.link, attributes: [.font: Style.body, .foregroundColor: Style.link, .link: u]))
+            }
+        }
+        if let f = failure {
+            d.gap(8)
+            d.text(f, Style.body, Style.dim)
+        } else if let cs = comments {
+            d.gap(12)
+            d.text(cs.isEmpty ? "No comments yet." : "\(count(post.j.i("num_comments"))) comments", Style.bold(15), Style.dim, Style.para(after: 10))
+            for c in cs { comment(c, into: d) }
+        } else {
+            d.gap(12)
+            d.text("Loading comments…", Style.body, Style.dim)
+        }
+        tv.attributedText = d.result
+    }
+
+    private func comment(_ c: JSON, into d: Doc) {
+        guard c.s("kind") == "t1" else { return }
+        let j = c.o("data")
+        let depth = j.i("depth")
+        d.indent = CGFloat(min(depth, 6)) * 14
+        let shade = UIColor(white: max(0.32, 0.55 - CGFloat(depth) * 0.04), alpha: 1)
+        d.text(joined(["u/" + j.s("author"), count(j.i("score")) + " points", ago(j.d("created_utc"))]) + (j.b("is_submitter") ? " · OP" : ""), Style.bold(13), shade, Style.para(after: 3))
+        Markdown.render(j.s("body"), into: d)
+        d.gap(4)
+        for r in j.o("replies").o("data").a("children") { comment(r, into: d) }
+        d.indent = 0
+    }
+
+    @objc private func openMedia() {
+        switch media {
+        case .none: break
+        case .image(_, let full): present(ViewerVC([full]), animated: true)
+        case .gallery(_, let full): present(ViewerVC(full), animated: true)
+        case .video(let u, _): play(u, from: self)
+        }
+    }
+
+    @objc private func inSafari() {
+        if let u = URL(string: "https://old.reddit.com" + post.permalink) { UIApplication.shared.open(u) }
+    }
+
+    func textView(_ textView: UITextView, shouldInteractWith url: URL, in range: NSRange, interaction: UITextItemInteraction) -> Bool {
+        if interaction == .invokeDefaultAction { Router.open(url, from: self) }
+        return false
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        if view.window == nil { picture.image = nil }
+    }
+}
+
+/// Videos play in the system player, which is loaded only when you tap play.
+func play(_ u: URL, from vc: UIViewController) {
+    try? AVAudioSession.sharedInstance().setCategory(.playback)
+    let p = AVPlayerViewController()
+    p.player = AVPlayer(url: u)
+    vc.present(p, animated: true) { p.player?.play() }
+}
+
+// MARK: - pictures, full screen
+
+/// Swipe between pictures, pinch to zoom. Only the picture on screen and its neighbours are kept.
+final class ViewerVC: UIViewController, UIScrollViewDelegate {
+    private let urls: [URL]
+    private let pager = UIScrollView()
+    private var pages: [ZoomPage] = []
+    private let counter = UILabel()
+    private var current = -1
+
+    init(_ urls: [URL]) {
+        self.urls = urls
+        super.init(nibName: nil, bundle: nil)
+        modalPresentationStyle = .fullScreen
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override var prefersStatusBarHidden: Bool { true }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        pager.isPagingEnabled = true
+        pager.showsHorizontalScrollIndicator = false
+        pager.delegate = self
+        pager.contentInsetAdjustmentBehavior = .never
+        view.addSubview(pager)
+        for _ in urls {
+            let p = ZoomPage()
+            pages.append(p)
+            pager.addSubview(p)
+        }
+        let close = UIButton(type: .system)
+        close.setTitle("Close", for: .normal)
+        close.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        close.tintColor = .white
+        close.frame = CGRect(x: 16, y: 20, width: 70, height: 40)
+        close.addTarget(self, action: #selector(done), for: .touchUpInside)
+        view.addSubview(close)
+        counter.textColor = UIColor(white: 0.7, alpha: 1)
+        counter.font = .systemFont(ofSize: 15)
+        counter.textAlignment = .right
+        view.addSubview(counter)
+        let down = UISwipeGestureRecognizer(target: self, action: #selector(done))
+        down.direction = .down
+        view.addGestureRecognizer(down)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let b = view.bounds
+        pager.frame = b
+        pager.contentSize = CGSize(width: b.width * CGFloat(urls.count), height: b.height)
+        for (i, p) in pages.enumerated() { p.frame = CGRect(x: b.width * CGFloat(i), y: 0, width: b.width, height: b.height) }
+        counter.frame = CGRect(x: b.width - 116, y: 20, width: 100, height: 40)
+        show(Int(round(pager.contentOffset.x / max(b.width, 1))))
+    }
+
+    func scrollViewDidEndDecelerating(_ s: UIScrollView) {
+        show(Int(round(s.contentOffset.x / max(s.bounds.width, 1))))
+    }
+
+    private func show(_ i: Int) {
+        let i = max(0, min(i, urls.count - 1))
+        guard i != current else { return }
+        current = i
+        counter.text = urls.count > 1 ? "\(i + 1) of \(urls.count)" : ""
+        let px = max(view.bounds.width, view.bounds.height) * UIScreen.main.scale
+        for (k, p) in pages.enumerated() {
+            if abs(k - i) <= 1 { p.show(urls[k], px: px) } else { p.clear() }
+        }
+    }
+
+    @objc private func done() { dismiss(animated: true) }
+}
+
+final class ZoomPage: UIScrollView, UIScrollViewDelegate {
+    private let iv = UIImageView()
+    private var url: URL?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        delegate = self
+        minimumZoomScale = 1
+        maximumZoomScale = 4
+        showsVerticalScrollIndicator = false
+        showsHorizontalScrollIndicator = false
+        iv.contentMode = .scaleAspectFit
+        addSubview(iv)
+        let dbl = UITapGestureRecognizer(target: self, action: #selector(toggleZoom))
+        dbl.numberOfTapsRequired = 2
+        addGestureRecognizer(dbl)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if zoomScale == 1 { iv.frame = bounds }
+    }
+
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? { iv }
+
+    @objc private func toggleZoom() { setZoomScale(zoomScale > 1 ? 1 : 2.5, animated: true) }
+
+    func show(_ u: URL, px: CGFloat) {
+        guard url != u else { return }
+        url = u
+        Images.load(u, px: px) { [weak self] img in
+            guard let s = self, s.url == u else { return }
+            s.iv.image = img
+        }
+    }
+
+    func clear() {
+        url = nil
+        iv.image = nil
+        zoomScale = 1
+    }
+}
+
+// MARK: - signing in
+
+/// Reddit's own sign-in page. Your password goes only to reddit.com; the app keeps no copy.
+final class LoginVC: UIViewController {
+    private var web: WKWebView!
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "Sign in to Reddit"
+        view.backgroundColor = .black
+        let c = WKWebViewConfiguration()
+        c.websiteDataStore = .default()
+        c.applicationNameForUserAgent = safariSuffix
+        web = WKWebView(frame: view.bounds, configuration: c)
+        web.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(web)
+        web.load(URLRequest(url: URL(string: "https://old.reddit.com/login")!))
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancel))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(done))
+    }
+
+    @objc private func cancel() { dismiss(animated: true) }
+
+    @objc private func done() {
+        WKWebsiteDataStore.default().httpCookieStore.getAllCookies { [weak self] cookies in
+            let yes = cookies.contains { $0.domain.hasSuffix("reddit.com") && ($0.name == "reddit_session" || $0.name == "token_v2") }
+            Reddit.shared.signedIn(yes)
+            if yes {
+                self?.web = nil
+                self?.dismiss(animated: true)
+            } else {
+                let a = UIAlertController(title: "Not signed in yet", message: "Sign in on the page first, then tap Done.", preferredStyle: .alert)
+                a.addAction(UIAlertAction(title: "OK", style: .default))
+                self?.present(a, animated: true)
+            }
+        }
+    }
+}
+
+// MARK: - links
+
+enum Router {
+    /// The screen for a Reddit link, or nil if it isn't one this app shows.
+    static func screen(_ url: URL) -> UIViewController? {
+        let host = (url.host ?? "www.reddit.com").lowercased()
+        let parts = url.path.split(separator: "/").map(String.init)
+        if host == "redd.it", parts.count == 1 { return PostVC(permalink: "/comments/" + parts[0]) }
+        if host == "i.redd.it" || host == "preview.redd.it" { return nil }
+        guard host.hasSuffix("reddit.com") else { return nil }
+        if parts.count >= 4, parts[0] == "r", parts[2] == "comments" { return PostVC(permalink: "/r/\(parts[1])/comments/\(parts[3])") }
+        if parts.count >= 2, parts[0] == "comments" { return PostVC(permalink: "/comments/" + parts[1]) }
+        if parts.count >= 2, parts[0] == "r", parts.count == 2 || ["hot", "new", "top", "rising"].contains(parts[2]) { return Lists.sub(parts[1]) }
+        if parts.count >= 2, parts[0] == "u" || parts[0] == "user" { return Lists.user(parts[1]) }
+        return nil
+    }
+
+    static func open(_ url: URL, from vc: UIViewController) {
+        var u = url
+        if u.host == nil, let r = URL(string: "https://www.reddit.com" + (u.path.hasPrefix("/") ? u.path : "/" + u.path)) { u = r }
+        let host = (u.host ?? "").lowercased()
+        if host == "i.redd.it" || (host == "i.imgur.com" && ["jpg", "jpeg", "png"].contains(u.pathExtension.lowercased())) {
+            vc.present(ViewerVC([u]), animated: true)
+            return
+        }
+        if host == "v.redd.it" { UIApplication.shared.open(u); return }
+        if let next = screen(u) { vc.navigationController?.pushViewController(next, animated: true); return }
+        UIApplication.shared.open(u)
+    }
+}

@@ -1,8 +1,6 @@
-// yrs. reddit: opens Reddit in the iPhone's own Safari engine, so it shares your real Safari's
-// login and "real browser" clearance — the only way that gets past Reddit's block on other apps.
-// A clean app icon that goes straight to old.reddit.com (light, fast, your account, your settings).
+// yrs. reddit: a read-only Reddit for iPhone. Native UIKit, no libraries, no ads, no tracking.
+// Text first; pictures are fetched at the size they're shown and let go of when you move on.
 
-import SafariServices
 import UIKit
 
 @main
@@ -10,52 +8,58 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        let bar = UINavigationBarAppearance()
+        bar.configureWithOpaqueBackground()
+        bar.backgroundColor = .black
+        bar.shadowColor = UIColor(white: 0.17, alpha: 1)
+        bar.titleTextAttributes = [.foregroundColor: UIColor.white, .font: UIFont.systemFont(ofSize: 17, weight: .semibold)]
+        UINavigationBar.appearance().standardAppearance = bar
+        UINavigationBar.appearance().scrollEdgeAppearance = bar
+
+        let nav = UINavigationController(rootViewController: HomeVC())
         let w = UIWindow(frame: UIScreen.main.bounds)
         w.backgroundColor = .black
         w.overrideUserInterfaceStyle = .dark
-        w.rootViewController = RedditHost()
+        w.tintColor = .white
+        w.rootViewController = nav
         w.makeKeyAndVisible()
         window = w
+        demo(nav)
         return true
     }
-}
 
-/// Keeps Reddit on screen in a real-Safari view, and reopens it if you close it.
-final class RedditHost: UIViewController, SFSafariViewControllerDelegate {
-    private var showing = false
-    // old.reddit.com works on iOS 15 and is lighter; change the start page here if you like.
-    private let start = URL(string: "https://old.reddit.com/")!
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .black
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        if presentedViewController == nil { open() }
-    }
-
-    private func open() {
-        let cfg = SFSafariViewController.Configuration()
-        cfg.barCollapsingEnabled = true
-        cfg.entersReaderIfAvailable = false
-        let s = SFSafariViewController(url: start, configuration: cfg)
-        s.delegate = self
-        s.modalPresentationStyle = .fullScreen
-        s.preferredBarTintColor = .black
-        s.preferredControlTintColor = .white
-        s.dismissButtonStyle = .close
-        showing = true
-        present(s, animated: false)
-    }
-
-    // "Close/Done" returns here; bring Reddit back so the app always lands on Reddit.
-    func safariViewControllerDidFinish(_ controller: SFSafariViewController) {
-        showing = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-            guard let s = self, !s.showing, s.view.window != nil else { return }
-            s.open()
+    /// Only for the screenshots taken with each build: `-demo sub:pics` and the like.
+    private func demo(_ nav: UINavigationController) {
+        guard let d = UserDefaults.standard.string(forKey: "demo"), let colon = d.firstIndex(of: ":") else { return }
+        let kind = d[..<colon], arg = String(d[d.index(after: colon)...])
+        switch kind {
+        case "sub": nav.pushViewController(Lists.sub(arg), animated: false)
+        case "search": nav.pushViewController(Lists.search(arg), animated: false)
+        case "first":
+            // the first post with a picture in a subreddit
+            Reddit.shared.get("/r/\(arg)/hot", ["limit": "15"]) { r in
+                guard case .success(let j) = r else {
+                    nav.pushViewController(Lists.sub(arg), animated: false)
+                    return
+                }
+                let posts = ((j as? JSON)?.o("data").a("children") ?? []).map { Post(j: $0.o("data")) }
+                let pick = posts.first { p in
+                    if case .image = p.media(px: 640) { return !p.j.b("stickied") }
+                    return false
+                } ?? posts.first { !$0.j.b("stickied") }
+                if let p = pick { nav.pushViewController(PostVC(p), animated: false) }
+            }
+        default: break
         }
+    }
+
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        // pictures are let go of; memory goes back to iOS
+        Images.forget()
+        malloc_zone_pressure_relief(nil, 0)
+    }
+
+    func applicationDidReceiveMemoryWarning(_ application: UIApplication) {
+        Images.forget()
     }
 }
