@@ -226,10 +226,15 @@ final class PinVC: GridVC {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let dots = UIBarButtonItem(title: "⋯", style: .plain, target: self, action: #selector(menu))
-        dots.setTitleTextAttributes([.font: UIFont.systemFont(ofSize: 26, weight: .regular)], for: .normal)
-        dots.setTitleTextAttributes([.font: UIFont.systemFont(ofSize: 26, weight: .regular)], for: .highlighted)
-        navigationItem.rightBarButtonItem = dots
+        // a plain custom button, so no system background sits behind the dots
+        let b = UIButton(type: .system)
+        b.setTitle("⋯", for: .normal)
+        b.titleLabel?.font = .systemFont(ofSize: 28, weight: .regular)
+        b.tintColor = .white
+        b.backgroundColor = .clear
+        b.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+        b.addTarget(self, action: #selector(menu), for: .touchUpInside)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: b)
     }
 
     /// The ⋯ menu: everything you can do with the pin, kept out of the way.
