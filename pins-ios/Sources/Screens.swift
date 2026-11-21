@@ -1,73 +1,46 @@
-// The screens: home (search, topics, your recent searches), one pin, and pictures full screen.
+// The screens: home (a search bar), one pin, and pictures full screen.
 
 import AVKit
 import UIKit
 
 // MARK: - home
 
-final class HomeVC: Feed, UISearchBarDelegate {
+/// Just a search bar.
+final class HomeVC: UIViewController, UISearchBarDelegate {
     private let bar = UISearchBar()
-    static let topics = ["Wallpapers", "Outfits", "Recipes", "Home decor", "Tattoos", "Art", "Nature", "Cars", "Hairstyles", "Quotes", "Architecture", "Drawing ideas"]
-
-    init() { super.init("pins") }
-    required init?(coder: NSCoder) { fatalError() }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = "pins"
+        navigationItem.backButtonDisplayMode = .minimal
+        view.backgroundColor = .black
         bar.placeholder = "Search Pinterest"
         bar.searchBarStyle = .minimal
         bar.barStyle = .black
         bar.autocorrectionType = .no
         bar.delegate = self
-        bar.sizeToFit()
-        tableView.tableHeaderView = bar
-        tableView.keyboardDismissMode = .onDrag
+        view.addSubview(bar)
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard)))
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        build()
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let top = view.safeAreaInsets.top
+        bar.frame = CGRect(x: 8, y: top + 8, width: view.bounds.width - 16, height: 56)
     }
+
+    @objc private func dismissKeyboard() { bar.resignFirstResponder() }
 
     func searchBarSearchButtonClicked(_ b: UISearchBar) {
         let q = (b.text ?? "").trimmingCharacters(in: .whitespaces)
         guard !q.isEmpty else { return }
         b.resignFirstResponder()
-        open(q)
-    }
-
-    private func open(_ q: String) {
-        Recent.add(q)
         navigationController?.pushViewController(HomeVC.search(q), animated: true)
     }
 
     static func search(_ q: String) -> GridVC {
         GridVC(q) { bm, done in Pinterest.search(q, bookmark: bm, done: done) }
     }
-
-    private func build() {
-        var rows: [Item] = []
-        for q in Recent.all {
-            rows.append(Item(title: q, detail: "searched before", action: { [weak self] in self?.open(q) }))
-        }
-        if !Recent.all.isEmpty {
-            rows.append(Item(title: "Clear searches", action: { [weak self] in Recent.clear(); self?.build() }, dim: true))
-        }
-        for t in HomeVC.topics {
-            rows.append(Item(title: t, action: { [weak self] in self?.open(t) }))
-        }
-        show(rows)
-    }
-}
-
-enum Recent {
-    static var all: [String] { UserDefaults.standard.stringArray(forKey: "recent") ?? [] }
-    static func add(_ q: String) {
-        var a = all.filter { $0.lowercased() != q.lowercased() }
-        a.insert(q, at: 0)
-        UserDefaults.standard.set(Array(a.prefix(8)), forKey: "recent")
-    }
-    static func clear() { UserDefaults.standard.removeObject(forKey: "recent") }
 }
 
 // MARK: - one pin
