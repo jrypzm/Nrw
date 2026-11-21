@@ -443,9 +443,9 @@ final class LoginVC: UIViewController {
         view.backgroundColor = .black
         let c = WKWebViewConfiguration()
         c.websiteDataStore = .default()
+        c.applicationNameForUserAgent = safariSuffix
         web = WKWebView(frame: view.bounds, configuration: c)
         web.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        web.customUserAgent = safariUA
         view.addSubview(web)
         web.load(URLRequest(url: URL(string: "https://old.reddit.com/login")!))
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancel))

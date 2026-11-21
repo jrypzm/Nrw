@@ -36,6 +36,15 @@ extension Dictionary where Key == String, Value == Any {
     func a(_ k: String) -> [JSON] { self[k] as? [JSON] ?? [] }
 }
 
+/// The end of Safari's own name for itself on this iPhone (iOS 15.6 and later all say Safari 15.6).
+/// Given to the hidden Safari view, which builds the rest exactly as Safari does.
+let safariSuffix: String = {
+    let parts = UIDevice.current.systemVersion.split(separator: ".").compactMap { Int($0) }
+    let major = parts.first ?? 15, minor = parts.count > 1 ? parts[1] : 0
+    let version = major == 15 ? "15.\(min(minor, 6))" : "\(major).\(minor)"
+    return "Version/\(version) Mobile/15E148 Safari/604.1"
+}()
+
 /// What Safari on this iPhone calls itself.
 let safariUA: String = {
     let v = UIDevice.current.systemVersion
@@ -87,7 +96,8 @@ final class Reddit {
                 return .success(j)
             })
         }
-        if viaSafari || isSignedIn { Web.shared.fetch(u, finish); return }
+        // always through the hidden Safari: Reddit refuses anything that isn't a real browser page
+        if true { Web.shared.fetch(u, finish); return }
         var req = URLRequest(url: u)
         req.setValue(safariUA, forHTTPHeaderField: "User-Agent")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -175,8 +185,8 @@ final class Web: NSObject, WKNavigationDelegate {
     private func make() -> WKWebView {
         let c = WKWebViewConfiguration()
         c.websiteDataStore = .default()
+        c.applicationNameForUserAgent = safariSuffix
         let v = WKWebView(frame: UIScreen.main.bounds, configuration: c)
-        v.customUserAgent = safariUA
         v.navigationDelegate = self
         v.isUserInteractionEnabled = false
         // on screen, behind the app, so the page runs as it would in Safari
