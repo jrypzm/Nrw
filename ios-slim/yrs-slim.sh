@@ -1,20 +1,18 @@
-#!/bin/sh
+#!/var/jb/bin/bash
 # yrs. slim: a debloat for jailbroken iPhones on iOS 15 (made for the iPhone 6s, iOS 15.7.6).
-# Works on Dopamine and palera1n, rootless or rootful. Needs root (sudo) and launchctl (Procursus).
+# Works on Dopamine and palera1n, rootless or rootful. Needs root and launchctl (Procursus).
+# Run it with bash (not fish):   bash yrs-slim.sh
 #
-# It stops Apple's background services you don't need: crash reporting, analytics, diagnostics,
-# software update, usage tracking, tips, and with --max more (Siri, Spotlight, photo analysis, ...).
-# Less RAM in use, fewer wake-ups, more battery.
+# By default it turns off every Apple background service in the groups below and keeps them off
+# after reboots, until you undo it. AssistiveTouch, calls, Wi-Fi, the App Store, Find My and the
+# rest of what the phone needs are never touched. Nothing is deleted.
 #
-# Nothing is deleted: iOS 15's system is sealed, and deleting would be the way to a bootloop.
-# By default every change lasts until the next reboot, so a reboot always gives you stock iOS back.
-#
-#   sudo sh yrs-slim.sh              stop the safe set, until the next reboot
-#   sudo sh yrs-slim.sh --max        also Siri, Spotlight search, photo/Siri analysis, Health, Wallet, ...
-#   sudo sh yrs-slim.sh --max --keep siri,wallet   --max, but leave those groups alone
-#   sudo sh yrs-slim.sh --persist    also keep them off after reboots (writes launchd's disabled list)
-#   sudo sh yrs-slim.sh --undo       turn everything back on (then reboot)
-#   sudo sh yrs-slim.sh --list       show what each group stops, change nothing
+#   bash yrs-slim.sh                    everything off, for good (until --undo)
+#   bash yrs-slim.sh --keep tips,siri   everything off except those groups
+#   bash yrs-slim.sh --safe             only the groups you'd never notice
+#   bash yrs-slim.sh --temp             only until the next reboot
+#   bash yrs-slim.sh --undo             turn everything back on (then reboot)
+#   bash yrs-slim.sh --list             show what each group stops, change nothing
 set -u
 
 # ---------- the groups ----------
@@ -34,7 +32,7 @@ com.apple.wapic com.apple.wifi.wapic"
 TIPS="com.apple.tipsd"
 SAFE_GROUPS="CRASH DIAG UPDATE TRACKING TIPS"
 
-# With --max. Each line says what stops working.
+# Also off unless you pass --safe. Each line says what stops working.
 SIRI="com.apple.assistantd com.apple.assistant_service com.apple.voiced"
 SPOTLIGHT="com.apple.searchd com.apple.corespotlightservice com.apple.spotlight.IndexAgent com.apple.spotlightknowledged com.apple.spotlightknowledged.updater"
 SMART="com.apple.suggestd com.apple.parsecd com.apple.knowledge-agent com.apple.duetexpertd com.apple.photoanalysisd com.apple.mediaanalysisd"
@@ -78,28 +76,30 @@ com.apple.mobileactivationd com.apple.assistivetouchd com.apple.imagent com.appl
 
 # ---------- options ----------
 
-MODE=stop; MAX=0; PERSIST=0; KEEP=""
+MODE=stop; MAX=1; PERSIST=1; KEEP=""
 while [ $# -gt 0 ]; do
     case $1 in
         --max) MAX=1 ;;
         --persist) PERSIST=1 ;;
+        --safe) MAX=0 ;;
+        --temp) PERSIST=0 ;;
         --undo) MODE=undo ;;
         --list) MODE=list ;;
         --keep) shift; KEEP=$(echo "${1:-}" | tr 'a-z,' 'A-Z ') ;;
         --keep=*) KEEP=$(echo "${1#--keep=}" | tr 'a-z,' 'A-Z ') ;;
-        -h|--help) sed -n '2,20p' "$0" 2>/dev/null || echo "see the top of the script"; exit 0 ;;
+        -h|--help) sed -n '2,17p' "$0" 2>/dev/null || echo "see the top of the script"; exit 0 ;;
         *) echo "unknown option: $1 (try --help)"; exit 1 ;;
     esac
     shift
 done
 
-GROUPS="$SAFE_GROUPS"
-if [ $MAX = 1 ] || [ $MODE != stop ]; then GROUPS="$SAFE_GROUPS $MAX_GROUPS"; fi
+SETS="$SAFE_GROUPS"
+if [ $MAX = 1 ] || [ $MODE != stop ]; then SETS="$SAFE_GROUPS $MAX_GROUPS"; fi
 NEVER=" $(echo $NEVER) "
 
 if [ $MODE = list ]; then
-    for g in $GROUPS; do
-        case " $SAFE_GROUPS " in *" $g "*) w="always" ;; *) w="--max " ;; esac
+    for g in $SETS; do
+        case " $SAFE_GROUPS " in *" $g "*) w="always" ;; *) w="most  " ;; esac
         echo "[$w] $(echo $g | tr 'A-Z' 'a-z'): $(about $g)"
         eval "echo \"\$$g\"" | tr ' ' '\n' | sed '/^$/d; s/^/          /'
     done
@@ -108,7 +108,7 @@ fi
 
 # ---------- checks ----------
 
-[ "$(id -u)" = 0 ] || { echo "Run it as root: sudo sh yrs-slim.sh   (the default sudo password on a fresh jailbreak is often 'alpine' unless you set one)"; exit 1; }
+[ "$(id -u)" = 0 ] || { echo "Run it as root: sudo bash yrs-slim.sh   (the default sudo password on a fresh jailbreak is often 'alpine' unless you set one)"; exit 1; }
 PATH="/var/jb/usr/bin:/var/jb/bin:/var/jb/usr/sbin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"; export PATH
 command -v launchctl >/dev/null 2>&1 || { echo "launchctl not found. Install it from Sileo/Zebra (package: launchctl, from Procursus)."; exit 1; }
 V=$(sw_vers -productVersion 2>/dev/null || sysctl -n kern.osproductversion 2>/dev/null || echo "?")
@@ -130,7 +130,7 @@ free_mb() {
 
 stopped=0; freed=0; absent=0
 before=$(free_mb)
-for g in $GROUPS; do
+for g in $SETS; do
     case " $KEEP " in *" $g "*) echo "keeping $(echo $g | tr 'A-Z' 'a-z')"; continue ;; esac
     [ $MODE = stop ] && echo "• $(echo $g | tr 'A-Z' 'a-z'): $(about $g)"
     for l in $(eval "echo \$$g"); do
@@ -169,7 +169,7 @@ echo "Stopped $stopped services ($absent were already off or not on this iOS)."
 [ $freed -gt 0 ] && echo "Memory they were using: about $((freed / 1024)) MB."
 [ -n "$before" ] && [ -n "$after" ] && echo "Free memory: $before MB before, $after MB now."
 if [ $PERSIST = 1 ]; then
-    echo "They stay off after reboots too. To bring them back: sudo sh yrs-slim.sh --undo, then reboot."
+    echo "They stay off after reboots too. To bring them back: bash yrs-slim.sh --undo, then reboot."
 else
-    echo "Until the next reboot. Run it again after you re-jailbreak (add --persist to make it stick)."
+    echo "Until the next reboot. Run it again after you re-jailbreak (leave out --temp to make it stick)."
 fi

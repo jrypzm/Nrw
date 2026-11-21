@@ -25,4 +25,4 @@ jobs:
         run: |
           gh release view ios-slim >/dev/null 2>&1 || gh release create ios-slim --latest=false --title "yrs. slim: iOS 15 debloat" --notes "yrs. slim"
           gh release upload ios-slim ios-slim/yrs-slim.sh --clobber
-          gh release edit ios-slim --notes "Debloat for jailbroken iPhones on iOS 15 (made for the iPhone 6s). Built from ${{ github.sha }}. On the phone: curl -fsSL https://github.com/${{ github.repository }}/releases/download/ios-slim/yrs-slim.sh -o yrs-slim.sh && sudo sh yrs-slim.sh"
+          gh release edit ios-slim --notes "Debloat for jailbroken iPhones on iOS 15 (made for the iPhone 6s). Built from ${{ github.sha }}. On the phone: curl -fsSL https://github.com/${{ github.repository }}/releases/download/ios-slim/yrs-slim.sh -o yrs-slim.sh && bash yrs-slim.sh"
