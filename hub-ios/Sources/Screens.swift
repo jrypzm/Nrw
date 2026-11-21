@@ -250,7 +250,7 @@ final class HomeVC: Feed, UISearchBarDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        bar.placeholder = "Search, or owner/repo"
+        bar.placeholder = "Search, owner/repo, or paste a link"
         bar.searchBarStyle = .minimal
         bar.barStyle = .black
         bar.autocapitalizationType = .none
@@ -266,7 +266,35 @@ final class HomeVC: Feed, UISearchBarDelegate {
         let q = (b.text ?? "").trimmingCharacters(in: .whitespaces)
         guard !q.isEmpty else { return }
         b.resignFirstResponder()
+        if let u = Router.github(q) { Router.open(u, from: self, pasted: true); return }
         navigationController?.pushViewController(HomeVC.search(q), animated: true)
+    }
+
+    /// Paste any GitHub link (a repository, an issue, a pull request, a file, a person) and go there.
+    private func openLink(_ error: String? = nil) {
+        let a = UIAlertController(title: "Open a GitHub link", message: error ?? "Paste a link to a repository, issue, pull request, file or person.", preferredStyle: .alert)
+        a.addTextField { f in
+            f.placeholder = "https://github.com/owner/repo"
+            f.keyboardType = .URL
+            f.autocorrectionType = .no
+            f.autocapitalizationType = .none
+            f.clearButtonMode = .always
+            // a GitHub link already copied is filled in
+            if UIPasteboard.general.hasStrings, let c = UIPasteboard.general.string, Router.github(c) != nil { f.text = c.trimmingCharacters(in: .whitespacesAndNewlines) }
+        }
+        a.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        a.addAction(UIAlertAction(title: "Open", style: .default) { [weak self, weak a] _ in
+            guard let s = self else { return }
+            let t = (a?.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if let u = Router.github(t) {
+                Router.open(u, from: s, pasted: true)
+            } else if t.split(separator: "/").count == 2, !t.contains(" ") {
+                s.navigationController?.pushViewController(RepoVC(t), animated: true)
+            } else if !t.isEmpty {
+                s.openLink("That isn't a GitHub link. Try again.")
+            }
+        })
+        present(a, animated: true)
     }
 
     /// "owner/repo" opens it; anything else is searched.
@@ -285,8 +313,10 @@ final class HomeVC: Feed, UISearchBarDelegate {
 
     @objc private func build() {
         let api = API.shared
+        let link = Item(title: "Open a GitHub link", detail: "Paste a link to go straight to a repository, issue, pull request, file or person.", action: { [weak self] in self?.openLink() })
         guard api.isSignedIn else {
             show([
+                link,
                 Item(title: "Sign in with a token", detail: "Optional. Adds your notifications, repositories, stars and pull requests, and a higher hourly limit. Kept in the iPhone's Keychain.", action: { [weak self] in self?.signIn() }),
                 Item(title: "Signed out, you can still search and read all of public GitHub.", dim: true),
             ])
@@ -296,6 +326,7 @@ final class HomeVC: Feed, UISearchBarDelegate {
             Item(title: title, open: { listVC(title, "search/issues", ["q": q, "sort": "updated"], key: "items") { Make.issue($0) } })
         }
         show([
+            link,
             Item(title: "Notifications", open: { listVC("Notifications", "notifications", parse: Make.notification) }),
             Item(title: "Your repositories", open: { listVC("Repositories", "user/repos", ["sort": "pushed"], parse: Make.repo) }),
             Item(title: "Starred", open: { listVC("Starred", "user/starred", parse: Make.repo) }),

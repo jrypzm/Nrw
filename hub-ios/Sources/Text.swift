@@ -328,7 +328,18 @@ final class TextVC: UIViewController, UITextViewDelegate {
 
 enum Router {
     /// GitHub links open as screens here; anything else goes to Safari.
-    static func open(_ url: URL, from vc: UIViewController, repo: String? = nil, ref: String = "", dir: String = "") {
+    /// A pasted GitHub link, with or without https://, as a URL; nil if it isn't one.
+    static func github(_ text: String) -> URL? {
+        var t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let low = t.lowercased()
+        if low.hasPrefix("github.com/") || low.hasPrefix("www.github.com/") { t = "https://" + t }
+        if low.hasPrefix("http://") { t = "https://" + t.dropFirst(7) }
+        guard let u = URL(string: t), let h = u.host?.lowercased(), h == "github.com" || h == "www.github.com" else { return nil }
+        return u
+    }
+
+    /// `pasted`: a link the person typed in; a GitHub page this app has no screen for opens its repository.
+    static func open(_ url: URL, from vc: UIViewController, repo: String? = nil, ref: String = "", dir: String = "", pasted: Bool = false) {
         let nav = vc.navigationController
         if url.scheme == nil || url.host == nil {
             // a link inside the repository, like docs/setup.md
@@ -347,7 +358,9 @@ enum Router {
             UIApplication.shared.open(url)
             return
         }
-        let parts = url.path.split(separator: "/").map(String.init)
+        var parts = url.path.split(separator: "/").map(String.init)
+        if parts.count >= 2, parts[1].lowercased().hasSuffix(".git") { parts[1] = String(parts[1].dropLast(4)) }
+        if parts.isEmpty { return }
         var next: UIViewController?
         switch parts.count {
         case 1: next = UserVC(parts[0])
@@ -363,6 +376,7 @@ enum Router {
                 if parts.count >= 4 { next = Screens.path(full, parts.dropFirst(4).joined(separator: "/"), ref: parts[3], folder: parts[2] == "tree") }
             default: break
             }
+            if next == nil, pasted { next = RepoVC(full) }
         }
         if let n = next { nav?.pushViewController(n, animated: true) } else { UIApplication.shared.open(url) }
     }
