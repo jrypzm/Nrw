@@ -139,6 +139,11 @@ final class Web: NSObject, WKNavigationDelegate {
     private var status = 0
     private var cookieSet = false
     private var idle: Timer?
+    private var url: URL?
+    private var tries = 0
+    /// The old.reddit.com front page is opened first, so a browser check runs on a normal page.
+    private var warming = false
+    private static let home = URL(string: "https://old.reddit.com/")!
 
     func fetch(_ u: URL, _ done: @escaping (Result<Data, APIError>) -> Void) {
         idle?.invalidate()
@@ -148,10 +153,14 @@ final class Web: NSObject, WKNavigationDelegate {
 
     private func next() {
         guard current == nil, !queue.isEmpty else { return }
-        let (u, done) = queue.removeFirst()
+        let fresh = view == nil
+        let v = view ?? make()
+        let (u, done): (URL, (Result<Data, APIError>) -> Void) = fresh ? (Web.home, { (_: Result<Data, APIError>) in }) : queue.removeFirst()
+        warming = fresh
         current = done
         status = 0
-        let v = view ?? make()
+        tries = 0
+        url = u
         let go = { v.load(URLRequest(url: u, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 25)) }
         guard !cookieSet else { go(); return }
         cookieSet = true
@@ -166,9 +175,14 @@ final class Web: NSObject, WKNavigationDelegate {
     private func make() -> WKWebView {
         let c = WKWebViewConfiguration()
         c.websiteDataStore = .default()
-        let v = WKWebView(frame: CGRect(x: 0, y: 0, width: 320, height: 480), configuration: c)
+        let v = WKWebView(frame: UIScreen.main.bounds, configuration: c)
         v.customUserAgent = safariUA
         v.navigationDelegate = self
+        v.isUserInteractionEnabled = false
+        // on screen, behind the app, so the page runs as it would in Safari
+        if let w = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) ?? UIApplication.shared.windows.first {
+            w.insertSubview(v, at: 0)
+        }
         view = v
         return v
     }
@@ -179,18 +193,43 @@ final class Web: NSObject, WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        if warming {
+            // let any check on the page finish, then go on
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+                self?.warming = false
+                self?.finish(.success(Data()))
+            }
+            return
+        }
+        read(webView)
+    }
+
+    private func read(_ webView: WKWebView) {
+        let asked = url
         webView.evaluateJavaScript("document.body ? document.body.innerText : ''") { [weak self] any, _ in
-            guard let s = self else { return }
+            guard let s = self, s.url != nil, s.url == asked else { return }
             let text = any as? String ?? ""
             let first = text.first { !$0.isWhitespace }
-            if (200 ..< 300).contains(s.status) || s.status == 0, first == "{" || first == "[" {
+            if first == "{" || first == "[" {
                 s.finish(.success(Data(text.utf8)))
-            } else if text.lowercased().contains("blocked") {
-                s.finish(.failure(.offline(Reddit.shared.isSignedIn
-                    ? "Reddit blocked this connection. Try switching between Wi-Fi and mobile data."
-                    : "Reddit blocked this connection. Sign in (on the home screen), or try switching between Wi-Fi and mobile data.")))
+                return
+            }
+            if s.status == 404 { s.finish(.failure(.http(404))); return }
+            // perhaps a browser check that reloads the page: wait, then open it again
+            if s.tries < 2, let u = s.url {
+                s.tries += 1
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    guard s.url == u, let v = s.view else { return }
+                    v.load(URLRequest(url: u, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 25))
+                }
+                return
+            }
+            let said = text.split(whereSeparator: { $0.isWhitespace }).prefix(24).joined(separator: " ")
+            let code = s.status > 0 ? "\(s.status)" : "?"
+            if text.lowercased().contains("blocked") {
+                s.finish(.failure(.offline("Reddit blocked this connection (\(code)). Reddit said: \"\(said)\"")))
             } else {
-                s.finish(.failure(s.status >= 300 ? .http(s.status) : .bad))
+                s.finish(.failure(.offline("Reddit sent a page instead of posts (\(code)): \"\(said)\"")))
             }
         }
     }
@@ -207,6 +246,7 @@ final class Web: NSObject, WKNavigationDelegate {
     private func finish(_ r: Result<Data, APIError>) {
         let done = current
         current = nil
+        url = nil
         done?(r)
         letGoLater()
         next()
@@ -224,6 +264,7 @@ final class Web: NSObject, WKNavigationDelegate {
         guard current == nil, queue.isEmpty else { return }
         view?.stopLoading()
         view?.navigationDelegate = nil
+        view?.removeFromSuperview()
         view = nil
         cookieSet = false
         DispatchQueue.main.async { malloc_zone_pressure_relief(nil, 0) }
