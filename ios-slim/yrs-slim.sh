@@ -46,8 +46,7 @@ HOME="com.apple.homed"
 WATCH="com.apple.nanotimekitcompaniond"
 PRINT="com.apple.printd"
 HOTSPOT="com.apple.MobileInternetSharing"
-ASSISTIVETOUCH="com.apple.assistivetouchd"
-MAX_GROUPS="SIRI SPOTLIGHT SMART SCREENTIME GAMECENTER HEALTH WALLET HOME WATCH PRINT HOTSPOT ASSISTIVETOUCH"
+MAX_GROUPS="SIRI SPOTLIGHT SMART SCREENTIME GAMECENTER HEALTH WALLET HOME WATCH PRINT HOTSPOT"
 
 about() {
     case $1 in
@@ -67,7 +66,6 @@ about() {
         WATCH) echo "Apple Watch faces stop syncing" ;;
         PRINT) echo "AirPrint stops" ;;
         HOTSPOT) echo "Personal Hotspot stops" ;;
-        ASSISTIVETOUCH) echo "AssistiveTouch (the on-screen button) stops" ;;
     esac
 }
 
@@ -76,7 +74,7 @@ NEVER=" com.apple.SpringBoard com.apple.backboardd com.apple.logd com.apple.trus
 com.apple.locationd com.apple.securityd com.apple.lsd com.apple.cfprefsd.xpc.daemon com.apple.configd com.apple.mDNSResponder
 com.apple.wifid com.apple.CommCenter com.apple.runningboardd com.apple.dasd com.apple.mediaserverd com.apple.mobile.installd
 com.apple.itunesstored com.apple.appstored com.apple.apsd com.apple.keybagd com.apple.fseventsd com.apple.itunescloudd
-com.apple.mobileactivationd com.apple.imagent com.apple.identityservicesd "
+com.apple.mobileactivationd com.apple.assistivetouchd com.apple.imagent com.apple.identityservicesd "
 
 # ---------- options ----------
 
