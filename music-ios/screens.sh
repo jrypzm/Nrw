@@ -48,14 +48,15 @@ xcrun simctl io "$UDID" screenshot player.png
 # libraries, so it isn't used. The full breakdown goes to usage-detail.txt.
 xcrun simctl install "$UDID" sim/empty.app
 pid_of() { pgrep -f "$1.app/$1" | head -n 1; }
+secs() { ps -o time= -p "$1" | awk -F: '{ if (NF==3) print $1*3600+$2*60+$3; else print $1*60+$2 }'; }
 measure() {   # label program
-    sleep 4
+    sleep 8
     PID=$(pid_of "$2")
     printf '%-46s' "$1"
     footprint "$PID" 2>/dev/null | awk '/phys_footprint:/ {printf "memory %s %s", $2, $3}'
-    cpu=0
-    for n in 1 2 3 4 5; do c=$(ps -o %cpu= -p "$PID" | tr -d ' '); cpu=$(echo "$cpu + $c" | bc); sleep 2; done
-    echo "   CPU $(echo "scale=1; $cpu / 5" | bc)% (average of 5)"
+    # CPU: the processor time the app used over 10 seconds, as a share of one core
+    a=$(secs "$PID"); sleep 10; b=$(secs "$PID")
+    echo "   CPU $(echo "scale=2; ($b - $a) * 10" | bc)% of one core over 10 s"
     { echo "===== $1"; footprint "$PID" 2>/dev/null; } >> usage-detail.txt
 }
 : > usage-detail.txt

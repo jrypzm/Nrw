@@ -1,7 +1,7 @@
 // The songs: every audio file in the app's own folder (Files app: On My iPhone > yrs. music).
 // Read once, on a background queue, and remembered; next time only new or changed files are read.
 
-import AVFoundation
+import AudioToolbox
 import ImageIO
 import UIKit
 
@@ -72,6 +72,7 @@ final class Library {
             DispatchQueue.main.async {
                 self.set(found)
                 self.scanning = false
+                Library.giveBack()
                 NotificationCenter.default.post(name: Library.changed, object: nil)
                 if self.again { self.again = false; self.scan() }
             }
@@ -99,42 +100,62 @@ final class Library {
     }
 
     /// Title, artist, album and length from the file's tags; the file name and folder otherwise.
+    /// Read with AudioToolbox's small AudioFile API, not AVFoundation, which would build large
+    /// caches for nothing. A file iOS can't open as audio isn't listed.
     private static func read(_ u: URL, rel: String, mtime: Double) -> Track? {
-        let a = AVURLAsset(url: u, options: [AVURLAssetPreferPreciseDurationAndTimingKey: false])
+        guard let f = open(u) else { return nil }
+        defer { AudioFileClose(f) }
+        var secs: Float64 = 0
+        var size = UInt32(MemoryLayout<Float64>.size)
+        AudioFileGetProperty(f, kAudioFilePropertyEstimatedDuration, &size, &secs)
+        guard secs.isFinite, secs > 0 else { return nil }
         var title = u.deletingPathExtension().lastPathComponent
         var artist = "", album = ""
-        for item in a.commonMetadata {
-            switch item.commonKey {
-            case .commonKeyTitle?: if let s = item.stringValue?.trimmingCharacters(in: .whitespaces), !s.isEmpty { title = s }
-            case .commonKeyArtist?: if let s = item.stringValue { artist = s.trimmingCharacters(in: .whitespaces) }
-            case .commonKeyAlbumName?: if let s = item.stringValue { album = s.trimmingCharacters(in: .whitespaces) }
-            default: break
-            }
+        var dict: Unmanaged<CFDictionary>?
+        size = UInt32(MemoryLayout<Unmanaged<CFDictionary>?>.size)
+        if AudioFileGetProperty(f, kAudioFilePropertyInfoDictionary, &size, &dict) == noErr,
+           let d = dict?.takeRetainedValue() as? [String: Any] {
+            let get = { (k: String) in (d[k] as? String)?.trimmingCharacters(in: .whitespaces) ?? "" }
+            if !get(kAFInfoDictionary_Title).isEmpty { title = get(kAFInfoDictionary_Title) }
+            artist = get(kAFInfoDictionary_Artist)
+            album = get(kAFInfoDictionary_Album)
         }
         if album.isEmpty, rel.contains("/") { album = u.deletingLastPathComponent().lastPathComponent }
-        let d = a.duration.seconds
-        // a file iOS can't play isn't listed
-        guard a.isPlayable, d.isFinite, d > 0 else { return nil }
-        return Track(path: rel, title: title, artist: artist, album: album, secs: d, mtime: mtime)
+        return Track(path: rel, title: title, artist: artist, album: album, secs: secs, mtime: mtime)
     }
+
+    private static func open(_ u: URL) -> AudioFileID? {
+        var f: AudioFileID?
+        return AudioFileOpenURL(u as CFURL, .readPermission, 0, &f) == noErr ? f : nil
+    }
+
+    private static let folderCovers = ["cover.jpg", "cover.png", "folder.jpg", "folder.png", "Cover.jpg", "Folder.jpg", "front.jpg"]
 
     /// Whether the file has a cover, without reading the picture.
     static func hasCover(_ u: URL) -> Bool {
-        if AVURLAsset(url: u).commonMetadata.contains(where: { $0.commonKey == .commonKeyArtwork }) { return true }
+        if let f = open(u) {
+            defer { AudioFileClose(f) }
+            var size: UInt32 = 0
+            if AudioFileGetPropertyInfo(f, kAudioFilePropertyAlbumArtwork, &size, nil) == noErr, size > 0 { return true }
+        }
         let dir = u.deletingLastPathComponent()
-        return ["cover.jpg", "cover.png", "folder.jpg", "folder.png", "Cover.jpg", "Folder.jpg", "front.jpg"].contains { FileManager.default.fileExists(atPath: dir.appendingPathComponent($0).path) }
+        return folderCovers.contains { FileManager.default.fileExists(atPath: dir.appendingPathComponent($0).path) }
     }
 
     /// The cover, shrunk to `px` on its longest side: from the file, or a cover image in its folder.
     static func cover(_ u: URL, px: CGFloat) -> UIImage? {
         var data: Data?
-        for item in AVURLAsset(url: u).commonMetadata where item.commonKey == .commonKeyArtwork {
-            data = item.dataValue
-            break
+        if let f = open(u) {
+            var art: Unmanaged<CFData>?
+            var size = UInt32(MemoryLayout<Unmanaged<CFData>?>.size)
+            if AudioFileGetProperty(f, kAudioFilePropertyAlbumArtwork, &size, &art) == noErr, let d = art?.takeRetainedValue() {
+                data = d as Data
+            }
+            AudioFileClose(f)
         }
         if data == nil {
             let dir = u.deletingLastPathComponent()
-            for n in ["cover.jpg", "cover.png", "folder.jpg", "folder.png", "Cover.jpg", "Folder.jpg", "front.jpg"] {
+            for n in folderCovers {
                 if let d = try? Data(contentsOf: dir.appendingPathComponent(n)) { data = d; break }
             }
         }
@@ -147,6 +168,11 @@ final class Library {
         ]
         guard let cg = CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary) else { return nil }
         return UIImage(cgImage: cg)
+    }
+
+    /// Gives memory that was freed back to iOS, so it stops counting against the app.
+    static func giveBack() {
+        malloc_zone_pressure_relief(nil, 0)
     }
 
     /// Copies songs or whole folders picked in the Files app into the library.

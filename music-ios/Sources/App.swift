@@ -42,6 +42,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.rootViewController = nil
         window?.isHidden = true
         window = nil
+        // and give the freed memory back to iOS
+        DispatchQueue.main.async { Library.giveBack() }
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {

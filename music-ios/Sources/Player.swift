@@ -1,7 +1,7 @@
 // The queue and the sound. One AVAudioPlayer at a time, the lock screen and headphone
 // controls, calls and unplugged headphones handled, and where you were kept for next time.
 
-import AVFoundation
+import AVFAudio
 import MediaPlayer
 import UIKit
 
@@ -20,11 +20,13 @@ final class Player: NSObject, AVAudioPlayerDelegate {
     private(set) var shuffle = false
     private(set) var repeatMode = Repeat.all
     private var resumeAfterInterruption = false
+    /// Where to start when play is pressed after opening the app (the song isn't opened before).
+    private var held: TimeInterval?
     private var coverFor: String?
 
     var current: Track? { queue.indices.contains(at) ? queue[at] : nil }
     var isPlaying: Bool { audio?.isPlaying ?? false }
-    var position: TimeInterval { audio?.currentTime ?? 0 }
+    var position: TimeInterval { audio?.currentTime ?? held ?? 0 }
     var duration: TimeInterval { audio.map { $0.duration } ?? current?.secs ?? 0 }
     var upcoming: [Track] { queue.isEmpty ? [] : Array(queue[(at + 1)...]) }
 
@@ -62,6 +64,7 @@ final class Player: NSObject, AVAudioPlayerDelegate {
     private func load(play: Bool, from time: TimeInterval = 0) {
         audio?.stop()
         audio = nil
+        held = nil
         var tries = 0
         while let t = current {
             if let p = try? AVAudioPlayer(contentsOf: Library.shared.url(t)) {
@@ -87,7 +90,7 @@ final class Player: NSObject, AVAudioPlayerDelegate {
 
     func toggle() {
         guard let a = audio else {
-            if current != nil { load(play: true) }
+            if current != nil { load(play: true, from: held ?? 0) }
             return
         }
         if a.isPlaying { a.pause() } else { start() }
@@ -108,7 +111,10 @@ final class Player: NSObject, AVAudioPlayerDelegate {
     }
 
     func seek(to t: TimeInterval) {
-        guard let a = audio else { return }
+        guard let a = audio else {
+            if current != nil { held = max(0, min(t, duration)); changed() }
+            return
+        }
         a.currentTime = max(0, min(t, a.duration))
         changed()
     }
@@ -258,6 +264,7 @@ final class Player: NSObject, AVAudioPlayerDelegate {
         queue = (d.stringArray(forKey: "queue") ?? []).compactMap { by[$0] }
         base = (d.stringArray(forKey: "base") ?? []).compactMap { by[$0] }
         at = min(d.integer(forKey: "at"), max(queue.count - 1, 0))
-        if current != nil { load(play: false, from: d.double(forKey: "pos")) }
+        // remembered, not opened: the song is read only when play is pressed
+        if current != nil { held = d.double(forKey: "pos"); changed() }
     }
 }
