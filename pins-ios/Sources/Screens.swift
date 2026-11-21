@@ -45,107 +45,34 @@ final class HomeVC: UIViewController, UISearchBarDelegate {
 
 // MARK: - one pin
 
-final class PinVC: UIViewController {
+/// A pin: its picture and details sit in the header, and similar pins fill the grid below.
+final class PinVC: GridVC {
     private let pin: Pin
-    private let scroll = UIScrollView()
-    private let picture = UIImageView()
-    private let stack = UIStackView()
-    private let badge = UILabel()
+    private let head: PinHeader
 
     init(_ p: Pin) {
         pin = p
-        super.init(nibName: nil, bundle: nil)
-        title = p.user.isEmpty ? "Pin" : p.user
-        navigationItem.backButtonDisplayMode = .minimal
+        head = PinHeader(p)
+        // similar pins come from a search of the pin's words
+        let query = !p.title.isEmpty ? p.title : (!p.board.isEmpty ? p.board : p.about)
+        super.init(p.user.isEmpty ? "Pin" : p.user) { bm, done in
+            if query.trimmingCharacters(in: .whitespaces).isEmpty { done(.success(([], nil))); return }
+            Pinterest.search(query, bookmark: bm) { r in
+                // drop the pin itself if it comes back
+                done(r.map { (pins, next) in (pins.filter { $0.id != p.id }, next) })
+            }
+        }
+        headerView = head
+        head.onPicture = { [weak self] in self?.openPicture() }
+        head.onUser = { [weak self] in self?.openUser() }
+        head.onLink = { [weak self] in if let l = p.link { UIApplication.shared.open(l) } }
+        head.onPinterest = { [weak self] in if let u = p.page { UIApplication.shared.open(u) } }
+        head.onSave = { [weak self] in self?.save() }
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .black
-        scroll.indicatorStyle = .white
-        scroll.alwaysBounceVertical = true
-        view.addSubview(scroll)
-        picture.contentMode = .scaleAspectFit
-        picture.backgroundColor = pin.color
-        picture.clipsToBounds = true
-        picture.layer.cornerRadius = 14
-        picture.isUserInteractionEnabled = true
-        picture.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(openPicture)))
-        scroll.addSubview(picture)
-        if pin.video != nil {
-            badge.text = "▶ play"
-            badge.font = .systemFont(ofSize: 15, weight: .semibold)
-            badge.textColor = .white
-            badge.backgroundColor = UIColor(white: 0, alpha: 0.6)
-            badge.textAlignment = .center
-            badge.layer.cornerRadius = 8
-            badge.clipsToBounds = true
-            picture.addSubview(badge)
-        }
-        stack.axis = .vertical
-        stack.spacing = 10
-        stack.alignment = .leading
-        scroll.addSubview(stack)
-
-        if !pin.title.isEmpty { stack.addArrangedSubview(label(pin.title, .systemFont(ofSize: 20, weight: .semibold), .white)) }
-        if !pin.about.isEmpty, pin.about != pin.title { stack.addArrangedSubview(label(pin.about, .systemFont(ofSize: 15), Style.text)) }
-        if !pin.user.isEmpty {
-            let who = pin.userName.isEmpty ? pin.user : "\(pin.userName) (@\(pin.user))"
-            stack.addArrangedSubview(button("By \(who)", #selector(openUser)))
-        }
-        if !pin.board.isEmpty { stack.addArrangedSubview(label("On the board \"\(pin.board)\"", .systemFont(ofSize: 14), Style.dim)) }
-        if !pin.title.isEmpty { stack.addArrangedSubview(button("More like this", #selector(moreLikeThis))) }
-        if let l = pin.link { stack.addArrangedSubview(button("Open the link (\(l.host?.replacingOccurrences(of: "www.", with: "") ?? "website"))", #selector(openLink))) }
-        stack.addArrangedSubview(button("Save picture to Photos", #selector(save)))
-        stack.addArrangedSubview(button("Open on Pinterest", #selector(openPinterest)))
-
-        loadPicture()
-    }
-
-    private func label(_ t: String, _ f: UIFont, _ c: UIColor) -> UILabel {
-        let l = UILabel()
-        l.text = t
-        l.font = f
-        l.textColor = c
-        l.numberOfLines = 0
-        return l
-    }
-
-    private func button(_ t: String, _ a: Selector) -> UIButton {
-        let b = UIButton(type: .system)
-        b.setTitle(t, for: .normal)
-        b.titleLabel?.font = .systemFont(ofSize: 16)
-        b.titleLabel?.numberOfLines = 0
-        b.contentHorizontalAlignment = .leading
-        b.tintColor = Style.link
-        b.addTarget(self, action: a, for: .touchUpInside)
-        return b
-    }
-
-    private var ratio: CGFloat { min(max(pin.image("736x")?.1 ?? 1, 0.4), 2.0) }
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        let b = view.bounds
-        scroll.frame = b
-        let w = b.width - 24
-        let h = ceil(w * ratio)
-        picture.frame = CGRect(x: 12, y: 12, width: w, height: h)
-        badge.frame = CGRect(x: w - 96, y: h - 44, width: 84, height: 32)
-        let size = stack.systemLayoutSizeFitting(CGSize(width: w, height: 0), withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
-        stack.frame = CGRect(x: 14, y: h + 26, width: w - 4, height: size.height)
-        scroll.contentSize = CGSize(width: b.width, height: h + 26 + size.height + 40)
-    }
-
-    private func loadPicture() {
-        let px = (view.bounds.width - 24) * UIScreen.main.scale
-        guard let (u, _) = pin.image(px > 500 ? "736x" : "474x") else { return }
-        Images.load(u, px: px) { [weak self] img in self?.picture.image = img }
-    }
-
-    @objc private func openPicture() {
+    private func openPicture() {
         if let v = pin.video { play(v); return }
         if let (u, _) = pin.image("orig") ?? pin.image("736x") { present(ViewerVC([u]), animated: true) }
     }
@@ -157,17 +84,14 @@ final class PinVC: UIViewController {
         present(p, animated: true) { p.player?.play() }
     }
 
-    @objc private func openUser() {
+    private func openUser() {
         let name = pin.user
+        guard !name.isEmpty else { return }
         navigationController?.pushViewController(GridVC("@" + name) { bm, done in Pinterest.user(name, bookmark: bm, done: done) }, animated: true)
     }
 
-    @objc private func moreLikeThis() { navigationController?.pushViewController(HomeVC.search(pin.title), animated: true) }
-    @objc private func openLink() { if let l = pin.link { UIApplication.shared.open(l) } }
-    @objc private func openPinterest() { if let p = pin.page { UIApplication.shared.open(p) } }
-
     /// The full-size picture goes to Photos; it's read, saved and let go of.
-    @objc private func save() {
+    private func save() {
         guard let (u, _) = pin.image("orig") ?? pin.image("736x") else { return }
         URLSession.shared.dataTask(with: u) { d, _, _ in
             let img = d.flatMap { UIImage(data: $0) }
@@ -187,11 +111,110 @@ final class PinVC: UIViewController {
         a.addAction(UIAlertAction(title: "OK", style: .default))
         present(a, animated: true)
     }
+}
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        if view.window == nil { picture.image = nil }
+/// The picture and details shown above the similar-pins grid on a pin screen.
+final class PinHeader: UIView, GridHeader {
+    private let pin: Pin
+    private let picture = UIImageView()
+    private let badge = UILabel()
+    private let stack = UIStackView()
+    private var shownPictureFor = -1
+
+    var onPicture: (() -> Void)?
+    var onUser: (() -> Void)?
+    var onLink: (() -> Void)?
+    var onSave: (() -> Void)?
+    var onPinterest: (() -> Void)?
+
+    init(_ p: Pin) {
+        pin = p
+        super.init(frame: .zero)
+        picture.contentMode = .scaleAspectFit
+        picture.backgroundColor = p.color
+        picture.clipsToBounds = true
+        picture.layer.cornerRadius = 14
+        picture.isUserInteractionEnabled = true
+        picture.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapPicture)))
+        addSubview(picture)
+        if p.video != nil {
+            badge.text = "▶ play"
+            badge.font = .systemFont(ofSize: 15, weight: .semibold)
+            badge.textColor = .white
+            badge.backgroundColor = UIColor(white: 0, alpha: 0.6)
+            badge.textAlignment = .center
+            badge.layer.cornerRadius = 8
+            badge.clipsToBounds = true
+            picture.addSubview(badge)
+        }
+        stack.axis = .vertical
+        stack.spacing = 10
+        stack.alignment = .leading
+        addSubview(stack)
+
+        if !p.title.isEmpty { stack.addArrangedSubview(label(p.title, .systemFont(ofSize: 20, weight: .semibold), .white)) }
+        if !p.about.isEmpty, p.about != p.title { stack.addArrangedSubview(label(p.about, .systemFont(ofSize: 15), Style.text)) }
+        if !p.user.isEmpty {
+            let who = p.userName.isEmpty ? p.user : "\(p.userName) (@\(p.user))"
+            stack.addArrangedSubview(button("By \(who)", #selector(tapUser)))
+        }
+        if !p.board.isEmpty { stack.addArrangedSubview(label("On the board \"\(p.board)\"", .systemFont(ofSize: 14), Style.dim)) }
+        if let l = p.link { stack.addArrangedSubview(button("Open the link (\(l.host?.replacingOccurrences(of: "www.", with: "") ?? "website"))", #selector(tapLink))) }
+        stack.addArrangedSubview(button("Save picture to Photos", #selector(tapSave)))
+        stack.addArrangedSubview(button("Open on Pinterest", #selector(tapPinterest)))
+        stack.addArrangedSubview(label("More like this", .systemFont(ofSize: 17, weight: .semibold), .white))
     }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    private func label(_ t: String, _ f: UIFont, _ c: UIColor) -> UILabel {
+        let l = UILabel(); l.text = t; l.font = f; l.textColor = c; l.numberOfLines = 0; return l
+    }
+
+    private func button(_ t: String, _ a: Selector) -> UIButton {
+        let b = UIButton(type: .system)
+        b.setTitle(t, for: .normal)
+        b.titleLabel?.font = .systemFont(ofSize: 16)
+        b.titleLabel?.numberOfLines = 0
+        b.contentHorizontalAlignment = .leading
+        b.tintColor = Style.link
+        b.addTarget(self, action: a, for: .touchUpInside)
+        return b
+    }
+
+    private var ratio: CGFloat { min(max(pin.image("736x")?.1 ?? 1, 0.4), 2.0) }
+    private func picHeight(_ w: CGFloat) -> CGFloat { ceil((w - 24) * ratio) }
+    private func stackHeight(_ w: CGFloat) -> CGFloat {
+        stack.systemLayoutSizeFitting(CGSize(width: w - 28, height: 0), withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel).height
+    }
+
+    func height(for width: CGFloat) -> CGFloat {
+        12 + picHeight(width) + 16 + stackHeight(width) + 14
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let w = bounds.width
+        let ph = picHeight(w)
+        picture.frame = CGRect(x: 12, y: 12, width: w - 24, height: ph)
+        badge.frame = CGRect(x: w - 24 - 96, y: ph - 44, width: 84, height: 32)
+        stack.frame = CGRect(x: 14, y: 12 + ph + 16, width: w - 28, height: stackHeight(w))
+        loadPicture(w)
+    }
+
+    private func loadPicture(_ w: CGFloat) {
+        let px = (w - 24) * UIScreen.main.scale
+        let key = Int(px)
+        guard key != shownPictureFor, let (u, _) = pin.image(px > 500 ? "736x" : "474x") else { return }
+        shownPictureFor = key
+        Images.load(u, px: px) { [weak self] img in self?.picture.image = img }
+    }
+
+    @objc private func tapPicture() { onPicture?() }
+    @objc private func tapUser() { onUser?() }
+    @objc private func tapLink() { onLink?() }
+    @objc private func tapSave() { onSave?() }
+    @objc private func tapPinterest() { onPinterest?() }
 }
 
 // MARK: - pictures, full screen
