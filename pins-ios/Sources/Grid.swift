@@ -96,9 +96,12 @@ final class PinCell: UICollectionViewCell {
         picture.image = nil
         picture.backgroundColor = p.color
         label.text = p.title.isEmpty ? nil : p.title
-        guard let (u, _) = p.image(width * UIScreen.main.scale > 300 ? "474x" : "236x") else { return }
+        // grid thumbnails use Pinterest's small 236-wide picture: a quarter of the memory of the
+        // bigger size and much faster to fetch and decode. The full picture loads when you open a pin.
+        guard let (u, _) = p.image("236x") else { return }
         url = u
-        task = Images.load(u, px: width * UIScreen.main.scale) { [weak self] img in
+        // the 236-wide source is already small; decode it at its own size (no shrinking, no upscaling)
+        task = Images.load(u, px: 1024) { [weak self] img in
             guard let s = self, s.url == u else { return }
             s.picture.image = img
         }

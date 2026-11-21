@@ -249,7 +249,8 @@ enum Pinterest {
 enum Images {
     private static let cache: NSCache<NSString, UIImage> = {
         let c = NSCache<NSString, UIImage>()
-        c.totalCostLimit = 6_000_000   // a few screens' worth, then the oldest go
+        c.totalCostLimit = 4_000_000   // a few screens' worth of thumbnails, then the oldest go
+        c.countLimit = 80
         return c
     }()
 
@@ -258,6 +259,7 @@ enum Images {
         c.urlCache = nil
         c.requestCachePolicy = .reloadIgnoringLocalCacheData
         c.httpMaximumConnectionsPerHost = 3
+        c.httpMaximumConnectionsPerHost = 5
         c.httpAdditionalHeaders = ["User-Agent": safariUA, "Accept": "image/jpeg,image/png,image/*;q=0.8"]
         return URLSession(configuration: c)
     }()
