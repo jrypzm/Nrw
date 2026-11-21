@@ -1,0 +1,42 @@
+name: yrs. reddit iPhone
+
+on:
+  push:
+    paths:
+      - "reddit-ios/**"
+      - ".github/workflows/reddit-ios.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reddit-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the .ipa and a simulator app
+        run: sh reddit-ios/build.sh --simulator
+      - name: Run it on a simulated iPhone, take screenshots, measure it
+        run: sh reddit-ios/screens.sh
+      - name: Keep the screenshots with the run
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yrs-reddit-ios
+          path: |
+            reddit-ios/build/yrs-reddit.ipa
+            reddit-ios/build/*.png
+            reddit-ios/build/usage*.txt
+      - name: Publish to the "reddit-ios" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view reddit-ios >/dev/null 2>&1 || gh release create reddit-ios --latest=false --title "yrs. reddit for iPhone" --notes "yrs. reddit for iPhone."
+          gh release upload reddit-ios reddit-ios/build/yrs-reddit.ipa reddit-ios/build/*.png reddit-ios/build/usage.txt --clobber
+          gh release edit reddit-ios --notes "yrs. reddit, a read-only Reddit for iPhone, iOS 15 and later (iPhone 6s too). Built from ${{ github.sha }}. Install the .ipa with Sideloadly, AltStore or TrollStore."
