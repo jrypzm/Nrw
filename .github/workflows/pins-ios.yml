@@ -1,0 +1,42 @@
+name: yrs. pins iPhone
+
+on:
+  push:
+    paths:
+      - "pins-ios/**"
+      - ".github/workflows/pins-ios.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pins-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the .ipa and a simulator app
+        run: sh pins-ios/build.sh --simulator
+      - name: Run it on a simulated iPhone, take screenshots, measure it
+        run: sh pins-ios/screens.sh
+      - name: Keep the screenshots with the run
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yrs-pins-ios
+          path: |
+            pins-ios/build/yrs-pins.ipa
+            pins-ios/build/*.png
+            pins-ios/build/usage*.txt
+      - name: Publish to the "pins-ios" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view pins-ios >/dev/null 2>&1 || gh release create pins-ios --latest=false --title "yrs. pins for iPhone" --notes "yrs. pins for iPhone."
+          gh release upload pins-ios pins-ios/build/yrs-pins.ipa pins-ios/build/*.png pins-ios/build/usage.txt --clobber
+          gh release edit pins-ios --notes "yrs. pins, a light Pinterest for iPhone, iOS 15 and later (iPhone 6s too). Built from ${{ github.sha }}. Install the .ipa with Sideloadly, AltStore or TrollStore."
