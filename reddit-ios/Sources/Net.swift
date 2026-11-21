@@ -78,7 +78,7 @@ final class Reddit {
     private var token: String?
     private var tokenUntil = Date.distantPast
     private var minting = false
-    private var waiting: [(Bool) -> Void] = []
+    private var waiting: [(String?) -> Void] = []
 
     var isSignedIn: Bool { UserDefaults.standard.bool(forKey: "signedIn") }
 
