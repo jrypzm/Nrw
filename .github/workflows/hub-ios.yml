@@ -1,0 +1,46 @@
+name: yrs. hub iPhone
+
+on:
+  push:
+    paths:
+      - "hub-ios/**"
+      - ".github/workflows/hub-ios.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hub-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the .ipa and a simulator app
+        run: sh hub-ios/build.sh --simulator
+      - name: Run it on a simulated iPhone, take screenshots, measure it
+        env:
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          HUB_DEMO_TOKEN: ${{ github.token }}
+        run: sh hub-ios/screens.sh
+      - name: Keep the screenshots with the run
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yrs-hub-ios
+          path: |
+            hub-ios/build/yrs-hub.ipa
+            hub-ios/build/*.png
+            hub-ios/build/usage*.txt
+      - name: Publish to the "hub-ios" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view hub-ios >/dev/null 2>&1 || gh release create hub-ios --latest=false --title "yrs. hub for iPhone" --notes "yrs. hub for iPhone."
+          gh release upload hub-ios hub-ios/build/yrs-hub.ipa hub-ios/build/*.png hub-ios/build/usage.txt hub-ios/build/usage-detail.txt --clobber
+          gh release edit hub-ios --notes "yrs. hub, a GitHub client for iPhone, iOS 15 and later (iPhone 6s too). Built from ${{ github.sha }}. Install the .ipa with Sideloadly, AltStore or TrollStore."
