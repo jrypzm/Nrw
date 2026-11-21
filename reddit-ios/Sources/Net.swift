@@ -15,7 +15,7 @@ enum APIError: Error, CustomStringConvertible {
 
     var description: String {
         switch self {
-        case .http(401), .http(403): return "Reddit won't show this (private, banned, or you need to sign in)."
+        case .http(let c) where c == 401 || c == 403: return "Reddit won't show this (\(c)): private, banned, or you need to sign in. Pull down to try again."
         case .http(404): return "Not found."
         case .http(429): return "Reddit says too many requests. Wait a minute and pull down to try again."
         case .http(let c): return "Reddit answered \(c)."
@@ -70,7 +70,7 @@ final class Reddit {
         while p.count > 1, p.hasSuffix("/") { p.removeLast() }
         var c = URLComponents()
         c.scheme = "https"
-        c.host = "www.reddit.com"
+        c.host = "old.reddit.com"
         c.path = p == "/" ? "/.json" : p + ".json"
         var items = [URLQueryItem(name: "raw_json", value: "1")]
         items += q.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
@@ -137,6 +137,18 @@ final class Web: NSObject, WKNavigationDelegate {
     private var idle: Timer?
 
     func fetch(_ u: URL, _ done: @escaping (Result<Data, APIError>) -> Void) {
+        fetchOnce(u) { [weak self] r in
+            if case .failure(.http(let c)) = r, c == 403 || c == 429, let s = self {
+                // perhaps a browser check: open the page again, wait for it, then try once more
+                s.reset(force: true)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { s.fetchOnce(u, done) }
+                return
+            }
+            done(r)
+        }
+    }
+
+    private func fetchOnce(_ u: URL, _ done: @escaping (Result<Data, APIError>) -> Void) {
         idle?.invalidate()
         whenReady { [weak self] ok in
             guard ok, let v = self?.view else { done(.failure(.offline("Couldn't reach Reddit."))); return }
@@ -176,7 +188,7 @@ final class Web: NSObject, WKNavigationDelegate {
         ready = false
         // grown-up posts are shown when you're signed out too, as far as Reddit allows
         let adult = HTTPCookie(properties: [.domain: ".reddit.com", .path: "/", .name: "over18", .value: "1", .secure: "TRUE", .expires: Date(timeIntervalSinceNow: 31_536_000)])
-        let go = { v.load(URLRequest(url: URL(string: "https://www.reddit.com/robots.txt")!)) }
+        let go = { v.load(URLRequest(url: URL(string: "https://old.reddit.com/wiki/pages/")!)) }
         if let adult = adult { c.websiteDataStore.httpCookieStore.setCookie(adult) { go() } } else { go() }
     }
 
@@ -187,8 +199,11 @@ final class Web: NSObject, WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        ready = true
-        flush()
+        // give a browser check on the page a moment to finish
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            self.ready = true
+            self.flush()
+        }
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { failed() }
@@ -206,10 +221,10 @@ final class Web: NSObject, WKNavigationDelegate {
     }
 
     /// Lets go of the hidden Safari view (and the memory it holds).
-    func reset() {
+    func reset(force: Bool = false) {
         idle?.invalidate()
         idle = nil
-        guard waiting.isEmpty else { return }
+        guard force || waiting.isEmpty else { return }
         view?.navigationDelegate = nil
         view = nil
         ready = false

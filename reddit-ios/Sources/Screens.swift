@@ -287,7 +287,7 @@ final class PostVC: UIViewController, UITextViewDelegate {
     }
 
     @objc private func inSafari() {
-        if let u = URL(string: "https://www.reddit.com" + post.permalink) { UIApplication.shared.open(u) }
+        if let u = URL(string: "https://old.reddit.com" + post.permalink) { UIApplication.shared.open(u) }
     }
 
     func textView(_ textView: UITextView, shouldInteractWith url: URL, in range: NSRange, interaction: UITextItemInteraction) -> Bool {
@@ -447,7 +447,7 @@ final class LoginVC: UIViewController {
         web.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         web.customUserAgent = safariUA
         view.addSubview(web)
-        web.load(URLRequest(url: URL(string: "https://www.reddit.com/login")!))
+        web.load(URLRequest(url: URL(string: "https://old.reddit.com/login")!))
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancel))
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(done))
     }
