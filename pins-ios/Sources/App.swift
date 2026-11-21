@@ -1,11 +1,13 @@
-// yrs. pins: Pinterest for iPhone, light. Native UIKit, no libraries, no ads, no tracking,
-// no sign-in. Pictures are fetched at the size they're shown and let go of when you move on.
+// yrs. pins: Pinterest for iPhone, light. Native UIKit, no libraries, no ads, no tracking.
+// Signed in, the main screen is your own home feed; signed out, it's search. Pictures are fetched
+// at the size they're shown and let go of when you move on.
 
 import UIKit
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
+    private let nav = UINavigationController()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         let bar = UINavigationBarAppearance()
@@ -16,7 +18,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         UINavigationBar.appearance().standardAppearance = bar
         UINavigationBar.appearance().scrollEdgeAppearance = bar
 
-        let nav = UINavigationController(rootViewController: HomeVC())
+        nav.setViewControllers([Screen.root()], animated: false)
         let w = UIWindow(frame: UIScreen.main.bounds)
         w.backgroundColor = .black
         w.overrideUserInterfaceStyle = .dark
@@ -24,8 +26,16 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         w.rootViewController = nav
         w.makeKeyAndVisible()
         window = w
+        // signing in or out swaps the main screen between the home feed and the welcome screen
+        NotificationCenter.default.addObserver(self, selector: #selector(accountChanged), name: Account.changed, object: nil)
+        // the sign-in cookies may already be there from last time
+        Account.refresh()
         demo(nav)
         return true
+    }
+
+    @objc private func accountChanged() {
+        nav.setViewControllers([Screen.root()], animated: false)
     }
 
     /// Only for the screenshots taken with each build: `-demo search:cats` or `-demo pin:cats`.
@@ -33,7 +43,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         guard let d = UserDefaults.standard.string(forKey: "demo"), let colon = d.firstIndex(of: ":") else { return }
         let kind = d[..<colon], arg = String(d[d.index(after: colon)...])
         switch kind {
-        case "search": nav.pushViewController(HomeVC.search(arg), animated: false)
+        case "search": nav.pushViewController(Screen.search(arg), animated: false)
         case "pin":
             Pinterest.search(arg, bookmark: nil) { r in
                 if case .success(let (pins, _)) = r, let p = pins.first(where: { !$0.title.isEmpty }) ?? pins.first {

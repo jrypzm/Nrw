@@ -1,17 +1,116 @@
-// The screens: home (a search bar), one pin, and pictures full screen.
+// The screens: the home feed (main), welcome and sign-in, search, one pin, and pictures full screen.
 
 import AVKit
 import UIKit
+import WebKit
 
-// MARK: - home
+// MARK: - home, search, welcome, sign-in
 
-/// Just a search bar.
-final class HomeVC: UIViewController, UISearchBarDelegate {
+enum Screen {
+    static func search(_ q: String) -> GridVC {
+        let g = GridVC(q) { bm, done in Pinterest.search(q, bookmark: bm, done: done) }
+        return g
+    }
+
+    /// The app's root, chosen by whether you're signed in: your home feed, or a welcome screen.
+    static func root() -> UIViewController {
+        Account.isSignedIn ? HomeFeedVC() : WelcomeVC()
+    }
+}
+
+/// Signed in: your own Pinterest home feed, the main screen.
+final class HomeFeedVC: GridVC {
+    init() {
+        super.init("Home") { bm, done in Pinterest.home(bookmark: bm, done: done) }
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .search, target: self, action: #selector(search))
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Account", style: .plain, target: self, action: #selector(account))
+    }
+
+    @objc private func search() { navigationController?.pushViewController(SearchVC(), animated: true) }
+
+    @objc private func account() {
+        let a = UIAlertController(title: "Account", message: nil, preferredStyle: .actionSheet)
+        a.addAction(UIAlertAction(title: "Sign out", style: .destructive) { _ in Account.signOut() })
+        a.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        a.popoverPresentationController?.barButtonItem = navigationItem.leftBarButtonItem
+        present(a, animated: true)
+    }
+}
+
+/// Signed out: a clean welcome with search and a sign-in button.
+final class WelcomeVC: UIViewController, UISearchBarDelegate {
     private let bar = UISearchBar()
+    private let title1 = UILabel()
+    private let subtitle = UILabel()
+    private let signIn = UIButton(type: .system)
 
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "pins"
+        view.backgroundColor = .black
+        title1.text = "pins."
+        title1.font = .systemFont(ofSize: 40, weight: .bold)
+        title1.textColor = .white
+        title1.textAlignment = .center
+        subtitle.text = "Search Pinterest, or sign in for your home feed."
+        subtitle.font = .systemFont(ofSize: 15)
+        subtitle.textColor = Style.dim
+        subtitle.textAlignment = .center
+        subtitle.numberOfLines = 0
+        bar.placeholder = "Search Pinterest"
+        bar.searchBarStyle = .minimal
+        bar.barStyle = .black
+        bar.autocorrectionType = .no
+        bar.delegate = self
+        signIn.setTitle("Sign in", for: .normal)
+        signIn.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        signIn.setTitleColor(.black, for: .normal)
+        signIn.backgroundColor = .white
+        signIn.layer.cornerRadius = 24
+        signIn.addTarget(self, action: #selector(tapSignIn), for: .touchUpInside)
+        [title1, subtitle, bar, signIn].forEach { view.addSubview($0) }
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard)))
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let w = view.bounds.width, cx = w / 2
+        let top = view.safeAreaInsets.top + 60
+        title1.frame = CGRect(x: 0, y: top, width: w, height: 48)
+        subtitle.frame = CGRect(x: 24, y: top + 56, width: w - 48, height: 44)
+        bar.frame = CGRect(x: 16, y: top + 112, width: w - 32, height: 56)
+        signIn.frame = CGRect(x: cx - 110, y: top + 184, width: 220, height: 48)
+    }
+
+    @objc private func dismissKeyboard() { bar.resignFirstResponder() }
+
+    func searchBarSearchButtonClicked(_ b: UISearchBar) {
+        let q = (b.text ?? "").trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return }
+        b.resignFirstResponder()
+        navigationController?.pushViewController(Screen.search(q), animated: true)
+    }
+
+    @objc private func tapSignIn() {
+        let nav = UINavigationController(rootViewController: LoginVC())
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
+    }
+}
+
+/// A plain search-bar screen, pushed from the home feed's magnifier.
+final class SearchVC: UIViewController, UISearchBarDelegate {
+    private let bar = UISearchBar()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "Search"
         navigationItem.backButtonDisplayMode = .minimal
         view.backgroundColor = .black
         bar.placeholder = "Search Pinterest"
@@ -23,10 +122,14 @@ final class HomeVC: UIViewController, UISearchBarDelegate {
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard)))
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        bar.becomeFirstResponder()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        let top = view.safeAreaInsets.top
-        bar.frame = CGRect(x: 8, y: top + 8, width: view.bounds.width - 16, height: 56)
+        bar.frame = CGRect(x: 8, y: view.safeAreaInsets.top + 8, width: view.bounds.width - 16, height: 56)
     }
 
     @objc private func dismissKeyboard() { bar.resignFirstResponder() }
@@ -35,13 +138,54 @@ final class HomeVC: UIViewController, UISearchBarDelegate {
         let q = (b.text ?? "").trimmingCharacters(in: .whitespaces)
         guard !q.isEmpty else { return }
         b.resignFirstResponder()
-        navigationController?.pushViewController(HomeVC.search(q), animated: true)
-    }
-
-    static func search(_ q: String) -> GridVC {
-        GridVC(q) { bm, done in Pinterest.search(q, bookmark: bm, done: done) }
+        navigationController?.pushViewController(Screen.search(q), animated: true)
     }
 }
+
+/// Pinterest's own sign-in page. Your password goes only to Pinterest; this app keeps no copy.
+final class LoginVC: UIViewController, WKNavigationDelegate {
+    private var web: WKWebView!
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "Sign in to Pinterest"
+        view.backgroundColor = .black
+        let c = WKWebViewConfiguration()
+        c.websiteDataStore = .default()
+        web = WKWebView(frame: view.bounds, configuration: c)
+        web.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        web.navigationDelegate = self
+        view.addSubview(web)
+        web.load(URLRequest(url: URL(string: "https://www.pinterest.com/login/")!))
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancel))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(done))
+    }
+
+    // after each page settles, check whether the login cookies are now set
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        Account.refresh { [weak self] yes in if yes { self?.finish() } }
+    }
+
+    @objc private func cancel() { dismiss(animated: true) }
+
+    @objc private func done() {
+        Account.refresh { [weak self] yes in
+            if yes { self?.finish() } else {
+                let a = UIAlertController(title: "Not signed in yet", message: "Sign in on the page first, then tap Done.", preferredStyle: .alert)
+                a.addAction(UIAlertAction(title: "OK", style: .default))
+                self?.present(a, animated: true)
+            }
+        }
+    }
+
+    private func finish() {
+        web.navigationDelegate = nil
+        web = nil
+        dismiss(animated: true)
+    }
+}
+
+// MARK: - one pin
 
 // MARK: - one pin
 

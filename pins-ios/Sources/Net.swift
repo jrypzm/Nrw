@@ -1,8 +1,10 @@
-// Reading Pinterest the way its own website does (no sign-in, no API key), and pictures fetched
-// at the size they're shown, with only a few screens' worth kept.
+// Reading Pinterest the way its own website does, and pictures fetched at the size they're shown,
+// with only a few screens' worth kept. Signed in, it also reads your own home feed; your Pinterest
+// login (the session cookie) stays in this app on your iPhone and is never saved or sent anywhere else.
 
 import ImageIO
 import UIKit
+import WebKit
 
 enum APIError: Error, CustomStringConvertible {
     case http(Int)
@@ -84,19 +86,81 @@ struct Pin {
     }
 }
 
+/// Your Pinterest login. The session cookie lives only in this app's own cookie store on the
+/// iPhone (where the sign-in page put it); it is attached to requests and never written to a file,
+/// a log, or sent anywhere but Pinterest.
+enum Account {
+    static let changed = Notification.Name("yrs.pins.account")
+    private static let store = WKWebsiteDataStore.default()
+    private static var appVersion: String?
+
+    static var isSignedIn: Bool { UserDefaults.standard.bool(forKey: "signedIn") }
+
+    /// Looks at the cookies the sign-in page left, and remembers whether you're signed in.
+    static func refresh(_ done: @escaping (Bool) -> Void = { _ in }) {
+        store.httpCookieStore.getAllCookies { cookies in
+            let auth = cookies.first { $0.name == "_auth" && $0.domain.contains("pinterest") }
+            let yes = (auth?.value ?? "0") != "0" && !(auth?.value ?? "").isEmpty
+            let was = UserDefaults.standard.bool(forKey: "signedIn")
+            UserDefaults.standard.set(yes, forKey: "signedIn")
+            if was != yes { NotificationCenter.default.post(name: Account.changed, object: nil) }
+            done(yes)
+        }
+    }
+
+    static func signOut() {
+        store.fetchDataRecords(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes()) { records in
+            let pin = records.filter { $0.displayName.contains("pinterest") }
+            store.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), for: pin) {
+                UserDefaults.standard.set(false, forKey: "signedIn")
+                NotificationCenter.default.post(name: Account.changed, object: nil)
+            }
+        }
+    }
+
+    /// Cookie header, the CSRF token, and the site version, gathered for a signed-in request.
+    static func auth(_ done: @escaping (_ cookie: String, _ csrf: String, _ version: String?) -> Void) {
+        store.httpCookieStore.getAllCookies { cookies in
+            let mine = cookies.filter { $0.domain.contains("pinterest") }
+            let header = mine.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
+            let csrf = mine.first { $0.name == "csrftoken" }?.value ?? ""
+            if let v = appVersion { done(header, csrf, v); return }
+            version { done(header, csrf, $0) }
+        }
+    }
+
+    /// The site's current build id, read once from the home page (a header Pinterest expects).
+    private static func version(_ done: @escaping (String?) -> Void) {
+        var req = URLRequest(url: URL(string: "https://www.pinterest.com/")!)
+        req.setValue(safariUA, forHTTPHeaderField: "User-Agent")
+        URLSession.shared.dataTask(with: req) { d, _, _ in
+            let html = d.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+            if let r = html.range(of: "\"app_version\":\"") {
+                let rest = html[r.upperBound...]
+                let v = String(rest.prefix { $0.isHexDigit })
+                if v.count >= 5 { appVersion = v }
+            }
+            DispatchQueue.main.async { done(appVersion) }
+        }.resume()
+    }
+}
+
 enum Pinterest {
     private static let session: URLSession = {
         let c = URLSessionConfiguration.ephemeral
         c.urlCache = nil
         c.requestCachePolicy = .reloadIgnoringLocalCacheData
+        c.httpShouldSetCookies = false
+        c.httpCookieAcceptPolicy = .never
         c.httpMaximumConnectionsPerHost = 2
         c.timeoutIntervalForRequest = 20
         return URLSession(configuration: c)
     }()
 
-    /// One of the website's own requests. Replies on the main queue with its data and the
-    /// bookmark for the next page (nil at the end).
-    static func get(_ resource: String, source: String, handler: String, options: JSON, done: @escaping (Result<(Any?, String?), APIError>) -> Void) {
+    /// One of the website's own requests. When signed in, your login cookies are attached so
+    /// Pinterest answers as it does in your browser. Replies on the main queue with the data and
+    /// the bookmark for the next page (nil at the end).
+    static func get(_ resource: String, source: String, handler: String, options: JSON, auth: Bool = false, done: @escaping (Result<(Any?, String?), APIError>) -> Void) {
         let body: JSON = ["options": options, "context": [:] as JSON]
         guard let data = try? JSONSerialization.data(withJSONObject: body), let ds = String(data: data, encoding: .utf8) else { done(.failure(.bad)); return }
         var c = URLComponents(string: "https://www.pinterest.com/resource/\(resource)/get/")!
@@ -106,11 +170,15 @@ enum Pinterest {
         req.setValue(safariUA, forHTTPHeaderField: "User-Agent")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         req.setValue("www/\(handler).js", forHTTPHeaderField: "X-Pinterest-PWS-Handler")
-        session.dataTask(with: req) { d, resp, err in
+        req.setValue(source, forHTTPHeaderField: "X-Pinterest-Source-Url")
+
+        let fire = { (self.session).dataTask(with: req) { d, resp, err in
             let r: Result<(Any?, String?), APIError>
             let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
             if let err = err {
                 r = .failure(.offline((err as NSError).code == NSURLErrorNotConnectedToInternet ? "No internet connection." : err.localizedDescription))
+            } else if code == 403, auth {
+                r = .failure(.offline("Pinterest didn't accept the sign-in. Try signing in again."))
             } else if !(200 ..< 300).contains(code) {
                 r = .failure(.http(code))
             } else if let j = d.flatMap({ try? JSONSerialization.jsonObject(with: $0) }) as? JSON {
@@ -121,7 +189,19 @@ enum Pinterest {
                 r = .failure(.bad)
             }
             DispatchQueue.main.async { done(r) }
-        }.resume()
+        }.resume() }
+
+        if auth {
+            Account.auth { cookie, csrf, version in
+                if !cookie.isEmpty { req.setValue(cookie, forHTTPHeaderField: "Cookie") }
+                if !csrf.isEmpty { req.setValue(csrf, forHTTPHeaderField: "X-CSRFToken") }
+                if let v = version { req.setValue(v, forHTTPHeaderField: "X-APP-VERSION") }
+                req.setValue("1", forHTTPHeaderField: "X-Requested-With")
+                fire()
+            }
+        } else {
+            fire()
+        }
     }
 
     /// Pins in a search or a list reply, including the ones grouped inside "stories".
@@ -138,10 +218,19 @@ enum Pinterest {
         return out.filter { $0.image("236x") != nil }
     }
 
+    /// Your own home feed (needs sign-in).
+    static func home(bookmark: String?, done: @escaping (Result<([Pin], String?), APIError>) -> Void) {
+        var o: JSON = ["field_set_key": "hf_grid", "in_nux": false, "prependPartner": false, "static_feed": false]
+        if let b = bookmark { o["bookmarks"] = [b] }
+        get("UserHomefeedResource", source: "/", handler: "index", options: o, auth: true) { r in
+            done(r.map { (pins($0.0), $0.1) })
+        }
+    }
+
     static func search(_ q: String, bookmark: String?, done: @escaping (Result<([Pin], String?), APIError>) -> Void) {
         var o: JSON = ["query": q, "scope": "pins", "page_size": 25]
         if let b = bookmark { o["bookmarks"] = [b] }
-        get("BaseSearchResource", source: "/search/pins/?q=" + (q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? q), handler: "search/[scope]", options: o) { r in
+        get("BaseSearchResource", source: "/search/pins/?q=" + (q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? q), handler: "search/[scope]", options: o, auth: Account.isSignedIn) { r in
             done(r.map { (pins($0.0), $0.1) })
         }
     }
@@ -149,7 +238,7 @@ enum Pinterest {
     static func user(_ name: String, bookmark: String?, done: @escaping (Result<([Pin], String?), APIError>) -> Void) {
         var o: JSON = ["username": name, "field_set_key": "grid_item"]
         if let b = bookmark { o["bookmarks"] = [b] }
-        get("UserActivityPinsResource", source: "/\(name)/_created/", handler: "[username]/_created", options: o) { r in
+        get("UserActivityPinsResource", source: "/\(name)/_created/", handler: "[username]/_created", options: o, auth: Account.isSignedIn) { r in
             done(r.map { (pins($0.0), $0.1) })
         }
     }
