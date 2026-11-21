@@ -43,22 +43,39 @@ xcrun simctl launch "$UDID" com.yrs.music -demo-player
 sleep 6
 xcrun simctl io "$UDID" screenshot player.png
 
-# memory and CPU while it plays: with the player open, and with nothing on screen.
-# "phys_footprint" is how iOS counts an app's memory (what it judges when memory is short);
-# the simulator's plain process size also counts shared system libraries, so it isn't used.
-measure() {
-    PID=$(pgrep -f "yrsmusic.app/yrsmusic" | head -n 1)
-    echo "$1"
-    footprint "$PID" 2>/dev/null | grep -iE "phys_footprint|^ *Footprint" | head -n 2 | sed 's/^/  /'
-    for n in 1 2 3 4 5 6; do sleep 2; ps -o %cpu= -p "$PID" | awk '{printf "  CPU %s%%\n", $1}'; done
+# Memory and CPU in each state. "phys_footprint" is how iOS counts an app's memory (what it
+# judges when memory runs short); the simulator's plain process size also counts shared system
+# libraries, so it isn't used. The full breakdown goes to usage-detail.txt.
+xcrun simctl install "$UDID" sim/empty.app
+pid_of() { pgrep -f "$1.app/$1" | head -n 1; }
+measure() {   # label program
+    sleep 4
+    PID=$(pid_of "$2")
+    printf '%-46s' "$1"
+    footprint "$PID" 2>/dev/null | awk '/phys_footprint:/ {printf "memory %s %s", $2, $3}'
+    cpu=0
+    for n in 1 2 3 4 5; do c=$(ps -o %cpu= -p "$PID" | tr -d ' '); cpu=$(echo "$cpu + $c" | bc); sleep 2; done
+    echo "   CPU $(echo "scale=1; $cpu / 5" | bc)% (average of 5)"
+    { echo "===== $1"; footprint "$PID" 2>/dev/null; } >> usage-detail.txt
 }
+: > usage-detail.txt
 {
     echo "yrs. music on a simulated iPhone ($DT, $RT)"
     echo "app size: $(du -k yrs-music.ipa | cut -f1) KB .ipa, $(du -k Payload/yrsmusic.app/yrsmusic | cut -f1) KB program"
-    measure "playing, player open:"
+    echo
+    xcrun simctl launch "$UDID" com.yrs.empty >/dev/null
+    measure "an empty app (the floor iOS sets):" empty
+    xcrun simctl terminate "$UDID" com.yrs.empty
+    xcrun simctl launch "$UDID" com.yrs.music >/dev/null
+    measure "yrs. music, the list, not playing:" yrsmusic
     xcrun simctl terminate "$UDID" com.yrs.music
-    xcrun simctl launch "$UDID" com.yrs.music -demo-play
-    sleep 6
-    measure "playing, nothing open (the phone in your pocket):"
+    xcrun simctl launch "$UDID" com.yrs.music -demo-player >/dev/null
+    measure "playing, player open:" yrsmusic
+    xcrun simctl terminate "$UDID" com.yrs.music
+    xcrun simctl launch "$UDID" com.yrs.music -demo-play >/dev/null
+    measure "playing, list on screen:" yrsmusic
+    # another app comes to the front: yrs. music plays on in the background
+    xcrun simctl launch "$UDID" com.apple.Preferences >/dev/null
+    measure "playing in the background (screen off):" yrsmusic
 } | tee usage.txt
 xcrun simctl shutdown "$UDID" || true

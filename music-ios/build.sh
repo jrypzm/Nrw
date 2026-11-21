@@ -8,13 +8,16 @@ cd "$(dirname "$0")"
 rm -rf build
 mkdir -p build
 
-app() {   # sdk target dir
-    a="$3/yrsmusic.app"
+app() {   # sdk target dir [sources name id]
+    src="${4:-Sources/*.swift}"; name="${5:-yrsmusic}"; id="${6:-com.yrs.music}"
+    a="$3/$name.app"
     mkdir -p "$a"
     # -Osize: the smallest code; no libraries, so the app is just this
-    xcrun -sdk "$1" swiftc -target "$2" -Osize -wmo -parse-as-library Sources/*.swift -o "$a/yrsmusic"
+    xcrun -sdk "$1" swiftc -target "$2" -Osize -wmo -parse-as-library $src -o "$a/$name"
     xcrun strip -x "$a/yrsmusic" 2>/dev/null || true
     cp Info.plist "$a/Info.plist"
+    plutil -replace CFBundleExecutable -string "$name" "$a/Info.plist"
+    plutil -replace CFBundleIdentifier -string "$id" "$a/Info.plist"
     plutil -insert DTPlatformName -string "$1" "$a/Info.plist"
     plutil -insert DTSDKName -string "$1$(xcrun -sdk "$1" --show-sdk-version)" "$a/Info.plist"
     plutil -insert DTPlatformVersion -string "$(xcrun -sdk "$1" --show-sdk-version)" "$a/Info.plist"
@@ -31,4 +34,6 @@ echo "build/yrs-music.ipa: $(du -k build/yrs-music.ipa | cut -f1) KB"
 
 if [ "${1:-}" = "--simulator" ]; then
     app iphonesimulator "$(uname -m)-apple-ios15.0-simulator" build/sim
+    # an empty app, to measure what iOS itself costs every app with a screen
+    app iphonesimulator "$(uname -m)-apple-ios15.0-simulator" build/sim Baseline/Empty.swift empty com.yrs.empty
 fi

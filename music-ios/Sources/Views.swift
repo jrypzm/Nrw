@@ -201,7 +201,8 @@ final class RootViewController: UIViewController, UITableViewDataSource, UITable
     @objc private func openPlayer() {
         guard Player.shared.current != nil else { return }
         let p = PlayerViewController()
-        p.modalPresentationStyle = .pageSheet
+        // full screen: UIKit then lets go of the list underneath while the player is up
+        p.modalPresentationStyle = .fullScreen
         present(p, animated: true)
     }
 
@@ -329,6 +330,7 @@ final class PlayerViewController: UIViewController {
     private let shuffleWord = word("Shuffle", size: 15, weight: .semibold)
     private let repeatWord = word("Repeat", size: 15, weight: .semibold)
     private let format = UILabel()
+    private let close = UIButton(type: .system)
     private var timer: Timer?
     private var dragging = false
     private var shownCover: String?
@@ -374,19 +376,31 @@ final class PlayerViewController: UIViewController {
         format.font = .systemFont(ofSize: 11, weight: .semibold)
         format.textColor = dim
 
+        close.setImage(UIImage(systemName: "chevron.down", withConfiguration: UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)), for: .normal)
+        close.tintColor = mute
+        close.accessibilityLabel = "Close"
+        close.addTarget(self, action: #selector(goClose), for: .touchUpInside)
+        let swipe = UISwipeGestureRecognizer(target: self, action: #selector(goClose))
+        swipe.direction = .down
+        view.addGestureRecognizer(swipe)
+
         let controls = UIStackView(arrangedSubviews: [prevButton, play, nextButton])
         controls.axis = .horizontal
         controls.distribution = .equalCentering
         let words = UIStackView(arrangedSubviews: [shuffleWord, repeatWord])
         words.distribution = .fillEqually
 
-        for v in [cover, letter, songTitle, artist, slider, now, left, controls, words, format] as [UIView] {
+        for v in [close, cover, letter, songTitle, artist, slider, now, left, controls, words, format] as [UIView] {
             v.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(v)
         }
         let g = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
-            cover.topAnchor.constraint(equalTo: g.topAnchor, constant: 28),
+            close.topAnchor.constraint(equalTo: g.topAnchor, constant: 2),
+            close.centerXAnchor.constraint(equalTo: g.centerXAnchor),
+            close.widthAnchor.constraint(equalToConstant: 60),
+            close.heightAnchor.constraint(equalToConstant: 36),
+            cover.topAnchor.constraint(equalTo: close.bottomAnchor, constant: 8),
             cover.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 28),
             cover.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -28),
             cover.heightAnchor.constraint(equalTo: cover.widthAnchor),
@@ -418,6 +432,11 @@ final class PlayerViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(stopClock), name: UIApplication.didEnterBackgroundNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(startClock), name: UIApplication.willEnterForegroundNotification, object: nil)
         changed()
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        if view.window == nil { cover.image = nil; shownCover = nil }
     }
 
     private static func dot(_ d: CGFloat) -> UIImage {
@@ -466,7 +485,7 @@ final class PlayerViewController: UIViewController {
             cover.image = nil
             letter.isHidden = false
             let url = Library.shared.url(t)
-            let px = view.bounds.width * UIScreen.main.scale
+            let px = max(view.bounds.width - 56, 100) * UIScreen.main.scale
             DispatchQueue.global(qos: .userInitiated).async {
                 let img = Library.cover(url, px: px)
                 DispatchQueue.main.async {
@@ -490,6 +509,7 @@ final class PlayerViewController: UIViewController {
         tick()
     }
 
+    @objc private func goClose() { dismiss(animated: true) }
     @objc private func goPrev() { Player.shared.previous() }
     @objc private func goPlay() { Player.shared.toggle() }
     @objc private func goNext() { Player.shared.next() }

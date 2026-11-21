@@ -221,11 +221,11 @@ final class Player: NSObject, AVAudioPlayerDelegate {
         if coverFor == t.path, let old = center.nowPlayingInfo?[MPMediaItemPropertyArtwork] {
             info[MPMediaItemPropertyArtwork] = old
         } else {
-            // the cover is read only when the lock screen asks for it, at the size it asks
+            // the cover is decoded only when the lock screen asks for it, at the size it asks
             let url = Library.shared.url(t)
-            if let probe = Library.cover(url, px: 64) {
-                info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: probe.size.applying(.init(scaleX: 10, y: 10))) { size in
-                    Library.cover(url, px: max(size.width, size.height) * UIScreen.main.scale) ?? probe
+            if Library.hasCover(url) {
+                info[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: CGSize(width: 600, height: 600)) { size in
+                    Library.cover(url, px: max(size.width, size.height)) ?? UIImage()
                 }
             }
             coverFor = t.path

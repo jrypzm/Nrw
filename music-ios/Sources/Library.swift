@@ -113,7 +113,16 @@ final class Library {
         }
         if album.isEmpty, rel.contains("/") { album = u.deletingLastPathComponent().lastPathComponent }
         let d = a.duration.seconds
-        return Track(path: rel, title: title, artist: artist, album: album, secs: d.isFinite ? d : 0, mtime: mtime)
+        // a file iOS can't play isn't listed
+        guard a.isPlayable, d.isFinite, d > 0 else { return nil }
+        return Track(path: rel, title: title, artist: artist, album: album, secs: d, mtime: mtime)
+    }
+
+    /// Whether the file has a cover, without reading the picture.
+    static func hasCover(_ u: URL) -> Bool {
+        if AVURLAsset(url: u).commonMetadata.contains(where: { $0.commonKey == .commonKeyArtwork }) { return true }
+        let dir = u.deletingLastPathComponent()
+        return ["cover.jpg", "cover.png", "folder.jpg", "folder.png", "Cover.jpg", "Folder.jpg", "front.jpg"].contains { FileManager.default.fileExists(atPath: dir.appendingPathComponent($0).path) }
     }
 
     /// The cover, shrunk to `px` on its longest side: from the file, or a cover image in its folder.

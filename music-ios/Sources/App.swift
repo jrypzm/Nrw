@@ -8,14 +8,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        let w = UIWindow(frame: UIScreen.main.bounds)
-        w.backgroundColor = .black
-        w.overrideUserInterfaceStyle = .dark
-        w.tintColor = .white
-        let root = RootViewController()
-        w.rootViewController = root
-        w.makeKeyAndVisible()
-        window = w
+        let root = makeWindow()
         _ = Player.shared
         Library.shared.scan()
         // used only to take the screenshots shown with each build
@@ -28,7 +21,31 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
 
+    @discardableResult
+    private func makeWindow() -> RootViewController {
+        let w = UIWindow(frame: UIScreen.main.bounds)
+        w.backgroundColor = .black
+        w.overrideUserInterfaceStyle = .dark
+        w.tintColor = .white
+        let root = RootViewController()
+        w.rootViewController = root
+        w.makeKeyAndVisible()
+        window = w
+        return root
+    }
+
+    // In the background only the sound is needed: let go of every screen, list and label,
+    // and build them again (it takes a moment) when you come back.
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        Player.shared.save()
+        window?.rootViewController?.dismiss(animated: false)
+        window?.rootViewController = nil
+        window?.isHidden = true
+        window = nil
+    }
+
     func applicationWillEnterForeground(_ application: UIApplication) {
+        if window == nil { makeWindow() }
         // songs may have been added in the Files app meanwhile
         Library.shared.scan()
     }
