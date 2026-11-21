@@ -434,8 +434,11 @@ final class ZoomPage: UIScrollView, UIScrollViewDelegate {
 // MARK: - signing in
 
 /// Reddit's own sign-in page. Your password goes only to reddit.com; the app keeps no copy.
-final class LoginVC: UIViewController {
+/// Sign-in counts only when Reddit confirms a real logged-in account (not just a cookie being set,
+/// which Reddit does for logged-out visitors too), so the front page and your lists actually work.
+final class LoginVC: UIViewController, WKNavigationDelegate {
     private var web: WKWebView!
+    private var done = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -446,27 +449,45 @@ final class LoginVC: UIViewController {
         c.applicationNameForUserAgent = safariSuffix
         web = WKWebView(frame: view.bounds, configuration: c)
         web.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        web.navigationDelegate = self
         view.addSubview(web)
         web.load(URLRequest(url: URL(string: "https://old.reddit.com/login")!))
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(cancel))
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(done))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(tapDone))
+    }
+
+    // after the page settles, ask Reddit who we are; if it's a real account, we're in
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        whoAmI { [weak self] name in if name != nil { self?.finish() } }
+    }
+
+    /// Asks reddit.com "who am I?" from inside the page (same site, so the login counts).
+    private func whoAmI(_ then: @escaping (String?) -> Void) {
+        let js = "try { const r = await fetch('/api/me.json', {credentials:'include'}); const j = await r.json(); return (j && j.data && j.data.name) ? j.data.name : ''; } catch(e) { return ''; }"
+        web.callAsyncJavaScript(js, arguments: [:], in: nil, in: .page) { result in
+            if case .success(let v) = result, let name = v as? String, !name.isEmpty { then(name) } else { then(nil) }
+        }
     }
 
     @objc private func cancel() { dismiss(animated: true) }
 
-    @objc private func done() {
-        WKWebsiteDataStore.default().httpCookieStore.getAllCookies { [weak self] cookies in
-            let yes = cookies.contains { $0.domain.hasSuffix("reddit.com") && ($0.name == "reddit_session" || $0.name == "token_v2") }
-            Reddit.shared.signedIn(yes)
-            if yes {
-                self?.web = nil
-                self?.dismiss(animated: true)
-            } else {
-                let a = UIAlertController(title: "Not signed in yet", message: "Sign in on the page first, then tap Done.", preferredStyle: .alert)
+    @objc private func tapDone() {
+        whoAmI { [weak self] name in
+            if name != nil { self?.finish() } else {
+                let a = UIAlertController(title: "Not signed in yet", message: "Log in on this page until you see your own Reddit, then tap Done.", preferredStyle: .alert)
                 a.addAction(UIAlertAction(title: "OK", style: .default))
                 self?.present(a, animated: true)
             }
         }
+    }
+
+    private func finish() {
+        guard !done else { return }
+        done = true
+        Reddit.shared.signedIn(true)
+        web.navigationDelegate = nil
+        web = nil
+        dismiss(animated: true)
     }
 }
 
